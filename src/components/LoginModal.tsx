@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, Shield, TrendingUp, Zap, Github } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
@@ -17,6 +18,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +86,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     },
   ];
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -93,7 +101,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 isolate">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -294,6 +302,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
