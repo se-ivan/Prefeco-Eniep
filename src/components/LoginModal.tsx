@@ -55,7 +55,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
         await authClient.signIn.social({
             provider,
-            callbackURL: window.location.origin
+            callbackURL: "http://localhost:3000/dashboard",
         });
     } catch (err: any) {
         toast.error(`Error al iniciar sesión con ${provider}`);
