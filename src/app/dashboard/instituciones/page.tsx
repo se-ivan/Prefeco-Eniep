@@ -80,7 +80,7 @@ export default function ListaInstitucionesPage() {
 
   return (
     <div className="min-h-screen bg-[#FFFFF8]">
-      {/* ── Top Bar ── */}
+
       <header className="border-b border-slate-200/60 bg-white border-dashed">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
@@ -96,7 +96,7 @@ export default function ListaInstitucionesPage() {
               <CalendarDays className="h-4 w-4 opacity-70" />
               <span>{formatDate(new Date())}</span>
             </div>
-            <Link href="/dashboard/instituciones">
+            <Link href="/dashboard/instituciones/registro">
               <Button className="h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
                 <Plus className="h-4 w-4" />
                 Registrar
@@ -106,7 +106,6 @@ export default function ListaInstitucionesPage() {
         </div>
       </header>
 
-      {/* ── Contenido Principal ── */}
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -124,7 +123,6 @@ export default function ListaInstitucionesPage() {
           </div>
         </div>
 
-        {/* Carga y Grid de Tarjetas */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#0b697d]">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -149,10 +147,8 @@ export default function ListaInstitucionesPage() {
                 key={inst.id}
                 className="group relative flex flex-col bg-white rounded-2xl p-6 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-lg overflow-hidden"
               >
-                {/* Decoration Border (Top) */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#0b697d] to-[#ffa52d] opacity-80" />
 
-                {/* Header Card */}
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0b697d]/10 text-[#0b697d]">
                     <Building2 className="h-6 w-6" />
@@ -168,7 +164,6 @@ export default function ListaInstitucionesPage() {
                   </Button>
                 </div>
 
-                {/* Body info */}
                 <h3 className="text-lg font-bold text-slate-800 mb-1 leading-tight line-clamp-2">
                   {inst.nombre}
                 </h3>

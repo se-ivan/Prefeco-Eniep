@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,6 +85,7 @@ function formatDate(date: Date) {
 }
 
 export default function InstitucionesPage() {
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFileName, setLogoFileName] = useState<string>("");
@@ -167,6 +169,7 @@ export default function InstitucionesPage() {
       toast.success("Institución registrada exitosamente");
       reset();
       clearLogoSelection();
+      router.push("/dashboard/instituciones");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error al registrar institución"
@@ -309,8 +312,8 @@ export default function InstitucionesPage() {
                   <label htmlFor="logo" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-lg cursor-pointer bg-slate-50/50 hover:bg-slate-50 hover:border-teal-400 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <ImageIcon className="w-8 h-8 mb-2 text-slate-400" />
-                      <p className="mb-1 text-sm text-slate-500"><span className="font-semibold text-teal-600">Haz clic para subir</span> o arrastra y suelta</p>
-                      <p className="text-xs text-slate-400">SVG, PNG, JPG o GIF (MAX. 800x400px)</p>
+                      <p className="mb-1 text-sm text-slate-500"><span className="font-semibold text-teal-600">Haz clic para subir</span></p>
+                      <p className="text-xs text-slate-400">SVG, PNG, JPG</p>
                     </div>
                     <Input
                       id="logo"
