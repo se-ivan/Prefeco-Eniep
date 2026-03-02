@@ -67,3 +67,15 @@ model Verification {
 
   @@map("verification")
 }
+
+model Institucion {
+  id          Int      @id @default(autoincrement())
+  cct         String   @unique
+  nombre      String
+  estado      String
+  zonaEscolar String   @map("zona_escolar")
+  urlLogo     String?  @map("url_logo")
+
+  @@map("instituciones")
+}
+

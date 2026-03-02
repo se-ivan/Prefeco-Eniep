@@ -44,17 +44,17 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
-
-.dark {
-  --background: #020f12; /* Darker, richer obsidian */
+/*
+ .dark {
+  --background: #020f12; 
   --foreground: #f1f5f9;
-  --card: #05191f; /* Slightly lighter than background for depth */
+  --card: #05191f; 
   --card-foreground: #f1f5f9;
   --popover: #05191f;
   --popover-foreground: #f1f5f9;
-  --primary: #2eb4cc; /* Brighter teal for dark mode contrast */
+  --primary: #2eb4cc; 
   --primary-foreground: #020f12;
-  --secondary: #ffb54d; /* Brighter orange for dark mode */
+  --secondary: #ffb54d; 
   --secondary-foreground: #020f12;
   --muted: #0d272e;
   --muted-foreground: #94a3b8;
@@ -62,7 +62,7 @@
   --accent-foreground: #f1f5f9;
   --destructive: #7f1d1d;
   --destructive-foreground: #fef2f2;
-  --border: rgba(46, 180, 204, 0.15); /* Subtle teal border */
+  --border: rgba(46, 180, 204, 0.15); 
   --input: #0d272e;
   --ring: #2eb4cc;
   --sidebar: #020f12;
@@ -74,7 +74,7 @@
   --sidebar-border: rgba(46, 180, 204, 0.15);
   --sidebar-ring: #2eb4cc;
 }
-
+*/
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
