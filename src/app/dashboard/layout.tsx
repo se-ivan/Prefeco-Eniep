@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Calendar,
   Settings, 
+  Volleyball,
   LogOut 
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
     { name: "Participantes", icon: Users, href: "/dashboard/participantes" },
     { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
     { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
+    { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
   ];
 
   return (
