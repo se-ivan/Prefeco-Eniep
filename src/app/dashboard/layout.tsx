@@ -1,43 +1,109 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/ThemeToggle"; // Asumiendo que lo tienes exportado así
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { 
+  Home, 
+  Building2,
+  UserPlus, 
+  Users, 
+  Briefcase,
+  ClipboardList,
+  Calendar,
+  Settings, 
+  LogOut 
+} from "lucide-react";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  const userName = session?.user?.name || "Usuario";
+  const userEmail = session?.user?.email || "Sin email";
+
+  const currentDate = new Date().toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+  const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
+
+  const menuItems = [
+    { name: "Inicio", icon: Home, href: "/dashboard" },
+    { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
+    { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
+    { name: "Participantes", icon: Users, href: "/dashboard/participantes" },
+    { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
+    { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Menú Lateral (Sidebar) */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col hidden md:flex">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700">
-          <span className="text-xl font-bold text-gray-800 dark:text-white">ENIEP Admin</span>
+    <div className="flex min-h-screen bg-[#f8fafc]">
+      {/* Sidebar */}
+      <aside className="w-72 bg-[#08677a] text-white hidden md:flex md:flex-col">
+        {/* Header del Sidebar */}
+        <div className="p-8">
+          <h1 className="text-2xl font-bold tracking-tight">ENIEP</h1>
+          <p className="text-xs text-teal-200/60 font-medium">2026</p>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <Link href="/dashboard" className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-300 dark:hover:bg-gray-700">
-            Inicio
-          </Link>
-          <Link href="/dashboard/instituciones" className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-300 dark:hover:bg-gray-700">
-            Instituciones
-          </Link>
-          <Link href="/dashboard/participantes" className="block px-4 py-2 font-medium bg-blue-50 text-blue-700 rounded-md dark:bg-blue-900/50 dark:text-blue-200">
-            Participantes
-          </Link>
-          <Link href="/dashboard/equipos" className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-300 dark:hover:bg-gray-700">
-            Equipos
-          </Link>
+
+        {/* Navegación Principal */}
+        <nav className="flex-1 px-4 space-y-1">
+          {menuItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-teal-50 hover:bg-teal-700/50"
+            >
+              <item.icon size={20} strokeWidth={2} />
+              <span className="text-sm">{item.name}</span>
+            </Link>
+          ))}
         </nav>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <ThemeToggle />
+
+        {/* Footer del Sidebar: Perfil y Configuración */}
+        <div className="p-4 space-y-4">
+          {/* Card de Usuario */}
+          <div className="bg-teal-800/40 p-4 rounded-2xl border border-teal-700/30">
+            <p className="text-sm font-semibold text-white truncate">{userName}</p>
+            <p className="text-xs text-teal-200/70 truncate">{userEmail}</p>
+          </div>
+
+          <div className="space-y-1">
+            <button className="flex items-center gap-3 px-4 py-2 w-full text-teal-100 hover:text-white transition-colors text-sm">
+              <Settings size={18} />
+              Configuración
+            </button>
+            <button className="flex items-center gap-3 px-4 py-2 w-full text-teal-100 hover:text-white transition-colors text-sm">
+              <LogOut size={18} />
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Contenido Principal */}
-      <main className="flex-1 flex flex-col">
-        {/* Aquí podrías agregar un Header móvil si lo necesitas */}
-        <div className="flex-1 p-6 md:p-8">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header Superior (Opcional, para la fecha y el título) */}
+        <header className="h-16 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm border-b border-gray-100">
+           <div className="flex flex-col">
+              <h2 className="text-sm font-bold text-gray-800">Registrar Alumno</h2>
+              <p className="text-[10px] text-gray-500">Plataforma de Gestión Deportiva y Cultural</p>
+           </div>
+           <div className="bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-medium border border-teal-100 flex items-center gap-2">
+             <Calendar size={14} />
+             {formattedDate}
+           </div>
+        </header>
+
+        <section className="flex-1 p-8 overflow-y-auto">
           {children}
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   open: boolean;
@@ -36,8 +36,6 @@ export default function TeamModal({ open, onClose, disciplinaId, onSuccess }: Pr
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const mountedRef = useRef(false);
 
   // reset cuando se cierra
   useEffect(() => {
@@ -80,14 +78,12 @@ export default function TeamModal({ open, onClose, disciplinaId, onSuccess }: Pr
     if (!open) return;
     let active = true;
     async function loadParticipantes() {
-      // dentro de loadParticipantes()
       const params = new URLSearchParams();
       if (q) params.set("q", q);
       if (institucionId) params.set("institucionId", String(institucionId));
       const url = `/api/participantes?${params.toString()}`;
       setLoading(true);
       try {
-        const url = `/api/participantes?q=${encodeURIComponent(q ?? "")}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ParticipanteApi[] = await res.json();
@@ -110,11 +106,9 @@ export default function TeamModal({ open, onClose, disciplinaId, onSuccess }: Pr
         if (active) setLoading(false);
       }
     }
-    // si es la primera vez que abrimos, solo cargar participantes una vez
-    // pero permitimos recargar cuando cambia q
     loadParticipantes();
     return () => { active = false; };
-  }, [open, q]); // dependemos de q para buscar dinamicamente
+  }, [open, q, institucionId]);
 
   // filtrar resultados client-side (por si el backend no recibe q)
   useEffect(() => {
@@ -260,7 +254,7 @@ export default function TeamModal({ open, onClose, disciplinaId, onSuccess }: Pr
               className="w-full border rounded p-2 mb-3"
             />
 
-            <div className="border rounded max-h-[420px] overflow-y-auto divide-y">
+            <div className="border rounded max-h-105 overflow-y-auto divide-y">
               {loading && <div className="p-3 text-sm text-slate-500">Cargando...</div>}
               {!loading && resultados.length === 0 && <div className="p-3 text-sm text-slate-500">No se encontraron participantes</div>}
               {!loading && resultados.map((p) => {
@@ -287,7 +281,7 @@ export default function TeamModal({ open, onClose, disciplinaId, onSuccess }: Pr
           </div>
 
           {/* Right: seleccionados */}
-          <div className="border rounded p-3 h-[420px] overflow-y-auto">
+          <div className="border rounded p-3 h-105 overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
               <strong>Seleccionados</strong>
               <span className="text-sm text-slate-500">{seleccionados.length}</span>

@@ -55,6 +55,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const data = participantesRaw.map((p: any) => ({
         participanteId: Number(p.participanteId),
         equipoId: equipoId,
+        disciplinaId: equipo.disciplinaId,
         fechaRegistro: now,
         esTitular: Boolean(p.esTitular ?? false),
       }));
