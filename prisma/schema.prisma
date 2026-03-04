@@ -75,6 +75,7 @@ model Institucion {
 
   equipos       Equipo[]        
   participantes Participante[] 
+  personalApoyo PersonalApoyo[]
 
   @@map("instituciones")
 }
@@ -127,9 +128,34 @@ model Participante {
   genero           Genero
   fotoUrl          String?
   estatus          Estatus
+  alergias         String?
+  tipoSangre       String? @map("tipo_sangre")
+  padecimientos    String?
+  medicamentos     String?
+  contactoEmergenciaNombre   String? @map("contacto_emergencia_nombre")
+  contactoEmergenciaTelefono String? @map("contacto_emergencia_telefono")
+  docCurp                  Boolean @default(false) @map("doc_curp")
+  docComprobanteEstudios   Boolean @default(false) @map("doc_comprobante_estudios")
+  docCartaResponsiva       Boolean @default(false) @map("doc_carta_responsiva")
+  docCertificadoMedico     Boolean @default(false) @map("doc_certificado_medico")
+  docIneTutor              Boolean @default(false) @map("doc_ine_tutor")
 
   institucion Institucion @relation(fields: [institucionId], references: [id])
+  tutor       Tutor?      @relation(fields: [tutorId], references: [id])
   inscripciones Inscripcion[]
+}
+
+model Tutor {
+  id             Int    @id @default(autoincrement())
+  nombreCompleto String @map("nombre_completo")
+  parentesco     String
+  telefono       String
+  email          String?
+  direccion      String?
+
+  participantes Participante[]
+
+  @@map("tutores")
 }
 
 model Disciplina {
@@ -176,6 +202,28 @@ model Inscripcion {
 
   @@map("inscripciones")
 }
-  @@map("instituciones")
+
+model PersonalApoyo {
+  id                        Int     @id @default(autoincrement())
+  institucionId             Int
+  curp                      String
+  nombres                   String
+  apellidoPaterno           String
+  apellidoMaterno           String
+  puesto                    String
+  telefono                  String
+  email                     String?
+  contactoEmergenciaNombre  String? @map("contacto_emergencia_nombre")
+  contactoEmergenciaTelefono String? @map("contacto_emergencia_telefono")
+  docCurp                   Boolean @default(false) @map("doc_curp")
+  docIdentificacionOficial  Boolean @default(false) @map("doc_identificacion_oficial")
+  docComprobanteDomicilio   Boolean @default(false) @map("doc_comprobante_domicilio")
+  docCartaAntecedentes      Boolean @default(false) @map("doc_carta_antecedentes")
+  estatus                   Estatus
+
+  institucion Institucion @relation(fields: [institucionId], references: [id])
+
+  @@map("personal_apoyo")
 }
+
 

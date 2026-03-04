@@ -1,0 +1,448 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { User, Phone, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+
+const STEPS = [
+  { id: 1, title: "Datos Personales", icon: User },
+  { id: 2, title: "Contacto", icon: Phone },
+  { id: 3, title: "Documentación", icon: FileText },
+];
+
+type Institucion = {
+  id: number;
+  nombre: string;
+};
+
+export default function RegistrarPersonalApoyoPage() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [instituciones, setInstituciones] = useState<Institucion[]>([]);
+  const [loadingInstituciones, setLoadingInstituciones] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    institucionId: "",
+    nombres: "",
+    apellidoPaterno: "",
+    apellidoMaterno: "",
+    curp: "",
+    puesto: "",
+    telefono: "",
+    email: "",
+    contactoEmergenciaNombre: "",
+    contactoEmergenciaTelefono: "",
+    docCurp: false,
+    docIdentificacionOficial: false,
+    docComprobanteDomicilio: false,
+    docCartaAntecedentes: false,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadInstituciones() {
+      setLoadingInstituciones(true);
+      try {
+        const res = await fetch("/api/instituciones");
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data: Institucion[] = await res.json();
+        if (!active) return;
+        setInstituciones(data);
+      } catch (error) {
+        console.error("Error al cargar instituciones", error);
+        if (!active) return;
+        setInstituciones([]);
+        toast.error("No se pudieron cargar las instituciones");
+      } finally {
+        if (active) setLoadingInstituciones(false);
+      }
+    }
+
+    loadInstituciones();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setStepError(null);
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setStepError(null);
+    setFormData((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const validateStep1 = () => {
+    if (!formData.institucionId) return "Selecciona una institución.";
+    if (!formData.nombres.trim()) return "El nombre es obligatorio.";
+    if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
+    if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
+    if (!formData.curp.trim()) return "La CURP es obligatoria.";
+    if (!formData.puesto.trim()) return "El puesto es obligatorio.";
+    if (!formData.telefono.trim()) return "El teléfono es obligatorio.";
+    return null;
+  };
+
+  const validateCurrentStep = () => {
+    if (currentStep === 1) return validateStep1();
+    return null;
+  };
+
+  const nextStep = () => {
+    const error = validateCurrentStep();
+    if (error) {
+      setStepError(error);
+      toast.error(error);
+      return;
+    }
+
+    if (currentStep < STEPS.length) {
+      setStepError(null);
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const prevStep = () => {
+    setStepError(null);
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSubmit = async () => {
+    const step1Error = validateStep1();
+    if (step1Error) {
+      setStepError(step1Error);
+      toast.error(step1Error);
+      setCurrentStep(1);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        institucionId: Number(formData.institucionId),
+        nombres: formData.nombres,
+        apellidoPaterno: formData.apellidoPaterno,
+        apellidoMaterno: formData.apellidoMaterno,
+        curp: formData.curp,
+        puesto: formData.puesto,
+        telefono: formData.telefono,
+        email: formData.email || null,
+        contactoEmergenciaNombre: formData.contactoEmergenciaNombre || null,
+        contactoEmergenciaTelefono: formData.contactoEmergenciaTelefono || null,
+        docCurp: formData.docCurp,
+        docIdentificacionOficial: formData.docIdentificacionOficial,
+        docComprobanteDomicilio: formData.docComprobanteDomicilio,
+        docCartaAntecedentes: formData.docCartaAntecedentes,
+        estatus: "ACTIVO",
+      };
+
+      const res = await fetch("/api/personal-apoyo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Error ${res.status} al registrar personal de apoyo`);
+      }
+
+      toast.success("Personal de apoyo registrado exitosamente");
+      router.push("/dashboard/personal-apoyo");
+      router.refresh();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "No se pudo registrar al personal de apoyo");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const progressPercentage = ((currentStep - 1) / (STEPS.length - 1)) * 100;
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-8 py-8 border-b border-gray-50">
+          <h2 className="text-2xl font-bold text-gray-800">Registro de Personal de Apoyo</h2>
+          <p className="text-gray-500 text-sm mt-1">Completa los datos en 3 sencillos pasos</p>
+        </div>
+
+        <div className="px-8 pt-8 pb-4">
+          <div className="relative flex justify-between items-center max-w-3xl mx-auto">
+            {STEPS.map((step) => {
+              const isActive = currentStep === step.id;
+              const isPast = currentStep > step.id;
+
+              return (
+                <div key={step.id} className="flex flex-col items-center relative z-10 w-24">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 shadow-sm
+                      ${isActive || isPast ? "bg-[#08677a] text-white" : "bg-gray-100 text-gray-400"}`}
+                  >
+                    <step.icon size={20} />
+                  </div>
+                  <span
+                    className={`text-[11px] font-semibold mt-3 text-center transition-colors duration-300
+                      ${isActive || isPast ? "text-[#08677a]" : "text-gray-400"}`}
+                  >
+                    {step.title}
+                  </span>
+                </div>
+              );
+            })}
+
+            <div className="absolute top-6 left-[10%] right-[10%] h-0.5 bg-gray-100 z-0" />
+          </div>
+
+          <div className="mt-6 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#08677a] transition-all duration-500 ease-in-out"
+              style={{ width: `${progressPercentage === 0 ? 15 : progressPercentage}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="px-8 py-6">
+          {stepError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {stepError}
+            </div>
+          )}
+
+          {currentStep === 1 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <h3 className="text-lg font-bold text-gray-800 mb-1">Datos Personales</h3>
+              <p className="text-xs text-gray-500 mb-8">Información general del personal de apoyo</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <div className="group md:col-span-2">
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    Institución <span className="text-[#08677a]">*</span>
+                  </label>
+                  <select
+                    name="institucionId"
+                    value={formData.institucionId}
+                    onChange={handleInputChange}
+                    disabled={loadingInstituciones}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
+                  >
+                    <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
+                    {instituciones.map((institucion) => (
+                      <option key={institucion.id} value={institucion.id}>
+                        {institucion.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Nombre(s) <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="text"
+                    name="nombres"
+                    value={formData.nombres}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Apellido Paterno <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="text"
+                    name="apellidoPaterno"
+                    value={formData.apellidoPaterno}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Apellido Materno <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="text"
+                    name="apellidoMaterno"
+                    value={formData.apellidoMaterno}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">CURP <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="text"
+                    name="curp"
+                    value={formData.curp}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none uppercase"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Puesto <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="text"
+                    name="puesto"
+                    value={formData.puesto}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Teléfono <span className="text-[#08677a]">*</span></label>
+                  <input
+                    type="tel"
+                    name="telefono"
+                    value={formData.telefono}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Correo electrónico</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <h3 className="text-lg font-bold text-gray-800 mb-1">Contacto de Emergencia</h3>
+              <p className="text-xs text-gray-500 mb-8">Persona de contacto para cualquier eventualidad</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Nombre del contacto</label>
+                  <input
+                    type="text"
+                    name="contactoEmergenciaNombre"
+                    value={formData.contactoEmergenciaNombre}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Teléfono del contacto</label>
+                  <input
+                    type="tel"
+                    name="contactoEmergenciaTelefono"
+                    value={formData.contactoEmergenciaTelefono}
+                    onChange={handleInputChange}
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <h3 className="text-lg font-bold text-gray-800 mb-1">Documentación</h3>
+              <p className="text-xs text-gray-500 mb-8">Marca los documentos entregados</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                <label className="flex items-center gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="docCurp"
+                    checked={formData.docCurp}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  CURP
+                </label>
+
+                <label className="flex items-center gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="docIdentificacionOficial"
+                    checked={formData.docIdentificacionOficial}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Identificación oficial
+                </label>
+
+                <label className="flex items-center gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="docComprobanteDomicilio"
+                    checked={formData.docComprobanteDomicilio}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Comprobante de domicilio
+                </label>
+
+                <label className="flex items-center gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="docCartaAntecedentes"
+                    checked={formData.docCartaAntecedentes}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Carta de antecedentes no penales
+                </label>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mt-10 pt-6 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={prevStep}
+              disabled={currentStep === 1 || submitting}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={16} />
+              Anterior
+            </button>
+
+            {currentStep < STEPS.length ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                disabled={submitting}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#08677a] text-white hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                Siguiente
+                <ChevronRight size={16} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#08677a] text-white hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Guardando..." : "Registrar"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
