@@ -176,3 +176,6 @@ model Inscripcion {
 
   @@map("inscripciones")
 }
+  @@map("instituciones")
+}
+
