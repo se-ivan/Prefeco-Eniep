@@ -1,17 +1,7 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { 
-  Home, 
-  Building2,
-  UserPlus, 
-  Users, 
-  Briefcase,
-  ClipboardList,
-  Calendar,
-  Settings, 
-  LogOut 
-} from "lucide-react";
+import { Calendar } from "lucide-react";
+import DashboardSidebar from "@/components/DashboardSidebar";
 
 export default async function DashboardLayout({
   children,
@@ -33,59 +23,9 @@ export default async function DashboardLayout({
   });
   const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
 
-  const menuItems = [
-    { name: "Inicio", icon: Home, href: "/dashboard" },
-    { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
-    { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
-    { name: "Participantes", icon: Users, href: "/dashboard/participantes" },
-    { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
-    { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
-  ];
-
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
-      {/* Sidebar */}
-      <aside className="w-72 bg-[#08677a] text-white hidden md:flex md:flex-col">
-        {/* Header del Sidebar */}
-        <div className="p-8">
-          <h1 className="text-2xl font-bold tracking-tight">ENIEP</h1>
-          <p className="text-xs text-teal-200/60 font-medium">2026</p>
-        </div>
-
-        {/* Navegación Principal */}
-        <nav className="flex-1 px-4 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-teal-50 hover:bg-teal-700/50"
-            >
-              <item.icon size={20} strokeWidth={2} />
-              <span className="text-sm">{item.name}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Footer del Sidebar: Perfil y Configuración */}
-        <div className="p-4 space-y-4">
-          {/* Card de Usuario */}
-          <div className="bg-teal-800/40 p-4 rounded-2xl border border-teal-700/30">
-            <p className="text-sm font-semibold text-white truncate">{userName}</p>
-            <p className="text-xs text-teal-200/70 truncate">{userEmail}</p>
-          </div>
-
-          <div className="space-y-1">
-            <button className="flex items-center gap-3 px-4 py-2 w-full text-teal-100 hover:text-white transition-colors text-sm">
-              <Settings size={18} />
-              Configuración
-            </button>
-            <button className="flex items-center gap-3 px-4 py-2 w-full text-teal-100 hover:text-white transition-colors text-sm">
-              <LogOut size={18} />
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
-      </aside>
+      <DashboardSidebar userName={userName} userEmail={userEmail} />
 
       {/* Contenido Principal */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
