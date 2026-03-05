@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import {
   Building2,
   MapPin,
@@ -37,27 +38,11 @@ function formatDate(date: Date) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function ListaInstitucionesPage() {
-  const [instituciones, setInstituciones] = useState<Institucion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones", fetcher);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const fetchInstituciones = useCallback(async () => {
-    try {
-      const res = await fetch("/api/instituciones");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setInstituciones(data);
-    } catch {
-      toast.error("Error al cargar instituciones");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchInstituciones();
-  }, [fetchInstituciones]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Seguro que deseas eliminar esta institución?")) return;
@@ -65,7 +50,7 @@ export default function ListaInstitucionesPage() {
       const res = await fetch(`/api/instituciones/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       toast.success("Institución eliminada");
-      fetchInstituciones();
+      mutate();
     } catch {
       toast.error("Error al eliminar institución");
     }
@@ -123,7 +108,7 @@ export default function ListaInstitucionesPage() {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#0b697d]">
             <Loader2 className="h-8 w-8 animate-spin" />
             <p className="mt-4 font-medium">Cargando instituciones...</p>

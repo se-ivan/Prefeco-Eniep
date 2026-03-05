@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import {
   Users,
   Search,
@@ -51,26 +52,8 @@ function formatDate(date: Date) {
 }
 
 export default function ListaParticipantesPage() {
-  const [participantes, setParticipantes] = useState<Participante[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: participantes = [], isLoading, mutate } = useSWR<Participante[]>("/api/participantes");
   const [searchTerm, setSearchTerm] = useState("");
-
-  const fetchParticipantes = useCallback(async () => {
-    try {
-      const res = await fetch("/api/participantes");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setParticipantes(data);
-    } catch {
-      toast.error("Error al cargar participantes");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchParticipantes();
-  }, [fetchParticipantes]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Seguro que deseas eliminar este participante?")) return;
@@ -78,7 +61,7 @@ export default function ListaParticipantesPage() {
       const res = await fetch(`/api/participantes/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       toast.success("Participante eliminado");
-      fetchParticipantes();
+      mutate();
     } catch {
       toast.error("Error al eliminar participante");
     }
@@ -134,7 +117,7 @@ export default function ListaParticipantesPage() {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#0b697d]">
             <Loader2 className="h-8 w-8 animate-spin" />
             <p className="mt-4 font-medium">Cargando participantes...</p>
