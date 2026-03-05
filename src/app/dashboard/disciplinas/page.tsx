@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import TeamsDrawer from "@/components/TeamsDrawer";
 import TeamModal from "@/components/TeamModal";
+import DisciplineModal from "@/components/DisciplineModal";
 
 type Disciplina = {
   id: number;
@@ -23,17 +24,18 @@ export default function DisciplinasPage() {
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
 
-  const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState<
-    Disciplina | null
-  >(null);
+  const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState<Disciplina | null>(null);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [crearEquipoOpen, setCrearEquipoOpen] = useState(false);
 
+  // nuevo: modal para crear disciplina
+  const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
+
   // Cargar disciplinas (con contadores)
   async function cargarDisciplinas() {
     try {
-      const res = await fetch("/api/disciplinas"); // asumimos que este endpoint devuelve los campos con los totals
+      const res = await fetch("/api/disciplinas");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: Disciplina[] = await res.json();
       setDisciplinas(data);
@@ -47,7 +49,6 @@ export default function DisciplinasPage() {
     cargarDisciplinas();
   }, []);
 
-  // Abrir drawer y cargar equipos de la disciplina
   async function abrirEquipos(d: Disciplina) {
     setDisciplinaSeleccionada(d);
     setDrawerOpen(true);
@@ -63,12 +64,9 @@ export default function DisciplinasPage() {
     }
   }
 
-  // Callback cuando TeamModal crea equipo con éxito: refrescar listas
   async function handleAfterCreate() {
-    // refrescar disciplinas (para que cambien totalEquipos, totalParticipantes)
     await cargarDisciplinas();
 
-    // si drawer está abierto y hay disciplinaSeleccionada, refrescar sus equipos
     if (drawerOpen && disciplinaSeleccionada) {
       try {
         const res = await fetch(`/api/disciplinas/${disciplinaSeleccionada.id}/equipos`);
@@ -84,7 +82,18 @@ export default function DisciplinasPage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Disciplinas</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Disciplinas</h1>
+
+        <div>
+          <button
+            onClick={() => setCrearDisciplinaOpen(true)}
+            className="px-4 py-2 bg-emerald-600 text-white rounded shadow-sm text-sm"
+          >
+            + Registrar disciplina
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {disciplinas.map((d) => (
@@ -97,11 +106,11 @@ export default function DisciplinasPage() {
 
               <div className="mt-3 text-sm text-slate-600 space-y-2">
                 <div>
-                  <span className="font-medium">{d.totalEquipos}</span> equipos
+                  <span className="font-medium">{d.totalEquipos ?? "—"}</span> equipos
                 </div>
 
                 <div>
-                  <span className="font-medium">{d.totalParticipantes}</span>{" "}
+                  <span className="font-medium">{d.totalParticipantes ?? "—"}</span>{" "}
                   participantes
                 </div>
 
@@ -142,11 +151,10 @@ export default function DisciplinasPage() {
         onClose={() => setDrawerOpen(false)}
         disciplinaNombre={disciplinaSeleccionada?.nombre}
         equipos={equipos}
-        // pasamos el max para que el drawer / modales hijos lo puedan usar
         maxIntegrantes={disciplinaSeleccionada?.maxIntegrantes}
       />
 
-      {/* Modal crear equipo: solo renderizar si hay disciplinaSeleccionada */}
+      {/* Modal crear equipo */}
       {disciplinaSeleccionada && (
         <TeamModal
           open={crearEquipoOpen}
@@ -158,6 +166,17 @@ export default function DisciplinasPage() {
           }}
         />
       )}
+
+      {/* Modal crear disciplina */}
+      <DisciplineModal
+        open={crearDisciplinaOpen}
+        onClose={() => setCrearDisciplinaOpen(false)}
+        onCreated={async () => {
+          // cerrar y recargar
+          setCrearDisciplinaOpen(false);
+          await handleAfterCreate();
+        }}
+      />
     </main>
   );
 }
