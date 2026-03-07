@@ -9,7 +9,6 @@ type Disciplina = {
   id: number;
   nombre: string;
   rama?: string | null;
-  // tipo lo dejamos fuera de la UI pero puede existir en datos
   modalidad: "INDIVIDUAL" | "EQUIPO";
   minIntegrantes?: number | null;
   maxIntegrantes?: number | null;
@@ -27,7 +26,7 @@ type Props = {
    */
   onCreateTeam?: (d: Disciplina) => void | Promise<void>;
   /**
-   * Opcional: si lo pasas, el botón "Ver Participantes" llamará esta función.
+   * Opcional: si se pasa, el botón "Ver Participantes" llamará esta función.
    * Si no se pasa, el componente navegará automáticamente a:
    * /dashboard/disciplinas/{disciplina.id}/participantes
    */
@@ -65,7 +64,7 @@ export default function DisciplinaCard({
   const handleView = useCallback(
     (e?: React.MouseEvent) => {
       e?.preventDefault();
-      // Si el padre proporciona callback, lo usamos (compatibilidad)
+      // Si el padre proporciona callback, lo usamos en lugar de navegar automáticamente
       if (onViewParticipants) {
         onViewParticipants(disciplina);
         return;

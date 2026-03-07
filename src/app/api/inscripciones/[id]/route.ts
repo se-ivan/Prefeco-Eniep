@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * DELETE /api/inscripciones/:id
  * Borra una inscripción por id
  */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {

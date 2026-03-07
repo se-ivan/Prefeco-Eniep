@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import ParticipantsTable from "@/components/ParticipantsTable";
 import TeamMembersModal from "@/components/TeamMembersModal";
 
-/* ---------- Tipos locales (compatibles con tus componentes) ---------- */
 
 type PageDisciplina = {
   id: number;
@@ -171,7 +170,7 @@ export default function ParticipantesPage() {
     }
 
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps, selectedCategoriaId
+    
   }, [disciplina, disciplinaIdFromUrl, entityType, selectedInstitucionId]);
 
   // --- acciones UI / CRUD local + llamadas a endpoints ---

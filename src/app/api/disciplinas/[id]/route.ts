@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/disciplinas/:id
  * Devuelve detalle de una disciplina, incluyendo sus categorías.
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {

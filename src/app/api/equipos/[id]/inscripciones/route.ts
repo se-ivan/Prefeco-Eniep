@@ -19,7 +19,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         return NextResponse.json({ error: "categoriaId is required" }, { status: 400 });
       }
 
-    // transaction: create many inscripciones only if all checks pass
     const created = await prisma.$transaction(async (tx) => {
       const equipo = await tx.equipo.findUnique({
         where: { id: equipoId },
@@ -27,21 +26,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       });
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
 
-      // count current inscripciones
       const existingCount = await tx.inscripcion.count({ where: { equipoId } });
 
-      // dedupe participanteIds in payload
       const participantIds: number[] = Array.from(
         new Set(participantesRaw.map((p: any) => Number(p.participanteId)))
       );
 
-      // quick capacity check
         const maxIntegrantes = equipo.disciplina.maxIntegrantes ?? Infinity;
         if (existingCount + participantIds.length > maxIntegrantes) {
         throw { status: 409, message: "Capacidad del equipo excedida" };
       }
 
-      // validate each participante
       for (const pid of participantIds) {
         const participante = await tx.participante.findUnique({
           where: { id: pid },
@@ -49,7 +44,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         });
         if (!participante) throw { status: 404, message: "Participante no encontrado" };
 
-        // check if already in same discipline and category
         const already = await tx.inscripcion.findFirst({
           where: {
             participanteId: pid,
@@ -60,7 +54,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         if (already) throw { status: 409, message: `${participante.nombres} ya esta inscrito en esta disciplina y categoria` };
       }
 
-      // all validations passed -> create inscripciones
       const now = new Date();
       const data = participantesRaw.map((p: any) => ({
         participanteId: Number(p.participanteId),
@@ -70,7 +63,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         fechaRegistro: now,
       }));
 
-      // createMany is faster; createMany returns count only
       await tx.inscripcion.createMany({ data });
 
       return { createdCount: data.length };

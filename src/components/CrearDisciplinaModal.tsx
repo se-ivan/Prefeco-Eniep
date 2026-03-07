@@ -3,14 +3,11 @@
 import React, { useState } from "react";
 
 /**
- * CrearDisciplinaModal (ajustado al schema.prisma)
  *
- * - Ya NO pide ni envía `minPersonalApoyo`.
  * - Categorías: entrada dinámica.
  * - Si modalidad === "EQUIPO" se muestran min/max integrantes.
  * - Si modalidad === "INDIVIDUAL" se muestra maxParticipantesPorEscuela.
  *
- * Nota: el backend espera `categorias: string[]`.
  */
 
 type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA";

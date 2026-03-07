@@ -14,7 +14,6 @@ const EVENT_START = process.env.EVENT_START_DATE
   : new Date();
 
 /**
- * PUT /api/equipos/:id/editar
  * Actualiza los miembros del equipo con validaciones de mín/máx integrantes
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {

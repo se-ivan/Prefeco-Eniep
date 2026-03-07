@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * DELETE /api/equipos/:id
- * Borra todas las inscripciones del equipo y luego el equipo (transactional)
+ * Borra todas las inscripciones del equipo y luego el equipo
  */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,7 +26,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   } catch (err: any) {
     console.error("DELETE /api/equipos/:id error:", err);
     if (err?.code === "P2025") {
-      // Prisma: record not found for deletion
       return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 });
     }
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
