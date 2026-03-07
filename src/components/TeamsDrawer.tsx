@@ -6,7 +6,7 @@ import ExistingTeamInscribeModal from "./ExistingTeamInscribeModal";
 type Equipo = {
   id: number;
   nombreEquipo: string;
-  folioRegistro?: string;
+  folioRegistro?: string| null;
 };
 
 type Props = {

@@ -2,44 +2,64 @@
 
 import { useEffect, useState } from "react";
 import TeamsDrawer from "@/components/TeamsDrawer";
-import TeamModal from "@/components/TeamModal";
+import CrearDisciplinaModal from "@/components/CrearDisciplinaModal";
+import DisciplinaCard from "@/components/DisciplinaCard";
+import NuevoParticipanteModal from "@/components/NuevoParticipanteModal";
+
+/**
+ * Página de Disciplinas (dashboard)
+ */
 
 type Disciplina = {
   id: number;
   nombre: string;
-  minIntegrantes: number;
-  maxIntegrantes: number;
-  totalEquipos: number;
-  totalParticipantes: number;
+  rama?: string | null;
+  tipo?: string | null;
+  modalidad: "INDIVIDUAL" | "EQUIPO";
+  minIntegrantes?: number | null;
+  maxIntegrantes?: number | null;
+  maxParticipantesPorEscuela?: number | null;
+
+  categorias?: {
+    id: number;
+    nombre: string;
+  }[];
+
+  totalEquipos?: number | null;
+  totalParticipantes?: number | null;
 };
 
-type Equipo = {
-  id: number;
-  nombreEquipo: string;
-  folioRegistro?: string;
-};
+type Equipo = any;
 
 export default function DisciplinasPage() {
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
 
-  const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState<
-    Disciplina | null
-  >(null);
+  const [disciplinaSeleccionada, setDisciplinaSeleccionada] =
+    useState<Disciplina | null>(null);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [crearEquipoOpen, setCrearEquipoOpen] = useState(false);
 
-  // Cargar disciplinas (con contadores)
+  // ya no usamos TeamModal; usamos NewParticipantModal
+  const [nuevoParticipanteOpen, setNuevoParticipanteOpen] = useState(false);
+
+  const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  // Cargar disciplinas (simple GET)
   async function cargarDisciplinas() {
+    setLoading(true);
     try {
-      const res = await fetch("/api/disciplinas"); // asumimos que este endpoint devuelve los campos con los totals
+      const res = await fetch("/api/disciplinas");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: Disciplina[] = await res.json();
       setDisciplinas(data);
     } catch (err) {
       console.error("Error cargando disciplinas:", err);
       setDisciplinas([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -47,7 +67,7 @@ export default function DisciplinasPage() {
     cargarDisciplinas();
   }, []);
 
-  // Abrir drawer y cargar equipos de la disciplina
+  // Abrir drawer y cargar equipos para la disciplina seleccionada
   async function abrirEquipos(d: Disciplina) {
     setDisciplinaSeleccionada(d);
     setDrawerOpen(true);
@@ -63,15 +83,22 @@ export default function DisciplinasPage() {
     }
   }
 
-  // Callback cuando TeamModal crea equipo con éxito: refrescar listas
+  // wrapper sincrónico para pasarlo a DisciplineCard (evita error de firma)
+  function abrirEquiposSync(d: Disciplina) {
+    abrirEquipos(d).catch((e) => {
+      console.error("abrirEquipos error:", e);
+    });
+  }
+
+  // Callback que refresca listas tras crear algo (equipo / inscripcion / asignacion)
   async function handleAfterCreate() {
-    // refrescar disciplinas (para que cambien totalEquipos, totalParticipantes)
     await cargarDisciplinas();
 
-    // si drawer está abierto y hay disciplinaSeleccionada, refrescar sus equipos
     if (drawerOpen && disciplinaSeleccionada) {
       try {
-        const res = await fetch(`/api/disciplinas/${disciplinaSeleccionada.id}/equipos`);
+        const res = await fetch(
+          `/api/disciplinas/${disciplinaSeleccionada.id}/equipos`
+        );
         if (res.ok) {
           const data: Equipo[] = await res.json();
           setEquipos(data);
@@ -84,80 +111,73 @@ export default function DisciplinasPage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Disciplinas</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Disciplinas</h1>
 
+        <button
+          onClick={() => setCrearDisciplinaOpen(true)}
+          className="px-4 py-2 bg-emerald-600 text-white rounded shadow-sm text-sm"
+        >
+          + Registrar disciplina
+        </button>
+      </div>
+
+      {loading && (
+        <div className="text-sm text-slate-500 mb-4">
+          Cargando disciplinas...
+        </div>
+      )}
+
+      {/* GRID DE CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {disciplinas.map((d) => (
-          <article
+          <DisciplinaCard
             key={d.id}
-            className="bg-white border rounded-xl p-4 shadow-sm flex flex-col justify-between"
-          >
-            <div>
-              <h2 className="text-lg font-semibold">{d.nombre}</h2>
-
-              <div className="mt-3 text-sm text-slate-600 space-y-2">
-                <div>
-                  <span className="font-medium">{d.totalEquipos}</span> equipos
-                </div>
-
-                <div>
-                  <span className="font-medium">{d.totalParticipantes}</span>{" "}
-                  participantes
-                </div>
-
-                <div>
-                  Integrantes por equipo:{" "}
-                  <span className="font-medium">
-                    {d.minIntegrantes} – {d.maxIntegrantes}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => abrirEquipos(d)}
-                className="flex-1 px-3 py-2 border rounded text-sm"
-              >
-                Ver equipos
-              </button>
-
-              <button
-                onClick={() => {
-                  setDisciplinaSeleccionada(d);
-                  setCrearEquipoOpen(true);
-                }}
-                className="px-3 py-2 bg-amber-500 text-white rounded text-sm"
-              >
-                Crear equipo
-              </button>
-            </div>
-          </article>
+            disciplina={d as any}
+            onOpenTeams={abrirEquiposSync}
+            onCreateTeam={(disc) => {
+              setDisciplinaSeleccionada(disc as Disciplina);
+              setNuevoParticipanteOpen(true);
+            }}
+          />
         ))}
       </div>
 
       {/* Drawer de equipos */}
       <TeamsDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setDisciplinaSeleccionada(null);
+          setEquipos([]);
+        }}
         disciplinaNombre={disciplinaSeleccionada?.nombre}
-        equipos={equipos}
-        // pasamos el max para que el drawer / modales hijos lo puedan usar
-        maxIntegrantes={disciplinaSeleccionada?.maxIntegrantes}
+        equipos={equipos as any}
+        maxIntegrantes={disciplinaSeleccionada?.maxIntegrantes ?? undefined}
       />
 
-      {/* Modal crear equipo: solo renderizar si hay disciplinaSeleccionada */}
+      {/* Nuevo participante (modal combinado que maneja equipo/individual/apoyo) */}
       {disciplinaSeleccionada && (
-        <TeamModal
-          open={crearEquipoOpen}
-          onClose={() => setCrearEquipoOpen(false)}
-          disciplinaId={disciplinaSeleccionada.id}
+        <NuevoParticipanteModal
+          open={nuevoParticipanteOpen}
+          onClose={() => setNuevoParticipanteOpen(false)}
+          disciplina={disciplinaSeleccionada}
           onSuccess={async () => {
-            setCrearEquipoOpen(false);
+            setNuevoParticipanteOpen(false);
             await handleAfterCreate();
           }}
         />
       )}
+
+      {/* Modal crear disciplina */}
+      <CrearDisciplinaModal
+        open={crearDisciplinaOpen}
+        onClose={() => setCrearDisciplinaOpen(false)}
+        onCreated={async () => {
+          setCrearDisciplinaOpen(false);
+          await handleAfterCreate();
+        }}
+      />
     </main>
   );
 }

@@ -65,6 +65,7 @@ model Verification {
   @@map("verification")
 }
 
+
 model Institucion {
   id          Int      @id @default(autoincrement())
   cct         String   @unique
@@ -81,7 +82,7 @@ model Institucion {
 }
 
 
-/// ENUMS 
+/// ENUMS
 enum Genero {
   MASCULINO
   FEMENINO
@@ -96,17 +97,19 @@ enum Estatus {
 enum TipoDisciplina {
   DEPORTIVA
   CULTURAL
-}
-
-enum Categoria {
-  FEMENIL
-  VARONIL
-  UNICA
+  CIVICA
 }
 
 enum Modalidad {
   INDIVIDUAL
   EQUIPO
+}
+
+enum Rama {
+  VARONIL
+  FEMENIL
+  UNICA
+  MIXTO
 }
 
 /// ===============================
@@ -162,43 +165,62 @@ model Disciplina {
   id             Int @id @default(autoincrement())
   nombre         String
   tipo           TipoDisciplina
-  categoria      Categoria
+  rama           Rama
   modalidad      Modalidad
-  minIntegrantes Int @map("min_integrantes")
-  maxIntegrantes Int @map("max_integrantes")
 
+  minIntegrantes Int? @map("min_integrantes") 
+  maxIntegrantes Int? @map("max_integrantes") 
+  maxParticipantesPorEscuela Int? @map("max_participantes_por_escuela")
+
+  categorias Categoria[]
   equipos      Equipo[]
-  inscripciones Inscripcion[]   
+  inscripciones Inscripcion[]
+  asignacionesApoyo AsignacionApoyo[]
 
   @@map("disciplinas")
 }
 
+
+model Categoria {
+  id           Int    @id @default(autoincrement())
+  nombre       String
+  disciplinaId Int
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
+
+  inscripciones Inscripcion[]
+  asignacionesApoyo AsignacionApoyo[]
+
+  @@map("categorias")
+}
 
 model Equipo {
   id            Int     @id @default(autoincrement())
   disciplinaId  Int     @map("id_disciplina")
   institucionId Int     @map("id_institucion")
   nombreEquipo  String  @map("nombre_equipo")
-  folioRegistro String  @map("folio_registro")
+  folioRegistro String? @map("folio_registro") 
 
   disciplina Disciplina @relation(fields: [disciplinaId], references: [id])
-  institucion   Institucion @relation(fields: [institucionId], references: [id])
+  institucion Institucion @relation(fields: [institucionId], references: [id])
+
   inscripciones Inscripcion[]
+  @@unique([disciplinaId, nombreEquipo])
 
   @@map("equipos")
 }
 
 model Inscripcion {
-  id             Int      @id @default(autoincrement())
-  participanteId Int      @map("id_participante")
-  disciplinaId   Int      @map("id_disciplina") 
-  equipoId       Int      @map("id_equipo")
-  fechaRegistro  DateTime @map("fecha_registro")
-  esTitular      Boolean  @map("es_titular")
+  id              Int      @id @default(autoincrement())
+  participanteId  Int      @map("id_participante")
+  disciplinaId    Int      @map("id_disciplina")
+  equipoId        Int?     @map("id_equipo")      
+  categoriaId     Int     @map("id_categoria")    
+  fechaRegistro   DateTime @map("fecha_registro") @default(now())
 
   participante Participante @relation(fields: [participanteId], references: [id])
-  equipo        Equipo       @relation(fields: [equipoId], references: [id])
+  equipo        Equipo?      @relation(fields: [equipoId], references: [id])
   disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
+  categoria     Categoria   @relation(fields: [categoriaId], references: [id])
 
   @@map("inscripciones")
 }
@@ -222,8 +244,24 @@ model PersonalApoyo {
   estatus                   Estatus
 
   institucion Institucion @relation(fields: [institucionId], references: [id])
+  asignacionesApoyo AsignacionApoyo[]
 
   @@map("personal_apoyo")
+}
+
+model AsignacionApoyo {
+  id               Int    @id @default(autoincrement())
+  personalId       Int    @map("id_personal")
+  disciplinaId     Int   @map("id_disciplina")
+  categoriaId      Int   @map("id_categoria")
+  rol              String? 
+  creadoEn         DateTime @default(now()) @map("creado_en")
+
+  personal PersonalApoyo @relation(fields: [personalId], references: [id])
+  disciplina Disciplina? @relation(fields: [disciplinaId], references: [id])
+  categoria  Categoria?  @relation(fields: [categoriaId], references: [id])
+
+  @@map("asignacion_apoyo")
 }
 
 

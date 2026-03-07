@@ -24,8 +24,7 @@ export async function POST(req: Request) {
     const data: any = {
       disciplinaId: Number(disciplinaId),
       nombreEquipo: String(nombreEquipo),
-      folioRegistro: folioRegistro ?? "",
-      // no poner institucionId aquí si es undefined
+      folioRegistro: folioRegistro || null,
     };
     if (institucionId != null) data.institucionId = Number(institucionId);
 

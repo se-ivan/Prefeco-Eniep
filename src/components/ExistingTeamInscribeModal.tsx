@@ -12,7 +12,13 @@ type Props = {
   maxIntegrantes?: number;
 };
 
-export default function ExistingTeamInscribeModal({ open, onClose, equipoId, onSuccess, maxIntegrantes }: Props) {
+export default function ExistingTeamInscribeModal({
+  open,
+  onClose,
+  equipoId,
+  onSuccess,
+  maxIntegrantes,
+}: Props) {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [existing, setExisting] = useState<SeleccionParticipante[]>([]);
   const [loadingExisting, setLoadingExisting] = useState(false);
@@ -26,35 +32,48 @@ export default function ExistingTeamInscribeModal({ open, onClose, equipoId, onS
       .then((res) => res.json())
       .then((data: SeleccionParticipante[]) => {
         if (!active) return;
-        setExisting(data);
+        // Aseguramos que la forma sea la esperada (participantId, nombreCompleto, matricula, ...)
+        setExisting(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Error cargando participantes del equipo:", err);
         setExisting([]);
       })
-      .finally(() => { if (active) setLoadingExisting(false); });
-    return () => { active = false; };
+      .finally(() => {
+        if (active) setLoadingExisting(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [open, equipoId]);
 
   async function handleConfirmSeleccion(seleccion: SeleccionParticipante[]) {
     if (!equipoId) return;
     setError(null);
+
     try {
-      // Enviamos solo los nuevos participantes
-      const nuevos = seleccion.map(s => ({ participanteId: s.participanteId, esTitular: !!s.esTitular }));
+      // Enviamos solo los nuevos participantes en el formato que el servidor espera:
+      // { participantes: [{ participanteId }, ...] }
+      const participantesPayload = seleccion.map((s) => ({
+        participanteId: s.participanteId,
+      }));
+
       const res = await fetch(`/api/equipos/${equipoId}/inscripciones`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantes: nuevos }),
+        body: JSON.stringify({ participantes: participantesPayload }),
       });
+
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error || json?.message || `Error ${res.status}`);
+        throw new Error(json?.error ?? json?.message ?? `HTTP ${res.status}`);
       }
+
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
-      console.error(err);
+      console.error("Error inscribiendo participantes en equipo existente:", err);
       setError(err?.message || "Error al inscribir participantes");
     }
   }
@@ -73,25 +92,28 @@ export default function ExistingTeamInscribeModal({ open, onClose, equipoId, onS
 
           <div>
             <p className="text-sm text-slate-600 mb-3">Participantes actualmente en el equipo: {existing.length}</p>
+
             {loadingExisting ? (
               <div className="text-sm text-slate-500">Cargando...</div>
             ) : (
               <ul className="text-sm mb-3 space-y-2 max-h-40 overflow-y-auto">
-                {existing.map(p => (
+                {existing.length === 0 && <li className="text-sm text-slate-500">No hay participantes en este equipo.</li>}
+                {existing.map((p) => (
                   <li key={p.participanteId} className="p-2 border rounded">
                     <div className="font-medium">{p.nombreCompleto}</div>
                     <div className="text-xs text-slate-500">Matrícula: {p.matricula ?? "—"}</div>
-                    <div className="text-xs text-slate-500">Titular: {p.esTitular ? "Sí" : "No"}</div>
+                    {/* ya no mostramos "Titular" porque ese campo no existe */}
                   </li>
                 ))}
-                {existing.length === 0 && <li className="text-sm text-slate-500">No hay participantes en este equipo.</li>}
               </ul>
             )}
 
             {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
 
             <div className="flex gap-2">
-              <button onClick={() => setSelectorOpen(true)} className="px-3 py-2 bg-blue-600 text-white rounded">Seleccionar nuevos participantes</button>
+              <button onClick={() => setSelectorOpen(true)} className="px-3 py-2 bg-blue-600 text-white rounded">
+                Seleccionar nuevos participantes
+              </button>
               <div className="flex-1 text-sm text-slate-500">{maxIntegrantes ? `Máx integrantes: ${maxIntegrantes}` : ""}</div>
             </div>
           </div>

@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
   const idNum = Number(id);
   if (!Number.isInteger(idNum)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
 
