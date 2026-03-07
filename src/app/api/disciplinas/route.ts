@@ -22,6 +22,7 @@ export async function GET() {
           select: {
             equipos: true,
             inscripciones: true,
+            asignacionesApoyo: true,
           },
         },
       },
@@ -39,6 +40,7 @@ export async function GET() {
       categorias: d.categorias ?? [],
       totalEquipos: d._count?.equipos ?? 0,
       totalParticipantes: d._count?.inscripciones ?? 0,
+      totalApoyos: d._count?.asignacionesApoyo ?? 0,
     }));
 
     return NextResponse.json(mapped);
@@ -111,10 +113,14 @@ export async function POST(req: Request) {
     }
 
     const existe = await prisma.disciplina.findFirst({
-      where: { nombre: { equals: nombre.trim(), mode: "insensitive" } },
+      where: {
+        nombre: { equals: nombre.trim(), mode: "insensitive" },
+        modalidad: modalidad as any,
+        rama: rama as any,
+      },
     });
     if (existe) {
-      return NextResponse.json({ error: "Ya existe una disciplina con ese nombre" }, { status: 409 });
+      return NextResponse.json({ error: "Esta disciplina ya existe" }, { status: 409 });
     }
 
     const created = await prisma.$transaction(async (tx) => {

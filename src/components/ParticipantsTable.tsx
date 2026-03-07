@@ -7,13 +7,14 @@ type Equipo = {
   id: number;
   nombreEquipo: string;
   institucion: { id: number; nombre: string };
-  // aceptar null o undefined para evitar incompatibilidades con otros módulos
   categoria?: { id: number; nombre: string } | null | undefined;
   integrantesCount?: number | null;
 };
 
 type ParticipanteRow = {
   id: number;
+  inscripcionId?: number | null;
+  asignacionId?: number | null;
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno?: string | null;
@@ -28,10 +29,11 @@ type Props = {
   teams: Equipo[];
   individuals: ParticipanteRow[];
   apoyos: ParticipanteRow[];
-  // más flexible: acepta cualquier forma de equipo (evita choque de tipos)
+  selectedCategoriaId?: number | "";
   onViewTeam: (t: any) => void;
   onDeleteTeam: (id: number) => void;
-  onDeleteParticipant: (id: number) => void;
+  onDeleteParticipant: (inscripcionId: number) => void;
+  onDeleteApoyo: (asignacionId: number) => void;
 };
 
 export default function ParticipantsTable({
@@ -41,22 +43,35 @@ export default function ParticipantsTable({
   teams,
   individuals,
   apoyos,
+  selectedCategoriaId,
   onViewTeam,
   onDeleteTeam,
   onDeleteParticipant,
+  onDeleteApoyo,
 }: Props) {
-  // decide qué mostrar
+  // Filtrar por categoría si está seleccionada
+  const filteredTeams = selectedCategoriaId
+    ? teams.filter((t) => t.categoria?.id === selectedCategoriaId)
+    : teams;
+
+  const filteredIndividuals = selectedCategoriaId
+    ? individuals.filter((p) => p.categoria?.id === selectedCategoriaId)
+    : individuals;
+
+  const filteredApoyos = selectedCategoriaId
+    ? apoyos.filter((p) => p.categoria?.id === selectedCategoriaId)
+    : apoyos;
   if (loading) {
     return <div className="p-6 bg-white rounded-xl border text-center">Cargando...</div>;
   }
 
-  if (entityType === "ALUMNO" && (modalidad === "EQUIPO" || modalidad === "INDIVIDUAL")) {
-    // equipos view (if modalidad empty we assume teams were loaded)
+  if (entityType === "ALUMNO" && modalidad === "EQUIPO") {
+    // equipos view
     return (
       <div className="bg-white rounded-xl border p-4">
         <h3 className="font-semibold mb-3">Equipos</h3>
         <div className="max-h-[52vh] overflow-y-auto">
-          {teams.length === 0 ? (
+          {filteredTeams.length === 0 ? (
             <div className="py-6 text-center text-sm text-gray-500">No hay equipos.</div>
           ) : (
             <table className="min-w-full text-sm">
@@ -70,7 +85,7 @@ export default function ParticipantsTable({
                 </tr>
               </thead>
               <tbody>
-                {teams.map((t) => (
+                {filteredTeams.map((t) => (
                   <tr key={t.id} className="border-t">
                     <td className="px-3 py-3 font-medium">{t.nombreEquipo}</td>
                     <td className="px-3 py-3">{t.institucion?.nombre ?? "—"}</td>
@@ -92,13 +107,13 @@ export default function ParticipantsTable({
     );
   }
 
-  // individuales (alumnos)
+  // individuales
   if (entityType === "ALUMNO" && modalidad === "INDIVIDUAL") {
     return (
       <div className="bg-white rounded-xl border p-4">
         <h3 className="font-semibold mb-3">Participantes individuales</h3>
         <div className="max-h-[52vh] overflow-y-auto">
-          {individuals.length === 0 ? (
+          {filteredIndividuals.length === 0 ? (
             <div className="py-6 text-center text-sm text-gray-500">No hay participantes individuales.</div>
           ) : (
             <table className="min-w-full text-sm">
@@ -111,13 +126,18 @@ export default function ParticipantsTable({
                 </tr>
               </thead>
               <tbody>
-                {individuals.map((p) => (
+                {filteredIndividuals.map((p) => (
                   <tr key={p.id} className="border-t">
                     <td className="px-3 py-3">{`${p.nombres} ${p.apellidoPaterno} ${p.apellidoMaterno ?? ""}`}</td>
                     <td className="px-3 py-3">{p.institucion?.nombre ?? "—"}</td>
                     <td className="px-3 py-3">{p.categoria?.nombre ?? "—"}</td>
                     <td className="px-3 py-3 text-right">
-                      <button onClick={() => onDeleteParticipant(p.id)} className="px-2 py-1 text-xs border rounded text-red-600">Eliminar</button>
+                      <button
+                        onClick={() => onDeleteParticipant(p.inscripcionId ?? p.id)}
+                        className="px-2 py-1 text-xs border rounded text-red-600"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -134,7 +154,7 @@ export default function ParticipantsTable({
     <div className="bg-white rounded-xl border p-4">
       <h3 className="font-semibold mb-3">Personal de apoyo</h3>
       <div className="max-h-[52vh] overflow-y-auto">
-        {apoyos.length === 0 ? (
+        {filteredApoyos.length === 0 ? (
           <div className="py-6 text-center text-sm text-gray-500">No hay personal de apoyo registrado.</div>
         ) : (
           <table className="min-w-full text-sm">
@@ -147,13 +167,18 @@ export default function ParticipantsTable({
               </tr>
             </thead>
             <tbody>
-              {apoyos.map((p) => (
+              {filteredApoyos.map((p) => (
                 <tr key={p.id} className="border-t">
                   <td className="px-3 py-3">{`${p.nombres} ${p.apellidoPaterno} ${p.apellidoMaterno ?? ""}`}</td>
                   <td className="px-3 py-3">{p.institucion?.nombre ?? "—"}</td>
                   <td className="px-3 py-3">{p.categoria?.nombre ?? "—"}</td>
                   <td className="px-3 py-3 text-right">
-                    <button onClick={() => onDeleteParticipant(p.id)} className="px-2 py-1 text-xs border rounded text-red-600">Eliminar</button>
+                    <button
+                      onClick={() => onDeleteApoyo(p.asignacionId ?? p.id)}
+                      className="px-2 py-1 text-xs border rounded text-red-600"
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}

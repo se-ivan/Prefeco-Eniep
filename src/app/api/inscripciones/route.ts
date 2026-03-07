@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     } = body ?? {};
 
     if (!disciplinaId) return NextResponse.json({ error: "disciplinaId requerido" }, { status: 400 });
+    if (!categoriaId) return NextResponse.json({ error: "categoriaId requerido" }, { status: 400 });
     if (!modalidad || (modalidad !== "EQUIPO" && modalidad !== "INDIVIDUAL")) {
       return NextResponse.json({ error: "modalidad inválida (EQUIPO|INDIVIDUAL)" }, { status: 400 });
     }
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
         // validate participants exist & belong to same institucion
         const fetchedParts = await tx.participante.findMany({
           where: { id: { in: uniqueParticipantIds } },
-          select: { id: true, institucionId: true, fechaNacimiento: true, genero: true },
+          select: { id: true, nombres: true, institucionId: true, fechaNacimiento: true, genero: true },
         });
         if (fetchedParts.length !== uniqueParticipantIds.length) {
           const foundIds = new Set(fetchedParts.map(p => p.id));
@@ -100,30 +101,34 @@ export async function POST(req: Request) {
 
         for (const p of fetchedParts) {
           const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
-          if (edad >= 20) throw { status: 409, message: `Participante ${p.id} tiene ${edad} años (>=20)` };
+          if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
 
           if (disciplina.rama !== "MIXTO" && disciplina.rama !== "UNICA") {
             if (disciplina.rama === "VARONIL" && p.genero !== "MASCULINO") {
-              throw { status: 409, message: `Participante ${p.id} no cumple la rama VARONIL` };
+              throw { status: 409, message: `Uno o mas participantes no cumple la rama VARONIL` };
             }
             if (disciplina.rama === "FEMENIL" && p.genero !== "FEMENINO") {
-              throw { status: 409, message: `Participante ${p.id} no cumple la rama FEMENIL` };
+              throw { status: 409, message: `Uno o mas participantes no cumple la rama FEMENIL` };
             }
           }
 
           const already = await tx.inscripcion.findFirst({
-            where: { participanteId: p.id, disciplinaId: Number(disciplinaId) },
+            where: {
+              participanteId: p.id,
+              disciplinaId: Number(disciplinaId),
+              categoriaId: Number(categoriaId),
+            },
           });
-          if (already) throw { status: 409, message: `Participante ${p.id} ya inscrito en esta disciplina` };
+          if (already) throw { status: 409, message: `${p.nombres} ya esta inscrito en esta disciplina y categoria` };
 
           const inscripcionesActuales = await tx.inscripcion.findMany({
             where: { participanteId: p.id },
-            select: { disciplinaId: true },
+            select: { disciplina: { select: { nombre: true } } },
           });
-          const disciplinasSet = new Set<number>(inscripcionesActuales.map(i => Number(i.disciplinaId)));
-          disciplinasSet.add(Number(disciplinaId));
+          const disciplinasSet = new Set<string>(inscripcionesActuales.map(i => i.disciplina.nombre));
+          disciplinasSet.add(disciplina.nombre);
           if (disciplinasSet.size > 2) {
-            throw { status: 409, message: `Participante ${p.id} excede el máximo de 2 disciplinas distintas` };
+            throw { status: 409, message: `${p.nombres} excede el maximo de 2 disciplinas distintas` };
           }
         }
 
@@ -141,11 +146,11 @@ export async function POST(req: Request) {
           participanteId: Number(p.participanteId),
           equipoId: equipo.id,
           disciplinaId: Number(disciplinaId),
-          categoriaId: categoriaId ? Number(categoriaId) : undefined,
+          categoriaId: Number(categoriaId),
           fechaRegistro: new Date(),
         }));
 
-await tx.inscripcion.createMany({ data: insData });
+        await tx.inscripcion.createMany({ data: insData });
 
         if (personalIds && personalIds.length > 0) {
           for (const pid of personalIds) {
@@ -153,7 +158,7 @@ await tx.inscripcion.createMany({ data: insData });
               data: {
                 personalId: Number(pid),
                 disciplinaId: Number(disciplinaId),
-                categoriaId: categoriaId ? Number(categoriaId) : undefined,
+                categoriaId: Number(categoriaId),
                 // rol left undefined unless provided in request payload; no equipoId (not in schema). // CHANGED
               },
             });
@@ -177,7 +182,7 @@ await tx.inscripcion.createMany({ data: insData });
 
         const fetchedParts = await tx.participante.findMany({
           where: { id: { in: uniqueParticipantIds } },
-          select: { id: true, institucionId: true, fechaNacimiento: true, genero: true },
+          select: { id: true, nombres: true, institucionId: true, fechaNacimiento: true, genero: true },
         });
         if (fetchedParts.length !== uniqueParticipantIds.length) {
           const foundIds = new Set(fetchedParts.map(p => p.id));
@@ -187,33 +192,48 @@ await tx.inscripcion.createMany({ data: insData });
 
         let nuevosPorInst = 0;
         for (const p of fetchedParts) {
-          if (Number(p.institucionId) === Number(institucionId)) nuevosPorInst++;
+          // Verificar si ya existe alguna inscripción en esta disciplina (cualquier categoría)
+          const yaInscritoEnDisciplina = await tx.inscripcion.findFirst({
+            where: {
+              participanteId: p.id,
+              disciplinaId: Number(disciplinaId),
+            },
+          });
+
+          // Solo contar como nuevo si no tiene inscripción previa en esta disciplina Y es de esta institución
+          if (!yaInscritoEnDisciplina && Number(p.institucionId) === Number(institucionId)) {
+            nuevosPorInst++;
+          }
 
           const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
-          if (edad >= 20) throw { status: 409, message: `Participante ${p.id} tiene ${edad} años (>=20)` };
+          if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
 
           if (disciplina.rama !== "MIXTO" && disciplina.rama !== "UNICA") {
             if (disciplina.rama === "VARONIL" && p.genero !== "MASCULINO") {
-              throw { status: 409, message: `Participante ${p.id} no cumple la rama VARONIL` };
+              throw { status: 409, message: `${p.nombres} no cumple la rama VARONIL` };
             }
             if (disciplina.rama === "FEMENIL" && p.genero !== "FEMENINO") {
-              throw { status: 409, message: `Participante ${p.id} no cumple la rama FEMENIL` };
+              throw { status: 409, message: `${p.nombres} no cumple la rama FEMENIL` };
             }
           }
 
           const already = await tx.inscripcion.findFirst({
-            where: { participanteId: p.id, disciplinaId: Number(disciplinaId) },
+            where: {
+              participanteId: p.id,
+              disciplinaId: Number(disciplinaId),
+              categoriaId: Number(categoriaId),
+            },
           });
-          if (already) throw { status: 409, message: `Participante ${p.id} ya inscrito en esta disciplina` };
+          if (already) throw { status: 409, message: `${p.nombres} ya esta inscrito en esta disciplina y categoria` };
 
           const inscripcionesActuales = await tx.inscripcion.findMany({
             where: { participanteId: p.id },
-            select: { disciplinaId: true },
+            select: { disciplina: { select: { nombre: true } } },
           });
-          const disciplinasSet = new Set<number>(inscripcionesActuales.map(i => Number(i.disciplinaId)));
-          disciplinasSet.add(Number(disciplinaId));
+          const disciplinasSet = new Set<string>(inscripcionesActuales.map(i => i.disciplina.nombre));
+          disciplinasSet.add(disciplina.nombre);
           if (disciplinasSet.size > 2) {
-            throw { status: 409, message: `Participante ${p.id} excede el máximo de 2 disciplinas distintas` };
+            throw { status: 409, message: `${p.nombres} excede el maximo de 2 disciplinas distintas` };
           }
         }
 
@@ -224,9 +244,8 @@ await tx.inscripcion.createMany({ data: insData });
         const now = new Date();
         const insData = fetchedParts.map(p => ({
           participanteId: p.id,
-          equipoId: undefined,
           disciplinaId: Number(disciplinaId),
-          categoriaId: categoriaId ? Number(categoriaId) : undefined,
+          categoriaId: Number(categoriaId),
           fechaRegistro: new Date(),
         }));
 
@@ -238,7 +257,7 @@ await tx.inscripcion.createMany({ data: insData });
               data: {
                 personalId: Number(pid),
                 disciplinaId: Number(disciplinaId),
-                categoriaId: categoriaId ? Number(categoriaId) : undefined,
+                categoriaId: Number(categoriaId),
               },
             });
           }
@@ -254,8 +273,11 @@ await tx.inscripcion.createMany({ data: insData });
   } catch (err: any) {
     console.error("POST /api/inscripciones error:", err);
     if (err?.status) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+      const response = { error: err.message };
+      console.log("Devolviendo error response al frontend:", JSON.stringify(response), "status:", err.status);
+      return NextResponse.json(response, { status: err.status });
     }
+    console.log("Devolviendo error genérico (500):", { error: "Error interno del servidor" });
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

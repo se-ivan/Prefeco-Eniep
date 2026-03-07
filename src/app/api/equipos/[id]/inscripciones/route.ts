@@ -9,10 +9,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   try {
     const body = await req.json();
-    const participantesRaw = Array.isArray(body?.participantes) ? body.participantes : null;
-    if (!participantesRaw || participantesRaw.length === 0) {
+      const { participantes: participantesRaw, categoriaId } = body ?? {};
+    
+      if (!Array.isArray(participantesRaw) || participantesRaw.length === 0) {
       return NextResponse.json({ error: "participants array is required" }, { status: 400 });
     }
+    
+      if (!categoriaId) {
+        return NextResponse.json({ error: "categoriaId is required" }, { status: 400 });
+      }
 
     // transaction: create many inscripciones only if all checks pass
     const created = await prisma.$transaction(async (tx) => {
@@ -31,23 +36,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       );
 
       // quick capacity check
-      if (existingCount + participantIds.length > equipo.disciplina.maxIntegrantes) {
+        const maxIntegrantes = equipo.disciplina.maxIntegrantes ?? Infinity;
+        if (existingCount + participantIds.length > maxIntegrantes) {
         throw { status: 409, message: "Capacidad del equipo excedida" };
       }
 
       // validate each participante
       for (const pid of participantIds) {
-        const participante = await tx.participante.findUnique({ where: { id: pid } });
-        if (!participante) throw { status: 404, message: `Participante ${pid} no encontrado` };
+        const participante = await tx.participante.findUnique({
+          where: { id: pid },
+          select: { id: true, nombres: true },
+        });
+        if (!participante) throw { status: 404, message: "Participante no encontrado" };
 
-        // check if already in same discipline
+        // check if already in same discipline and category
         const already = await tx.inscripcion.findFirst({
           where: {
             participanteId: pid,
             equipo: { disciplinaId: equipo.disciplinaId },
+            categoriaId: Number(categoriaId),
           },
         });
-        if (already) throw { status: 409, message: `Participante ${pid} ya inscrito en la disciplina` };
+        if (already) throw { status: 409, message: `${participante.nombres} ya esta inscrito en esta disciplina y categoria` };
       }
 
       // all validations passed -> create inscripciones
@@ -56,8 +66,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         participanteId: Number(p.participanteId),
         equipoId: equipoId,
         disciplinaId: equipo.disciplinaId,
+        categoriaId: Number(categoriaId),
         fechaRegistro: now,
-        esTitular: Boolean(p.esTitular ?? false),
       }));
 
       // createMany is faster; createMany returns count only

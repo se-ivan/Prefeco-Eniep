@@ -76,7 +76,6 @@ export default function NuevoParticipanteModal({
   const [institucionId, setInstitucionId] = useState<number | "">("");
   const [tipo, setTipo] = useState<"ALUMNO" | "APOYO" | "">("");
   const [categoriaId, setCategoriaId] = useState<number | "">("");
-  const [nombreEquipo, setNombreEquipo] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -89,7 +88,6 @@ export default function NuevoParticipanteModal({
       setCategoriaId("");
       setTipo("");
       setInstitucionId("");
-      setNombreEquipo("");
       initialRef.current = null;
     }
   }, [open]);
@@ -182,6 +180,43 @@ export default function NuevoParticipanteModal({
     setSeleccionados((prev) => prev.filter((x) => x.participanteId !== id));
   }
 
+  function pickMessageFromUnknown(input: unknown): string | null {
+    if (!input) return null;
+    if (typeof input === "string") return input.trim() || null;
+    if (typeof input !== "object") return null;
+
+    const obj = input as Record<string, unknown>;
+    const errorVal = obj.error;
+    const msgVal = obj.message;
+
+    if (typeof errorVal === "string" && errorVal.trim()) return errorVal;
+    if (typeof msgVal === "string" && msgVal.trim()) return msgVal;
+
+    if (errorVal && typeof errorVal === "object") {
+      const nested = errorVal as Record<string, unknown>;
+      if (typeof nested.message === "string" && nested.message.trim()) return nested.message;
+    }
+
+    return null;
+  }
+
+  async function getApiErrorMessage(res: Response, fallback: string) {
+    try {
+      const parsed = await res.json();
+      
+      if (typeof parsed?.error === "string" && parsed.error.trim()) {
+        return parsed.error;
+      }
+      if (typeof parsed?.message === "string" && parsed.message.trim()) {
+        return parsed.message;
+      }
+      
+      return `${fallback} (HTTP ${res.status})`;
+    } catch (err) {
+      return `${fallback} (HTTP ${res.status})`;
+    }
+  }
+
   async function confirmarAltas() {
     setSearchError(null);
     if (!tipo || (tipo === "ALUMNO" && !institucionId) || !categoriaId || seleccionados.length === 0) {
@@ -192,6 +227,11 @@ export default function NuevoParticipanteModal({
     setSubmitting(true);
     try {
       if (tipo === "ALUMNO") {
+        const institucionSeleccionada = instituciones.find(
+          (ins) => ins.id === Number(institucionId)
+        );
+        const nombreInstitucion = institucionSeleccionada?.nombre?.trim() || String(institucionId);
+
         const payload: any = {
           disciplinaId: Number(disciplina.id),
           modalidad: disciplina.modalidad,
@@ -200,16 +240,21 @@ export default function NuevoParticipanteModal({
           personalIds: [],
           participantes: seleccionados.map((s) => ({ participanteId: s.participanteId })),
         };
-        if (disciplina.modalidad === "EQUIPO") payload.nombreEquipo = nombreEquipo || `Equipo-${Date.now()}`;
+        if (disciplina.modalidad === "EQUIPO") {
+          payload.nombreEquipo = `Equipo - ${nombreInstitucion}`;
+        }
         const res = await fetch("/api/inscripciones", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error("Error en la inscripción");
+        if (!res.ok) {
+          const msg = await getApiErrorMessage(res, "Error en la inscripción");
+          throw new Error(msg);
+        }
       } else {
         for (const s of seleccionados) {
-          await fetch("/api/asignacion-apoyo", {
+          const res = await fetch("/api/asignacion-apoyo", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -218,12 +263,20 @@ export default function NuevoParticipanteModal({
               categoriaId: Number(categoriaId),
             }),
           });
+          if (!res.ok) {
+            const msg = await getApiErrorMessage(res, "Error al asignar personal de apoyo");
+            throw new Error(msg);
+          }
         }
       }
       await onSuccess();
       onClose();
     } catch (err: any) {
-      setSearchError(err?.message ?? "Error al registrar");
+      const msg =
+        (typeof err?.message === "string" && err.message) ||
+        (typeof err === "string" && err) ||
+        "Error al registrar";
+      setSearchError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -301,7 +354,7 @@ export default function NuevoParticipanteModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Categoría</label>
                   <select
@@ -313,17 +366,6 @@ export default function NuevoParticipanteModal({
                     {(disciplina.categorias ?? []).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
                 </div>
-                {disciplina.modalidad === "EQUIPO" && tipo === "ALUMNO" && (
-                  <div>
-                    <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Nombre del equipo</label>
-                    <input
-                      className="w-full border-gray-200 rounded-lg p-2 text-sm outline-none"
-                      value={nombreEquipo}
-                      onChange={(e) => setNombreEquipo(e.target.value)}
-                      placeholder="Ej. Los Jaguares"
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="relative">
