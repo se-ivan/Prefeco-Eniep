@@ -1,7 +1,7 @@
 // src/components/TeamsDrawer.tsx
 "use client";
 import React, { useState } from "react";
-import ExistingTeamInscribeModal from "./ExistingTeamInscribeModal";
+import TeamMembersModal from "./TeamMembersModal";
 
 type Equipo = {
   id: number;
@@ -14,13 +14,12 @@ type Props = {
   onClose: () => void;
   disciplinaNombre?: string;
   equipos?: Equipo[];
-  // opcional: pasar maxIntegrantes por disciplina si lo sabes
   maxIntegrantes?: number;
 };
 
-export default function TeamsDrawer({ open, onClose, disciplinaNombre, equipos = [], maxIntegrantes }: Props) {
+export default function TeamsDrawer({ open, onClose, disciplinaNombre, equipos = [] }: Props) {
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<Equipo | null>(null);
-  const [modalInscribirOpen, setModalInscribirOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
 
   if (!open) return null;
 
@@ -45,9 +44,9 @@ export default function TeamsDrawer({ open, onClose, disciplinaNombre, equipos =
                 <div className="flex flex-col items-end gap-2">
                   <button
                     className="text-sm text-blue-600"
-                    onClick={() => { setEquipoSeleccionado(e); setModalInscribirOpen(true); }}
+                    onClick={() => { setEquipoSeleccionado(e); setMembersOpen(true); }}
                   >
-                    Inscribir participantes
+                    Ver integrantes
                   </button>
                 </div>
               </li>
@@ -56,14 +55,10 @@ export default function TeamsDrawer({ open, onClose, disciplinaNombre, equipos =
         </aside>
       </div>
 
-      <ExistingTeamInscribeModal
-        open={modalInscribirOpen}
-        onClose={() => { setModalInscribirOpen(false); setEquipoSeleccionado(null); }}
+      <TeamMembersModal
+        open={membersOpen}
+        onClose={() => { setMembersOpen(false); setEquipoSeleccionado(null); }}
         equipoId={equipoSeleccionado?.id ?? null}
-        onSuccess={() => {
-          // opcional: refrescar lista de equipos o inscripciones en la página principal
-        }}
-        maxIntegrantes={maxIntegrantes}
       />
     </>
   );

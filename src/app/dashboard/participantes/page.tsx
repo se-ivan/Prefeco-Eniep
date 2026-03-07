@@ -285,7 +285,7 @@ export default function RegistrarAlumnoPage() {
             })}
 
             {/* Líneas conectoras grises detrás de los círculos */}
-            <div className="absolute top-6 left-[10%] right-[10%] h-[2px] bg-gray-100 -z-0" />
+            <div className="absolute top-6 left-[10%] right-[10%] h-0.5 bg-gray-100 z-0" />
           </div>
 
           {/* Barra de Progreso Inferior (La línea gruesa bajo el stepper) */}

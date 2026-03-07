@@ -35,7 +35,7 @@ export default function DisciplinasPage() {
   const [disciplinaSeleccionada, setDisciplinaSeleccionada] =
     useState<Disciplina | null>(null);
 
-  // ya no usamos TeamModal; usamos NewParticipantModal
+
   const [nuevoParticipanteOpen, setNuevoParticipanteOpen] = useState(false);
 
   const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
