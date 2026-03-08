@@ -9,7 +9,6 @@ import {
   Search,
   Hash,
   Loader2,
-  CalendarDays,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -28,20 +27,8 @@ type Institucion = {
   urlLogo: string | null;
 };
 
-function formatDate(date: Date) {
-  const str = date.toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 export default function ListaInstitucionesPage() {
-  const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones", fetcher);
+  const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones");
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleDelete = async (id: number) => {
@@ -64,34 +51,8 @@ export default function ListaInstitucionesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFFF8]">
-
-      <header className="border-b border-slate-200/60 bg-white border-dashed">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-[17px] font-bold text-[#0b697d]">
-              Instituciones Registradas
-            </h1>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Directorio de la Red PREFECO
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 rounded-md bg-[#0b697d]/1 px-3 py-1.5 text-[13px] font-medium text-[#0b697d]">
-              <CalendarDays className="h-4 w-4 opacity-70" />
-              <span>{formatDate(new Date())}</span>
-            </div>
-            <Link href="/dashboard/instituciones/registro">
-              <Button className="h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
-                <Plus className="h-4 w-4" />
-                Registrar
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="min-h-screen ">
+      <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:max-w-md">
@@ -103,8 +64,16 @@ export default function ListaInstitucionesPage() {
               className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
             />
           </div>
-          <div className="bg-[#0b697d]/5  px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] w-full sm:w-auto text-center">
-            Total Registrados: {instituciones.length}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="bg-[#0b697d]/5 px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] text-center flex-1 sm:flex-none">
+              Total Registrados: {instituciones.length}
+            </div>
+            <Link href="/dashboard/instituciones/registro" className="flex-1 sm:flex-none">
+              <Button className="w-full h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
+                <Plus className="h-4 w-4" />
+                Registrar
+              </Button>
+            </Link>
           </div>
         </div>
 

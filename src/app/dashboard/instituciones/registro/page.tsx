@@ -180,25 +180,9 @@ export default function InstitucionesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFF8]">
-      {/* ── Top Bar Tipo Imagen ── */}
-      <header className="border-b border-slate-200/60 bg-white border-dashed">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-[17px] font-bold text-slate-800">Registrar Institución</h1>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Plataforma de Gestión Deportiva y Cultural
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-md bg-teal-50 px-3 py-1.5 text-[13px] font-medium text-teal-800">
-            <CalendarDays className="h-4 w-4 opacity-70" />
-            <span>{formatDate(new Date())}</span>
-          </div>
-        </div>
-      </header>
-
+    <div className="container mx-auto">
       {/* ── Contenido Principal ── */}
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-2 sm:px-6">
         <div className="rounded-2xl border border-slate-100 bg-white p-8 sm:p-10 shadow-xl">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* ── Título Tarjeta ── */}

@@ -6,7 +6,6 @@ import {
   Users,
   Search,
   Loader2,
-  CalendarDays,
   Plus,
   Trash2,
   Building2,
@@ -41,16 +40,6 @@ type Participante = {
   institucion: Institucion;
 };
 
-function formatDate(date: Date) {
-  const str = date.toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 export default function ListaParticipantesPage() {
   const { data: participantes = [], isLoading, mutate } = useSWR<Participante[]>("/api/participantes");
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,29 +67,8 @@ export default function ListaParticipantesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFFF8]">
-      <header className="border-b border-slate-200/60 bg-white border-dashed">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-[17px] font-bold text-[#0b697d]">
-              Participantes Registrados
-            </h1>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Directorio de Estudiantes PREFECO
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/participantes">
-              <Button className="h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
-                <Plus className="h-4 w-4" />
-                Registrar
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="min-h-screen">
+      <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:max-w-md">
@@ -112,8 +80,16 @@ export default function ListaParticipantesPage() {
               className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
             />
           </div>
-          <div className="bg-[#0b697d]/5 px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] w-full sm:w-auto text-center border border-[#0b697d]/10">
-            Total Registrados: {participantes.length}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="bg-[#0b697d]/5 px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] text-center border border-[#0b697d]/10 flex-1 sm:flex-none">
+              Total Registrados: {participantes.length}
+            </div>
+            <Link href="/dashboard/participantes" className="flex-1 sm:flex-none">
+              <Button className="w-full h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
+                <Plus className="h-4 w-4" />
+                Registrar
+              </Button>
+            </Link>
           </div>
         </div>
 
