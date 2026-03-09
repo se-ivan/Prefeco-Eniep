@@ -53,6 +53,7 @@ export default function ParticipantesPage() {
   
   // Filtro de categoría (default: todas)
   const [selectedCategoriaId, setSelectedCategoriaId] = useState<number | "">("");
+  const [nameSearch, setNameSearch] = useState("");
 
   const [rowsTeams, setRowsTeams] = useState<Equipo[]>([]);
   const [rowsIndividuals, setRowsIndividuals] = useState<ParticipanteRow[]>([]);
@@ -242,6 +243,29 @@ export default function ParticipantesPage() {
   // instituciones + opción vacía
   const institucionOptions = [{ id: 0, nombre: "(todas)" }, ...instituciones];
 
+  // Búsqueda local por nombre completo, sobre los resultados ya filtrados por los selectores.
+  const normalizedNameSearch = nameSearch.trim().toLowerCase();
+
+  const rowsIndividualsFilteredByName = useMemo(() => {
+    if (!normalizedNameSearch) return rowsIndividuals;
+    return rowsIndividuals.filter((row) => {
+      const fullName = `${row.nombres} ${row.apellidoPaterno} ${row.apellidoMaterno ?? ""}`
+        .trim()
+        .toLowerCase();
+      return fullName.includes(normalizedNameSearch);
+    });
+  }, [rowsIndividuals, normalizedNameSearch]);
+
+  const rowsApoyoFilteredByName = useMemo(() => {
+    if (!normalizedNameSearch) return rowsApoyo;
+    return rowsApoyo.filter((row) => {
+      const fullName = `${row.nombres} ${row.apellidoPaterno} ${row.apellidoMaterno ?? ""}`
+        .trim()
+        .toLowerCase();
+      return fullName.includes(normalizedNameSearch);
+    });
+  }, [rowsApoyo, normalizedNameSearch]);
+
   return (
     <main className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -325,13 +349,27 @@ export default function ParticipantesPage() {
 
       {/* Tabla */}
       <div className="space-y-4">
+        <div className="bg-white rounded-xl border p-4">
+          <label htmlFor="busqueda-nombre" className="block text-xs text-gray-500 mb-1">
+            Buscar por nombre
+          </label>
+          <input
+            id="busqueda-nombre"
+            type="text"
+            value={nameSearch}
+            onChange={(e) => setNameSearch(e.target.value)}
+            placeholder={entityType === "ALUMNO" ? "Ej. Juan Perez" : "Ej. Maria Lopez"}
+            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
         <ParticipantsTable
           loading={loading}
           modalidad={disciplina?.modalidad ?? undefined}
           entityType={entityType}
           teams={rowsTeams}
-          individuals={rowsIndividuals}
-          apoyos={rowsApoyo}
+          individuals={rowsIndividualsFilteredByName}
+          apoyos={rowsApoyoFilteredByName}
           selectedCategoriaId={selectedCategoriaId}
           onViewTeam={handleOpenTeam}
           onDeleteTeam={(id) => handleDeleteTeamLocally(id)}

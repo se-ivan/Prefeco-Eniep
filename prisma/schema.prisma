@@ -98,6 +98,7 @@ enum TipoDisciplina {
   DEPORTIVA
   CULTURAL
   CIVICA
+  ACADEMICA
 }
 
 enum Modalidad {

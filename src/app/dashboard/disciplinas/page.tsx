@@ -46,6 +46,7 @@ export default function DisciplinasPage() {
   const [filtroTipo, setFiltroTipo] = useState<string>("TODAS");
   const [filtroRama, setFiltroRama] = useState<string>("TODAS");
   const [filtroModalidad, setFiltroModalidad] = useState<string>("TODAS");
+  const [busquedaNombre, setBusquedaNombre] = useState<string>("");
 
   // Determinar qué ramas mostrar según la modalidad
   const ramasDisponibles = (() => {
@@ -99,6 +100,11 @@ export default function DisciplinasPage() {
     if (filtroTipo !== "TODAS" && d.tipo !== filtroTipo) return false;
     if (filtroRama !== "TODAS" && d.rama !== filtroRama) return false;
     if (filtroModalidad !== "TODAS" && d.modalidad !== filtroModalidad) return false;
+    if (busquedaNombre.trim()) {
+      const nombre = d.nombre?.toLowerCase() ?? "";
+      const termino = busquedaNombre.trim().toLowerCase();
+      if (!nombre.includes(termino)) return false;
+    }
     return true;
   });
 
@@ -173,6 +179,20 @@ export default function DisciplinasPage() {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <label htmlFor="busqueda-disciplina" className="block text-sm font-medium text-slate-700 mb-1">
+            Buscar disciplina por nombre
+          </label>
+          <input
+            id="busqueda-disciplina"
+            type="text"
+            value={busquedaNombre}
+            onChange={(e) => setBusquedaNombre(e.target.value)}
+            placeholder="Ej. Ajedrez"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
       </div>
 
