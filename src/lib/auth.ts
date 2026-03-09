@@ -6,7 +6,7 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
-    emailAndPassword: {
+    emailAndPassword: { //La seguridad de contraseñas es gestionada internamente por better Auth
         enabled: true
     },
     socialProviders: {

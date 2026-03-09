@@ -1,6 +1,7 @@
 // app/api/inscripciones/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -12,6 +13,15 @@ function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
 const EVENT_START = process.env.EVENT_START_DATE ? new Date(process.env.EVENT_START_DATE) : new Date();
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+  if (!rateLimit(ip, 40, 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta más tarde." },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
 
@@ -50,13 +60,11 @@ export async function POST(req: Request) {
       });
       if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
 
-      // minPersonalApoyo not present in schema => default 0. // CHANGED
       const minPersonal = 0;
       if ((personalIds?.length ?? 0) < minPersonal) {
         throw { status: 409, message: `Se requieren al menos ${minPersonal} personal(es) de apoyo` };
       }
 
-      // verify personals if provided
       if (personalIds && personalIds.length > 0) {
         const personals = await tx.personalApoyo.findMany({
           where: { id: { in: personalIds.map(Number) } },
@@ -83,7 +91,7 @@ export async function POST(req: Request) {
         if (total < minI) throw { status: 409, message: `Faltan participantes: mínimo ${minI}` };
         if (total > maxI) throw { status: 409, message: `Excede el máximo de integrantes (${maxI})` };
 
-        // validate participants exist & belong to same institucion
+        // valida institucion y disciplina antes de validar participantes para evitar queries innecesarios
         const fetchedParts = await tx.participante.findMany({
           where: { id: { in: uniqueParticipantIds } },
           select: { id: true, nombres: true, institucionId: true, fechaNacimiento: true, genero: true },

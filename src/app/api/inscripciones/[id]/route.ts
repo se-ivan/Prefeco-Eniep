@@ -1,12 +1,22 @@
 // src/app/api/inscripciones/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 /**
  * DELETE /api/inscripciones/:id
  * Borra una inscripción por id
  */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const ip = _req.headers.get("x-forwarded-for") ?? "unknown";
+
+  if (!rateLimit(ip, 40, 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta más tarde." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { id } = await params;
     const insId = Number(id);

@@ -1,9 +1,18 @@
 // app/api/disciplinas/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 // GET: lista disciplinas 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+  if (!rateLimit(ip, 180, 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta más tarde." },
+      { status: 429 }
+    );
+  }
   try {
     const disciplinas = await prisma.disciplina.findMany({
       orderBy: { nombre: "asc" },
@@ -52,6 +61,14 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+  if (!rateLimit(ip, 40, 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta más tarde." },
+      { status: 429 }
+    );
+  }
   try {
     const body = await req.json();
     const {
