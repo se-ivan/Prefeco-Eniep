@@ -1,31 +1,40 @@
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth"; 
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-// Importa Prisma o las funciones que usen tus otras APIs
-// import prisma from "@/lib/prisma"; 
-
 
 export async function GET(request: NextRequest) {
-    const session = await authClient.getSession();
+
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
     if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     try {
-        const estudiantes = await prisma.participante.findMany();
-        const disciplinas = await prisma.disciplina.findMany();
+
+        const [totalStudents, activeDisciplines] = await Promise.all([
+            prisma.participante.count(),
+            prisma.disciplina.count()
+        ]);
 
         const dashboardData = {
-            totalStudents: estudiantes.length,
+            totalStudents,
             pendingDocuments: 18,
             upcomingEvents: 5,
-            activeDisciplines: disciplinas.length,
+            activeDisciplines
         };
 
         return NextResponse.json(dashboardData);
 
     } catch (error) {
         console.error("Dashboard API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+        return NextResponse.json(
+            { error: "Error interno del servidor" },
+            { status: 500 }
+        );
     }
 }

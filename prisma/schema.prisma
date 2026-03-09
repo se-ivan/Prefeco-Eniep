@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,6 +19,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
+  role       TipoUsuario? @default(user)
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
   @@map("user")
 }
 
@@ -32,7 +38,10 @@ model Session {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  impersonatedBy String?
+
   @@map("session")
+  @@index([userId])
 }
 
 model Account {
@@ -52,6 +61,7 @@ model Account {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
+  @@index([userId])
 }
 
 model Verification {
@@ -63,26 +73,32 @@ model Verification {
   updatedAt  DateTime? @updatedAt @map("updated_at")
 
   @@map("verification")
+  @@index([identifier])
 }
 
-
 model Institucion {
-  id          Int      @id @default(autoincrement())
-  cct         String   @unique
+  id          Int     @id @default(autoincrement())
+  cct         String  @unique
   nombre      String
   estado      String
-  zonaEscolar String   @map("zona_escolar")
-  urlLogo     String?  @map("url_logo")
+  zonaEscolar String  @map("zona_escolar")
+  urlLogo     String? @map("url_logo")
 
-  equipos       Equipo[]        
-  participantes Participante[] 
+  equipos       Equipo[]
+  participantes Participante[]
   personalApoyo PersonalApoyo[]
 
   @@map("instituciones")
 }
 
-
 /// ENUMS
+
+enum TipoUsuario {
+  admin
+  institucion
+  user
+}
+
 enum Genero {
   MASCULINO
   FEMENINO
@@ -116,41 +132,39 @@ enum Rama {
 /// MODELOS
 /// ===============================
 
-
-
 model Participante {
-  id               Int @id @default(autoincrement())
-  institucionId    Int
-  tutorId          Int?
-  curp             String
-  matricula        String
-  nombres          String
-  apellidoPaterno  String
-  apellidoMaterno  String
-  fechaNacimiento  DateTime
-  genero           Genero
-  fotoUrl          String?
-  estatus          Estatus
-  alergias         String?
-  tipoSangre       String? @map("tipo_sangre")
-  padecimientos    String?
-  medicamentos     String?
-  contactoEmergenciaNombre   String? @map("contacto_emergencia_nombre")
-  contactoEmergenciaTelefono String? @map("contacto_emergencia_telefono")
-  docCurp                  Boolean @default(false) @map("doc_curp")
-  docComprobanteEstudios   Boolean @default(false) @map("doc_comprobante_estudios")
-  docCartaResponsiva       Boolean @default(false) @map("doc_carta_responsiva")
-  docCertificadoMedico     Boolean @default(false) @map("doc_certificado_medico")
-  docIneTutor              Boolean @default(false) @map("doc_ine_tutor")
+  id                         Int      @id @default(autoincrement())
+  institucionId              Int
+  tutorId                    Int?
+  curp                       String
+  matricula                  String
+  nombres                    String
+  apellidoPaterno            String
+  apellidoMaterno            String
+  fechaNacimiento            DateTime
+  genero                     Genero
+  fotoUrl                    String?
+  estatus                    Estatus
+  alergias                   String?
+  tipoSangre                 String?  @map("tipo_sangre")
+  padecimientos              String?
+  medicamentos               String?
+  contactoEmergenciaNombre   String?  @map("contacto_emergencia_nombre")
+  contactoEmergenciaTelefono String?  @map("contacto_emergencia_telefono")
+  docCurp                    Boolean  @default(false) @map("doc_curp")
+  docComprobanteEstudios     Boolean  @default(false) @map("doc_comprobante_estudios")
+  docCartaResponsiva         Boolean  @default(false) @map("doc_carta_responsiva")
+  docCertificadoMedico       Boolean  @default(false) @map("doc_certificado_medico")
+  docIneTutor                Boolean  @default(false) @map("doc_ine_tutor")
 
-  institucion Institucion @relation(fields: [institucionId], references: [id])
-  tutor       Tutor?      @relation(fields: [tutorId], references: [id])
+  institucion   Institucion   @relation(fields: [institucionId], references: [id])
+  tutor         Tutor?        @relation(fields: [tutorId], references: [id])
   inscripciones Inscripcion[]
 }
 
 model Tutor {
-  id             Int    @id @default(autoincrement())
-  nombreCompleto String @map("nombre_completo")
+  id             Int     @id @default(autoincrement())
+  nombreCompleto String  @map("nombre_completo")
   parentesco     String
   telefono       String
   email          String?
@@ -162,104 +176,102 @@ model Tutor {
 }
 
 model Disciplina {
-  id             Int @id @default(autoincrement())
-  nombre         String
-  tipo           TipoDisciplina
-  rama           Rama
-  modalidad      Modalidad
+  id        Int            @id @default(autoincrement())
+  nombre    String
+  tipo      TipoDisciplina
+  rama      Rama
+  modalidad Modalidad
 
-  minIntegrantes Int? @map("min_integrantes") 
-  maxIntegrantes Int? @map("max_integrantes") 
+  minIntegrantes             Int? @map("min_integrantes")
+  maxIntegrantes             Int? @map("max_integrantes")
   maxParticipantesPorEscuela Int? @map("max_participantes_por_escuela")
 
-  categorias Categoria[]
-  equipos      Equipo[]
-  inscripciones Inscripcion[]
+  categorias        Categoria[]
+  equipos           Equipo[]
+  inscripciones     Inscripcion[]
   asignacionesApoyo AsignacionApoyo[]
 
   @@map("disciplinas")
 }
 
-
 model Categoria {
-  id           Int    @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   nombre       String
   disciplinaId Int
   disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
 
-  inscripciones Inscripcion[]
+  inscripciones     Inscripcion[]
   asignacionesApoyo AsignacionApoyo[]
 
   @@map("categorias")
 }
 
 model Equipo {
-  id            Int     @id @default(autoincrement())
-  disciplinaId  Int     @map("id_disciplina")
-  institucionId Int     @map("id_institucion")
-  nombreEquipo  String  @map("nombre_equipo")
-  folioRegistro String? @map("folio_registro") 
-
-  disciplina Disciplina @relation(fields: [disciplinaId], references: [id])
-  institucion Institucion @relation(fields: [institucionId], references: [id])
+  id            Int         @id @default(autoincrement())
+  disciplinaId  Int         @map("id_disciplina")
+  institucionId Int         @map("id_institucion")
+  nombreEquipo  String      @map("nombre_equipo")
+  folioRegistro String?     @map("folio_registro")
+  disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
+  institucion   Institucion @relation(fields: [institucionId], references: [id])
 
   inscripciones Inscripcion[]
-  @@unique([disciplinaId, nombreEquipo])
 
+  @@unique([disciplinaId, nombreEquipo])
   @@map("equipos")
 }
 
 model Inscripcion {
-  id              Int      @id @default(autoincrement())
-  participanteId  Int      @map("id_participante")
-  disciplinaId    Int      @map("id_disciplina")
-  equipoId        Int?     @map("id_equipo")      
-  categoriaId     Int     @map("id_categoria")    
-  fechaRegistro   DateTime @map("fecha_registro") @default(now())
+  id             Int      @id @default(autoincrement())
+  participanteId Int      @map("id_participante")
+  disciplinaId   Int      @map("id_disciplina")
+  equipoId       Int?     @map("id_equipo")
+  categoriaId    Int      @map("id_categoria")
+  fechaRegistro  DateTime @map("fecha_registro") @default(now())
 
   participante Participante @relation(fields: [participanteId], references: [id])
-  equipo        Equipo?      @relation(fields: [equipoId], references: [id])
-  disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
-  categoria     Categoria   @relation(fields: [categoriaId], references: [id])
+  equipo       Equipo?      @relation(fields: [equipoId], references: [id])
+  disciplina   Disciplina   @relation(fields: [disciplinaId], references: [id])
+  categoria    Categoria    @relation(fields: [categoriaId], references: [id])
 
   @@map("inscripciones")
 }
 
 model PersonalApoyo {
-  id                        Int     @id @default(autoincrement())
-  institucionId             Int
-  curp                      String
-  nombres                   String
-  apellidoPaterno           String
-  apellidoMaterno           String
-  puesto                    String
-  telefono                  String
-  email                     String?
-  contactoEmergenciaNombre  String? @map("contacto_emergencia_nombre")
+  id                         Int     @id @default(autoincrement())
+  institucionId              Int
+  curp                       String
+  nombres                    String
+  apellidoPaterno            String
+  apellidoMaterno            String
+  puesto                     String
+  telefono                   String
+  email                      String?
+  contactoEmergenciaNombre   String? @map("contacto_emergencia_nombre")
   contactoEmergenciaTelefono String? @map("contacto_emergencia_telefono")
-  docCurp                   Boolean @default(false) @map("doc_curp")
-  docIdentificacionOficial  Boolean @default(false) @map("doc_identificacion_oficial")
-  docComprobanteDomicilio   Boolean @default(false) @map("doc_comprobante_domicilio")
-  docCartaAntecedentes      Boolean @default(false) @map("doc_carta_antecedentes")
-  estatus                   Estatus
+  docCurp                    Boolean @default(false) @map("doc_curp")
+  docIdentificacionOficial   Boolean @default(false) @map("doc_identificacion_oficial")
+  docComprobanteDomicilio    Boolean @default(false) @map("doc_comprobante_domicilio")
+  docCartaAntecedentes       Boolean @default(false) @map("doc_carta_antecedentes")
+  estatus                    Estatus
 
-  institucion Institucion @relation(fields: [institucionId], references: [id])
+  institucion       Institucion       @relation(fields: [institucionId], references: [id])
   asignacionesApoyo AsignacionApoyo[]
 
   @@map("personal_apoyo")
 }
 
 model AsignacionApoyo {
-  id               Int    @id @default(autoincrement())
-  personalId       Int    @map("id_personal")
-  disciplinaId     Int   @map("id_disciplina")
-  categoriaId      Int   @map("id_categoria")
-  rol              String? 
-  creadoEn         DateTime @default(now()) @map("creado_en")
+  id           Int      @id @default(autoincrement())
+  personalId   Int      @map("id_personal")
+  disciplinaId Int      @map("id_disciplina")
+  categoriaId  Int      @map("id_categoria")
+  rol          String?
+  creadoEn     DateTime @default(now()) @map("creado_en")
 
-  personal PersonalApoyo @relation(fields: [personalId], references: [id])
-  disciplina Disciplina? @relation(fields: [disciplinaId], references: [id])
-  categoria  Categoria?  @relation(fields: [categoriaId], references: [id])
+  personal   PersonalApoyo @relation(fields: [personalId], references: [id])
+  disciplina Disciplina?   @relation(fields: [disciplinaId], references: [id])
+  categoria  Categoria?    @relation(fields: [categoriaId], references: [id])
 
   @@map("asignacion_apoyo")
 }

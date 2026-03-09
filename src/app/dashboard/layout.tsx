@@ -34,16 +34,35 @@ export default async function DashboardLayout({
   });
   const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
 
-  const menuItems = [
-    { name: "Inicio", icon: Home, href: "/dashboard" },
-    { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
-    { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
-    { name: "Participantes", icon: Users, href: "/dashboard/participantes/lista" },
-    { name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" },
-    { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
-    { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
-    { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
-  ];
+  let menuItems = [];
+
+  if (session?.user?.role === "admin") {
+    menuItems = [
+      { name: "Inicio", icon: Home, href: "/dashboard" },
+      { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
+      { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
+      { name: "Participantes", icon: Users, href: "/dashboard/participantes/lista" },
+      { name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" },
+      { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
+      { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
+      { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
+    ];
+  } else if (session?.user?.role === "institucion") {
+    menuItems = [
+      { name: "Inicio", icon: Home, href: "/dashboard" },
+      { name: "Participantes", icon: Users, href: "/dashboard/participantes/lista" },
+      { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
+      { name: "Personal de Apoyo", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
+      { name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" },
+      { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" }
+    ];
+  } else {
+    menuItems = [
+      { name: "Inicio", icon: Home, href: "/dashboard" },
+      { name: "Participantes", icon: Users, href: "/dashboard/participantes/lista" },
+      { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
+    ];
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
