@@ -16,11 +16,18 @@ type Institucion = {
   nombre: string;
 };
 
+type UserScope = {
+  role: "ADMIN" | "RESPONSABLE_INSTITUCION";
+  institucionId: number | null;
+  institucion: { id: number; nombre: string; cct: string } | null;
+};
+
 export default function RegistrarPersonalApoyoPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [instituciones, setInstituciones] = useState<Institucion[]>([]);
   const [loadingInstituciones, setLoadingInstituciones] = useState(false);
+  const [scope, setScope] = useState<UserScope | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,6 +70,23 @@ export default function RegistrarPersonalApoyoPage() {
     }
 
     loadInstituciones();
+
+    async function loadScope() {
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) return;
+        const data: UserScope = await res.json();
+        if (!active) return;
+        setScope(data);
+        if (data.role === "RESPONSABLE_INSTITUCION" && data.institucionId) {
+          setFormData((prev) => ({ ...prev, institucionId: String(data.institucionId) }));
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    loadScope();
 
     return () => {
       active = false;
@@ -233,11 +257,11 @@ export default function RegistrarPersonalApoyoPage() {
                     name="institucionId"
                     value={formData.institucionId}
                     onChange={handleInputChange}
-                    disabled={loadingInstituciones}
+                    disabled={loadingInstituciones || scope?.role === "RESPONSABLE_INSTITUCION"}
                     className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
                   >
                     <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
-                    {instituciones.map((institucion) => (
+                    {(scope?.role === "RESPONSABLE_INSTITUCION" ? instituciones.filter((i) => i.id === scope.institucionId) : instituciones).map((institucion) => (
                       <option key={institucion.id} value={institucion.id}>
                         {institucion.nombre}
                       </option>

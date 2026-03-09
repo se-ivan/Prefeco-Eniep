@@ -1,9 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
 
 // GET  /api/instituciones  → lista todas las instituciones
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    if (isResponsable(scope) && scope.institucionId) {
+      const institucion = await prisma.institucion.findUnique({
+        where: { id: scope.institucionId },
+      });
+      return NextResponse.json(institucion ? [institucion] : []);
+    }
+
     const instituciones = await prisma.institucion.findMany({
       orderBy: { nombre: "asc" },
     });
@@ -19,6 +30,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!isAdmin(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const body = await req.json();
     const { cct, nombre, estado, zonaEscolar, urlLogo } = body;
 

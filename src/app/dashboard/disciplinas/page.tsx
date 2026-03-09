@@ -41,6 +41,7 @@ export default function DisciplinasPage() {
   const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true);
 
   // Filtros - iniciados con valores por defecto
   const [filtroTipo, setFiltroTipo] = useState<string>("TODAS");
@@ -88,6 +89,17 @@ export default function DisciplinasPage() {
 
   useEffect(() => {
     cargarDisciplinas();
+
+    (async () => {
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) return;
+        const me = await res.json();
+        setIsAdmin(me?.role === "ADMIN");
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
 
   // Callback que refresca listas tras crear algo (equipo / inscripcion / asignacion)
@@ -113,12 +125,14 @@ export default function DisciplinasPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Disciplinas</h1>
 
-        <button
-          onClick={() => setCrearDisciplinaOpen(true)}
-          className="px-4 py-2 bg-emerald-600 text-white rounded shadow-sm text-sm"
-        >
-          + Registrar disciplina
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setCrearDisciplinaOpen(true)}
+            className="px-4 py-2 bg-emerald-600 text-white rounded shadow-sm text-sm"
+          >
+            + Registrar disciplina
+          </button>
+        )}
       </div>
 
       {/* FILTROS */}
@@ -230,14 +244,16 @@ export default function DisciplinasPage() {
       )}
 
       {/* Modal crear disciplina */}
-      <CrearDisciplinaModal
-        open={crearDisciplinaOpen}
-        onClose={() => setCrearDisciplinaOpen(false)}
-        onCreated={async () => {
-          setCrearDisciplinaOpen(false);
-          await handleAfterCreate();
-        }}
-      />
+      {isAdmin && (
+        <CrearDisciplinaModal
+          open={crearDisciplinaOpen}
+          onClose={() => setCrearDisciplinaOpen(false)}
+          onCreated={async () => {
+            setCrearDisciplinaOpen(false);
+            await handleAfterCreate();
+          }}
+        />
+      )}
     </main>
   );
 }

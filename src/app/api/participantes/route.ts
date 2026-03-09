@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function GET(req: NextRequest) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim() ?? "";
     const institucionIdParam = searchParams.get("institucionId");
     const estatus = searchParams.get("estatus") as "ACTIVO" | "INACTIVO" | null;
 
     const institucionId = institucionIdParam ? Number(institucionIdParam) : null;
+    const scopedInstitucionId = isResponsable(scope) ? scope.institucionId : institucionId;
     if (institucionIdParam && !Number.isInteger(institucionId)) {
       return NextResponse.json({ error: "institucionId inválido" }, { status: 400 });
     }
 
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
     const participantes = await prisma.participante.findMany({
       where: {
-        ...(institucionId ? { institucionId } : {}),
+        ...(scopedInstitucionId ? { institucionId: scopedInstitucionId } : {}),
         ...(estatus ? { estatus } : {}),
         ...(q
           ? {
@@ -56,9 +65,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const body = await req.json();
     const {
-      institucionId,
+      institucionId: bodyInstitucionId,
       curp,
       matricula,
       nombres,
@@ -83,7 +95,7 @@ export async function POST(req: NextRequest) {
     } = body ?? {};
 
     if (
-      !institucionId ||
+      !bodyInstitucionId ||
       !curp ||
       !matricula ||
       !nombres ||
@@ -98,6 +110,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
+    const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
 
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
     if (!institucion) {

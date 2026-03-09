@@ -1,0 +1,2 @@
+-- Placeholder migration to reconcile migration history with database.
+-- This migration already exists in the target database (_prisma_migrations).

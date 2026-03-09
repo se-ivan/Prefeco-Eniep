@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getUserScope } from "@/lib/rbac";
 import { 
   Home, 
   Building2,
   UserPlus, 
   Users, 
+  ShieldCheck,
   Briefcase,
   ClipboardList,
   Calendar,
@@ -19,12 +20,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  });
+  const scope = await getUserScope(await headers());
+  const isAdmin = scope?.role === "ADMIN";
 
-  const userName = session?.user?.name || "Usuario";
-  const userEmail = session?.user?.email || "Sin email";
+  const userName = scope?.name || "Usuario";
+  const userEmail = scope?.email || "Sin email";
 
   const currentDate = new Date().toLocaleDateString("es-MX", {
     weekday: "long",
@@ -36,8 +36,13 @@ export default async function DashboardLayout({
 
   const menuItems = [
     { name: "Inicio", icon: Home, href: "/dashboard" },
-    { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
-    { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
+    ...(isAdmin
+      ? [
+          { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
+          { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
+          { name: "Encargados", icon: ShieldCheck, href: "/dashboard/usuarios" },
+        ]
+      : []),
     { name: "Participantes", icon: Users, href: "/dashboard/participantes/lista" },
     { name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" },
     { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },

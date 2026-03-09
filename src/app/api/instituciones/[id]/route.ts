@@ -1,11 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserScope, isAdmin } from "@/lib/rbac";
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!isAdmin(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const { id } = await params;
     const idNum = parseInt(id, 10);
 

@@ -1,6 +1,7 @@
 // app/api/inscripciones/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -13,17 +14,26 @@ const EVENT_START = process.env.EVENT_START_DATE ? new Date(process.env.EVENT_ST
 
 export async function POST(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const body = await req.json();
 
     const {
       disciplinaId,
       modalidad,
       nombreEquipo,
-      institucionId,
+      institucionId: bodyInstitucionId,
       categoriaId,
       personalIds,
       participantes,
     } = body ?? {};
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
+    const institucionId = isResponsable(scope) ? scope.institucionId : bodyInstitucionId;
 
     if (!disciplinaId) return NextResponse.json({ error: "disciplinaId requerido" }, { status: 400 });
     if (!categoriaId) return NextResponse.json({ error: "categoriaId requerido" }, { status: 400 });
