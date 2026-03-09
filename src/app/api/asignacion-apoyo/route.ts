@@ -1,9 +1,13 @@
 // app/api/asignacion-apoyo/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function POST(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const body = await req.json();
     const { personalId, disciplinaId, categoriaId, rol } = body ?? {};
 
@@ -12,6 +16,15 @@ export async function POST(req: Request) {
     // validar existencia de personal
     const personal = await prisma.personalApoyo.findUnique({ where: { id: Number(personalId) } });
     if (!personal) return NextResponse.json({ error: "personal no encontrado" }, { status: 404 });
+
+    if (isResponsable(scope)) {
+      if (!scope.institucionId) {
+        return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+      }
+      if (personal.institucionId !== scope.institucionId) {
+        return NextResponse.json({ error: "No autorizado para asignar personal de otra institución" }, { status: 403 });
+      }
+    }
 
     const data: any = {
       personalId: Number(personalId),

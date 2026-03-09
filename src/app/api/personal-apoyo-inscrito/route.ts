@@ -1,6 +1,7 @@
 // src/app/api/personal-apoyo-inscrito/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 /**
  * GET /api/personal-apoyo-inscrito
@@ -12,6 +13,9 @@ import { prisma } from "@/lib/prisma";
  */
 export async function GET(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const url = new URL(req.url);
     const disciplinaId = url.searchParams.get("disciplinaId");
     const categoriaId = url.searchParams.get("categoriaId");
@@ -21,7 +25,14 @@ export async function GET(req: Request) {
     const where: any = {};
     if (disciplinaId) where.disciplinaId = Number(disciplinaId);
     if (categoriaId) where.categoriaId = Number(categoriaId);
-    if (institucionId) where.personal = { institucionId: Number(institucionId) };
+    if (isResponsable(scope)) {
+      if (!scope.institucionId) {
+        return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+      }
+      where.personal = { institucionId: scope.institucionId };
+    } else if (institucionId) {
+      where.personal = { institucionId: Number(institucionId) };
+    }
 
     if (q) {
       where.AND = [
@@ -48,11 +59,13 @@ export async function GET(req: Request) {
             nombres: true,
             apellidoPaterno: true,
             apellidoMaterno: true,
-            institucion: { select: { id: true, nombre: true } },
+            curp: true,
+            institucion: { select: { id: true, nombre: true, cct: true, estado: true } },
             puesto: true,
             telefono: true,
           },
         },
+        disciplina: { select: { id: true, nombre: true } },
         categoria: { select: { id: true, nombre: true } },
       },
       orderBy: { id: "desc" },
@@ -64,9 +77,11 @@ export async function GET(req: Request) {
       nombres: a.personal.nombres,
       apellidoPaterno: a.personal.apellidoPaterno,
       apellidoMaterno: a.personal.apellidoMaterno,
+      curp: a.personal.curp,
       institucion: a.personal.institucion,
       puesto: a.personal.puesto,
       telefono: a.personal.telefono,
+      disciplina: a.disciplina ?? null,
       categoria: a.categoria ?? null,
       disciplinaId: a.disciplinaId,
       creadoEn: a.creadoEn,

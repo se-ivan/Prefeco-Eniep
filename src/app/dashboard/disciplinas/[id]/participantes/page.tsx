@@ -47,6 +47,7 @@ export default function ParticipantesPage() {
   const [disciplina, setDisciplina] = useState<PageDisciplina | null>(null);
   const [instituciones, setInstituciones] = useState<{ id: number; nombre: string }[]>([]);
   const [selectedInstitucionId, setSelectedInstitucionId] = useState<number | "">("");
+  const [isResponsable, setIsResponsable] = useState(false);
 
   // solo ALUMNO / APOYO (default ALUMNO)
   const [entityType, setEntityType] = useState<"ALUMNO" | "APOYO">("ALUMNO");
@@ -95,6 +96,20 @@ export default function ParticipantesPage() {
       } catch (err) {
         console.error("No se pudo cargar instituciones:", err);
         setInstituciones([]);
+      }
+    })();
+
+    (async () => {
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) return;
+        const me = await res.json();
+        if (me?.role === "RESPONSABLE_INSTITUCION" && me?.institucionId) {
+          setIsResponsable(true);
+          setSelectedInstitucionId(Number(me.institucionId));
+        }
+      } catch {
+        // ignore
       }
     })();
   }, [disciplinaIdFromUrl]);
@@ -336,9 +351,10 @@ export default function ParticipantesPage() {
               id="filtro-institucion"
               value={selectedInstitucionId ?? ""}
               onChange={(e) => setSelectedInstitucionId(e.target.value ? Number(e.target.value) : "")}
+              disabled={isResponsable}
               className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="">(todas las instituciones)</option>
+              {!isResponsable && <option value="">(todas las instituciones)</option>}
               {instituciones.map((ins) => (
                 <option key={ins.id} value={ins.id}>{ins.nombre}</option>
               ))}

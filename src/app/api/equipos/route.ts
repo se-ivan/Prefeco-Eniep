@@ -1,15 +1,25 @@
 // app/api/equipos/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { disciplinaId, nombreEquipo, folioRegistro, institucionId } = body ?? {};
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    if (!disciplinaId || !nombreEquipo || !institucionId) {
+    const body = await req.json();
+    const { disciplinaId, nombreEquipo, folioRegistro, institucionId: bodyInstitucionId } = body ?? {};
+
+    if (!disciplinaId || !nombreEquipo || !bodyInstitucionId) {
       return NextResponse.json({ error: "disciplinaId, nombreEquipo e institucionId son requeridos" }, { status: 400 });
     }
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
+    const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
 
     // validar disciplina
     const disciplina = await prisma.disciplina.findUnique({ where: { id: Number(disciplinaId) } });
@@ -36,6 +46,9 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const url = new URL(req.url);
     const disciplinaId = url.searchParams.get("disciplinaId");
     const institucionId = url.searchParams.get("institucionId");
@@ -43,7 +56,14 @@ export async function GET(req: Request) {
 
     const where: any = {};
     if (disciplinaId) where.disciplinaId = Number(disciplinaId);
-    if (institucionId) where.institucionId = Number(institucionId);
+    if (isResponsable(scope)) {
+      if (!scope.institucionId) {
+        return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+      }
+      where.institucionId = scope.institucionId;
+    } else if (institucionId) {
+      where.institucionId = Number(institucionId);
+    }
     if (categoriaId) {
       where.inscripciones = { some: { categoriaId: Number(categoriaId) } };
     }

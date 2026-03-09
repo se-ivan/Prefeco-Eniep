@@ -1,6 +1,7 @@
 // app/api/disciplinas/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isAdmin } from "@/lib/rbac";
 
 // GET: lista disciplinas 
 export async function GET() {
@@ -53,6 +54,11 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!isAdmin(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     const body = await req.json();
     const {
       nombre,

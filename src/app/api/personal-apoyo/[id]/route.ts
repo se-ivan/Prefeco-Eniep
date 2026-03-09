@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const { id } = await params;
     const personalId = Number(id);
 
@@ -12,7 +16,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const body = await req.json();
     const {
-      institucionId,
+      institucionId: bodyInstitucionId,
       curp,
       nombres,
       apellidoPaterno,
@@ -30,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     } = body ?? {};
 
     if (
-      !institucionId ||
+      !bodyInstitucionId ||
       !curp ||
       !nombres ||
       !apellidoPaterno ||
@@ -43,6 +47,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         { error: "Faltan campos obligatorios del personal de apoyo" },
         { status: 400 }
       );
+    }
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
+    const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
+
+    const existing = await prisma.personalApoyo.findUnique({
+      where: { id: personalId },
+      select: { id: true, institucionId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Personal de apoyo no encontrado" }, { status: 404 });
+    }
+
+    if (isResponsable(scope) && existing.institucionId !== scope.institucionId) {
+      return NextResponse.json({ error: "No autorizado para editar este registro" }, { status: 403 });
     }
 
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
@@ -89,5 +112,37 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     return NextResponse.json({ error: "Error al actualizar personal de apoyo" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { id } = await params;
+    const personalId = Number(id);
+    if (!Number.isInteger(personalId)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const existing = await prisma.personalApoyo.findUnique({
+      where: { id: personalId },
+      select: { id: true, institucionId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Personal de apoyo no encontrado" }, { status: 404 });
+    }
+
+    if (isResponsable(scope) && existing.institucionId !== scope.institucionId) {
+      return NextResponse.json({ error: "No autorizado para eliminar este registro" }, { status: 403 });
+    }
+
+    await prisma.personalApoyo.delete({ where: { id: personalId } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error al eliminar personal de apoyo:", error);
+    return NextResponse.json({ error: "Error al eliminar personal de apoyo" }, { status: 500 });
   }
 }

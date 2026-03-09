@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
     const { id } = await params;
     const participanteId = Number(id);
 
@@ -12,7 +16,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const body = await req.json();
     const {
-      institucionId,
+      institucionId: bodyInstitucionId,
       curp,
       matricula,
       nombres,
@@ -37,7 +41,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     } = body ?? {};
 
     if (
-      !institucionId ||
+      !bodyInstitucionId ||
       !curp ||
       !matricula ||
       !nombres ||
@@ -53,6 +57,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       );
     }
 
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
+    const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
+
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
     if (!institucion) {
       return NextResponse.json({ error: "Institución no encontrada" }, { status: 404 });
@@ -60,11 +70,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const currentParticipante = await prisma.participante.findUnique({
       where: { id: participanteId },
-      select: { tutorId: true },
+      select: { tutorId: true, institucionId: true },
     });
 
     if (!currentParticipante) {
       return NextResponse.json({ error: "Participante no encontrado" }, { status: 404 });
+    }
+
+    if (isResponsable(scope) && currentParticipante.institucionId !== scope.institucionId) {
+      return NextResponse.json({ error: "No autorizado para editar este participante" }, { status: 403 });
     }
 
     const tutorPayload = tutor ?? null;
@@ -170,5 +184,37 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     return NextResponse.json({ error: "Error al actualizar participante" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { id } = await params;
+    const participanteId = Number(id);
+    if (!Number.isInteger(participanteId)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const existing = await prisma.participante.findUnique({
+      where: { id: participanteId },
+      select: { id: true, institucionId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Participante no encontrado" }, { status: 404 });
+    }
+
+    if (isResponsable(scope) && existing.institucionId !== scope.institucionId) {
+      return NextResponse.json({ error: "No autorizado para eliminar este participante" }, { status: 403 });
+    }
+
+    await prisma.participante.delete({ where: { id: participanteId } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error al eliminar participante:", error);
+    return NextResponse.json({ error: "Error al eliminar participante" }, { status: 500 });
   }
 }

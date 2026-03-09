@@ -11,12 +11,15 @@ model User {
   id            String    @id
   name          String
   email         String    @unique
+  role          UserRole  @default(ADMIN)
+  institucionId Int?      @map("institucion_id")
   emailVerified Boolean   @map("email_verified")
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   accounts      Account[]
   sessions      Session[]
+  institucion   Institucion? @relation(fields: [institucionId], references: [id])
 
   @@map("user")
 }
@@ -77,6 +80,7 @@ model Institucion {
   equipos       Equipo[]        
   participantes Participante[] 
   personalApoyo PersonalApoyo[]
+  usuariosResponsables User[]
 
   @@map("instituciones")
 }
@@ -104,6 +108,11 @@ enum TipoDisciplina {
 enum Modalidad {
   INDIVIDUAL
   EQUIPO
+}
+
+enum UserRole {
+  ADMIN
+  RESPONSABLE_INSTITUCION
 }
 
 enum Rama {
