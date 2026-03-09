@@ -25,6 +25,9 @@ type Tutor = {
 type Participante = {
   id: number;
   institucionId: number;
+  clave: string | null;
+  estado: string | null;
+  semestre: number | null;
   curp: string;
   matricula: string;
   nombres: string;
@@ -53,6 +56,9 @@ type Participante = {
 
 type EditForm = {
   institucionId: string;
+  clave: string;
+  estado: string;
+  semestre: string;
   curp: string;
   matricula: string;
   nombres: string;
@@ -81,6 +87,9 @@ type EditForm = {
 
 const initialEditForm: EditForm = {
   institucionId: "",
+  clave: "",
+  estado: "",
+  semestre: "",
   curp: "",
   matricula: "",
   nombres: "",
@@ -162,6 +171,9 @@ export default function ListaParticipantesPage() {
       const fullName = `${item.nombres} ${item.apellidoPaterno} ${item.apellidoMaterno}`.toLowerCase();
       return (
         fullName.includes(value) ||
+        (item.clave ?? "").toLowerCase().includes(value) ||
+        (item.estado ?? "").toLowerCase().includes(value) ||
+        String(item.semestre ?? "").includes(value) ||
         item.matricula.toLowerCase().includes(value) ||
         item.curp.toLowerCase().includes(value) ||
         item.institucion.nombre.toLowerCase().includes(value)
@@ -173,6 +185,9 @@ export default function ListaParticipantesPage() {
     setEditingItem(item);
     setEditForm({
       institucionId: String(item.institucionId),
+      clave: item.clave ?? "",
+      estado: item.estado ?? "",
+      semestre: item.semestre ? String(item.semestre) : "",
       curp: item.curp,
       matricula: item.matricula,
       nombres: item.nombres,
@@ -253,6 +268,9 @@ export default function ListaParticipantesPage() {
     try {
       const payload = {
         institucionId: Number(editForm.institucionId),
+        clave: editForm.clave || null,
+        estado: editForm.estado || null,
+        semestre: editForm.semestre ? Number(editForm.semestre) : null,
         curp: editForm.curp,
         matricula: editForm.matricula,
         nombres: editForm.nombres,
@@ -326,7 +344,7 @@ export default function ListaParticipantesPage() {
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar por nombre, matrícula, CURP o institución"
+          placeholder="Buscar por nombre, clave, estado, semestre, matrícula, CURP o institución"
           className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#08677a]"
         />
       </div>
@@ -345,6 +363,9 @@ export default function ListaParticipantesPage() {
               <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
                 <tr>
                   <th className="px-4 py-3">Nombre</th>
+                  <th className="px-4 py-3">Clave</th>
+                  <th className="px-4 py-3">Estado</th>
+                  <th className="px-4 py-3">Semestre</th>
                   <th className="px-4 py-3">Matrícula</th>
                   <th className="px-4 py-3">CURP</th>
                   <th className="px-4 py-3">Institución</th>
@@ -359,6 +380,9 @@ export default function ListaParticipantesPage() {
                     <td className="px-4 py-3 font-medium text-gray-800">
                       {item.nombres} {item.apellidoPaterno} {item.apellidoMaterno}
                     </td>
+                    <td className="px-4 py-3 text-gray-600">{item.clave ?? "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">{item.estado ?? "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">{item.semestre ?? "—"}</td>
                     <td className="px-4 py-3 text-gray-600">{item.matricula}</td>
                     <td className="px-4 py-3 text-gray-600">{item.curp}</td>
                     <td className="px-4 py-3 text-gray-600">{item.institucion.nombre}</td>
@@ -422,6 +446,9 @@ export default function ListaParticipantesPage() {
               <Field label="Nombre(s) *" name="nombres" value={editForm.nombres} onChange={handleEditInputChange} />
               <Field label="Apellido paterno *" name="apellidoPaterno" value={editForm.apellidoPaterno} onChange={handleEditInputChange} />
               <Field label="Apellido materno *" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} />
+              <Field label="Clave" name="clave" value={editForm.clave} onChange={handleEditInputChange} />
+              <Field label="Estado" name="estado" value={editForm.estado} onChange={handleEditInputChange} />
+              <Field label="Semestre" name="semestre" type="number" value={editForm.semestre} onChange={handleEditInputChange} />
               <Field label="Matrícula *" name="matricula" value={editForm.matricula} onChange={handleEditInputChange} />
               <Field label="CURP *" name="curp" value={editForm.curp} onChange={handleEditInputChange} />
               <Field label="Fecha nacimiento *" name="fechaNacimiento" type="date" value={editForm.fechaNacimiento} onChange={handleEditInputChange} />

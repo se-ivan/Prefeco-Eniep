@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "institucionId inválido" }, { status: 400 });
     }
 
-    const participantes = await prisma.participante.findMany({
+    const alumnos = await prisma.alumno.findMany({
       where: {
         ...(institucionId ? { institucionId } : {}),
         ...(estatus ? { estatus } : {}),
@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
                 { apellidoMaterno: { contains: q, mode: "insensitive" } },
                 { matricula: { contains: q, mode: "insensitive" } },
                 { curp: { contains: q, mode: "insensitive" } },
+                { clave: { contains: q, mode: "insensitive" } },
+                { estado: { contains: q, mode: "insensitive" } },
               ],
             }
           : {}),
@@ -47,7 +49,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(participantes);
+    return NextResponse.json(alumnos);
   } catch (error) {
     console.error("Error al obtener participantes:", error);
     return NextResponse.json({ error: "Error al obtener participantes" }, { status: 500 });
@@ -59,6 +61,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       institucionId,
+      clave,
+      estado,
+      semestre,
       curp,
       matricula,
       nombres,
@@ -137,10 +142,13 @@ export async function POST(req: NextRequest) {
         tutorId = createdTutor.id;
       }
 
-      return tx.participante.create({
+      return tx.alumno.create({
         data: {
           institucionId: Number(institucionId),
           tutorId,
+          clave: clave ? String(clave).trim() : null,
+          estado: estado ? String(estado).trim() : null,
+          semestre: semestre !== undefined && semestre !== null && String(semestre).trim() !== "" ? Number(semestre) : null,
           curp: String(curp).trim().toUpperCase(),
           matricula: String(matricula).trim().toUpperCase(),
           nombres: String(nombres).trim(),

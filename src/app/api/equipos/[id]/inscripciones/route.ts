@@ -37,13 +37,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       // validate each participante
       for (const pid of participantIds) {
-        const participante = await tx.participante.findUnique({ where: { id: pid } });
-        if (!participante) throw { status: 404, message: `Participante ${pid} no encontrado` };
+        const alumno = await tx.alumno.findUnique({ where: { id: pid } });
+        if (!alumno) throw { status: 404, message: `Participante ${pid} no encontrado` };
 
         // check if already in same discipline
         const already = await tx.inscripcion.findFirst({
           where: {
-            participanteId: pid,
+            alumnoId: pid,
             equipo: { disciplinaId: equipo.disciplinaId },
           },
         });
@@ -53,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // all validations passed -> create inscripciones
       const now = new Date();
       const data = participantesRaw.map((p: any) => ({
-        participanteId: Number(p.participanteId),
+        alumnoId: Number(p.participanteId),
         equipoId: equipoId,
         disciplinaId: equipo.disciplinaId,
         fechaRegistro: now,

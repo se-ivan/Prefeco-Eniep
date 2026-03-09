@@ -76,17 +76,17 @@ export async function POST(req: Request) {
       // ===== VALIDAR CADA PARTICIPANTE =====
       for (const pid of participantIds) {
         // existe el participante
-        const participante = await tx.participante.findUnique({
+        const alumno = await tx.alumno.findUnique({
           where: { id: pid },
           select: { id: true, institucionId: true },
         });
 
-        if (!participante) {
+        if (!alumno) {
           throw { status: 404, message: `Participante ${pid} no encontrado` };
         }
 
         // pertenece a la misma institución que el equipo
-        if (Number(participante.institucionId) !== Number(institucionId)) {
+        if (Number(alumno.institucionId) !== Number(institucionId)) {
           throw {
             status: 409,
             message: `Participante ${pid} no pertenece a la institución seleccionada`,
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
         // evitar doble inscripción en la misma disciplina (ahora explícito por disciplinaId)
         const already = await tx.inscripcion.findFirst({
           where: {
-            participanteId: pid,
+            alumnoId: pid,
             disciplinaId: Number(disciplinaId),
           },
         });
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
         // ===== validar máximo de 2 disciplinas distintas por participante =====
         // traemos las inscripciones actuales del participante y recolectamos disciplinaId únicos
         const inscripcionesActuales = await tx.inscripcion.findMany({
-          where: { participanteId: pid },
+          where: { alumnoId: pid },
           select: { disciplinaId: true },
         });
 
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
       // ===== CREAR INSCRIPCIONES (AHORA INCLUYENDO disciplinaId) =====
       const now = new Date();
       const inscripcionesData = participantes.map((p: any) => ({
-        participanteId: Number(p.participanteId),
+        alumnoId: Number(p.participanteId),
         equipoId: equipo.id,
         disciplinaId: Number(disciplinaId), // <-- aquí lo agregamos
         fechaRegistro: now,

@@ -7,11 +7,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const equipoId = Number(id);
   if (!Number.isInteger(equipoId)) return NextResponse.json({ error: "invalid equipo id" }, { status: 400 });
 
-  // Traemos inscripciones y el participante relacionado
+  // Traemos inscripciones y el alumno relacionado
   const inscripciones = await prisma.inscripcion.findMany({
     where: { equipoId },
     include: {
-      participante: {
+      alumno: {
         select: { id: true, nombres: true, apellidoPaterno: true, apellidoMaterno: true, matricula: true },
       },
     },
@@ -19,9 +19,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   // Convertir a un formato simple
   const participantes = inscripciones.map((i) => ({
-    participanteId: i.participante.id,
-    nombreCompleto: `${i.participante.apellidoPaterno} ${i.participante.apellidoMaterno} ${i.participante.nombres}`,
-    matricula: i.participante.matricula,
+    participanteId: i.alumno.id,
+    nombreCompleto: `${i.alumno.apellidoPaterno} ${i.alumno.apellidoMaterno} ${i.alumno.nombres}`,
+    matricula: i.alumno.matricula,
     esTitular: i.esTitular,
   }));
 

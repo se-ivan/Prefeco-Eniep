@@ -12,8 +12,8 @@ export async function POST(req: Request) {
 
     // transaction to ensure checks and create atomically
     const result = await prisma.$transaction(async (tx) => {
-      const participante = await tx.participante.findUnique({ where: { id: Number(participanteId) } });
-      if (!participante) throw { status: 404, message: "Participante no encontrado" };
+      const alumno = await tx.alumno.findUnique({ where: { id: Number(participanteId) } });
+      if (!alumno) throw { status: 404, message: "Participante no encontrado" };
 
       const equipo = await tx.equipo.findUnique({
         where: { id: Number(equipoId) },
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       // check if participant already inscrito in same discipline
       const already = await tx.inscripcion.findFirst({
         where: {
-          participanteId: Number(participanteId),
+          alumnoId: Number(participanteId),
           disciplinaId: equipo.disciplinaId,
         },
       });
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
       const created = await tx.inscripcion.create({
         data: {
-          participanteId: Number(participanteId),
+          alumnoId: Number(participanteId),
           equipoId: Number(equipoId),
           disciplinaId: equipo.disciplinaId,
           fechaRegistro: new Date(),

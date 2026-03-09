@@ -37,6 +37,9 @@ export default function RegistrarAlumnoPage() {
   
   const [formData, setFormData] = useState({
     institucionId: "",
+    clave: "",
+    estado: "",
+    semestre: "",
     nombres: "",
     apellidoPaterno: "",
     apellidoMaterno: "",
@@ -190,6 +193,9 @@ export default function RegistrarAlumnoPage() {
     try {
       const payload = {
         institucionId: Number(formData.institucionId),
+        clave: formData.clave || null,
+        estado: formData.estado || null,
+        semestre: formData.semestre ? Number(formData.semestre) : null,
         curp: formData.curp,
         matricula: formData.matricula,
         nombres: formData.nombres,
@@ -388,6 +394,43 @@ export default function RegistrarAlumnoPage() {
                     value={formData.matricula}
                     onChange={handleInputChange}
                     placeholder="Ej: 2026001234"
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Clave</label>
+                  <input
+                    type="text"
+                    name="clave"
+                    value={formData.clave}
+                    onChange={handleInputChange}
+                    placeholder="Ej: ALU-001"
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Estado</label>
+                  <input
+                    type="text"
+                    name="estado"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Oaxaca"
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800">Semestre</label>
+                  <input
+                    type="number"
+                    min={1}
+                    name="semestre"
+                    value={formData.semestre}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 2"
                     className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
                   />
                 </div>

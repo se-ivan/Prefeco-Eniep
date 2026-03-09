@@ -74,7 +74,7 @@ model Institucion {
   urlLogo     String?  @map("url_logo")
 
   equipos       Equipo[]        
-  participantes Participante[] 
+  alumnos       Alumno[] 
   personalApoyo PersonalApoyo[]
 
   @@map("instituciones")
@@ -115,10 +115,13 @@ enum Modalidad {
 
 
 
-model Participante {
+model Alumno {
   id               Int @id @default(autoincrement())
   institucionId    Int
   tutorId          Int?
+  clave            String?
+  estado           String?
+  semestre         Int?
   curp             String
   matricula        String
   nombres          String
@@ -143,6 +146,8 @@ model Participante {
   institucion Institucion @relation(fields: [institucionId], references: [id])
   tutor       Tutor?      @relation(fields: [tutorId], references: [id])
   inscripciones Inscripcion[]
+
+  @@map("alumnos")
 }
 
 model Tutor {
@@ -153,7 +158,7 @@ model Tutor {
   email          String?
   direccion      String?
 
-  participantes Participante[]
+  alumnos Alumno[]
 
   @@map("tutores")
 }
@@ -190,13 +195,13 @@ model Equipo {
 
 model Inscripcion {
   id             Int      @id @default(autoincrement())
-  participanteId Int      @map("id_participante")
+  alumnoId       Int      @map("id_alumno")
   disciplinaId   Int      @map("id_disciplina") 
   equipoId       Int      @map("id_equipo")
   fechaRegistro  DateTime @map("fecha_registro")
   esTitular      Boolean  @map("es_titular")
 
-  participante Participante @relation(fields: [participanteId], references: [id])
+  alumno       Alumno     @relation(fields: [alumnoId], references: [id])
   equipo        Equipo       @relation(fields: [equipoId], references: [id])
   disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
 

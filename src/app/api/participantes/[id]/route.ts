@@ -13,6 +13,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const {
       institucionId,
+      clave,
+      estado,
+      semestre,
       curp,
       matricula,
       nombres,
@@ -58,12 +61,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Institución no encontrada" }, { status: 404 });
     }
 
-    const currentParticipante = await prisma.participante.findUnique({
+    const currentAlumno = await prisma.alumno.findUnique({
       where: { id: participanteId },
       select: { tutorId: true },
     });
 
-    if (!currentParticipante) {
+    if (!currentAlumno) {
       return NextResponse.json({ error: "Participante no encontrado" }, { status: 404 });
     }
 
@@ -85,7 +88,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const updated = await prisma.$transaction(async (tx) => {
-      let tutorId = currentParticipante.tutorId;
+      let tutorId = currentAlumno.tutorId;
 
       if (hasTutorData) {
         if (tutorId) {
@@ -113,11 +116,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
       }
 
-      return tx.participante.update({
+      return tx.alumno.update({
         where: { id: participanteId },
         data: {
           institucionId: Number(institucionId),
           tutorId,
+          clave: clave ? String(clave).trim() : null,
+          estado: estado ? String(estado).trim() : null,
+          semestre: semestre !== undefined && semestre !== null && String(semestre).trim() !== "" ? Number(semestre) : null,
           curp: String(curp).trim().toUpperCase(),
           matricula: String(matricula).trim().toUpperCase(),
           nombres: String(nombres).trim(),

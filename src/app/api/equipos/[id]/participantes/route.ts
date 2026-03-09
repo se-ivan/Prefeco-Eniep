@@ -17,9 +17,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         inscripciones: {
           orderBy: { id: "asc" },
           select: {
-            participanteId: true,
+            alumnoId: true,
             esTitular: true,
-            participante: {
+            alumno: {
               select: {
                 nombres: true,
                 apellidoPaterno: true,
@@ -37,9 +37,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
 
     const participantes = equipo.inscripciones.map((ins) => ({
-      participanteId: ins.participanteId,
-      nombreCompleto: `${ins.participante.apellidoPaterno} ${ins.participante.apellidoMaterno} ${ins.participante.nombres}`,
-      matricula: ins.participante.matricula,
+      participanteId: ins.alumnoId,
+      nombreCompleto: `${ins.alumno.apellidoPaterno} ${ins.alumno.apellidoMaterno} ${ins.alumno.nombres}`,
+      matricula: ins.alumno.matricula,
       esTitular: ins.esTitular,
     }));
 
