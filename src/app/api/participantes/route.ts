@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+if (!rateLimit(ip, 150, 60 * 1000)) {
+  return NextResponse.json(
+    { error: "Demasiadas solicitudes. Intenta más tarde." },
+    { status: 429 }
+  );
+}
+  
   try {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim() ?? "";
@@ -55,6 +65,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+if (!rateLimit(ip, 40, 60 * 1000)) {
+  return NextResponse.json(
+    { error: "Demasiadas solicitudes. Intenta más tarde." },
+    { status: 429 }
+  );
+}
   try {
     const body = await req.json();
     const {

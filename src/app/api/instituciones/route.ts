@@ -1,8 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from '@/lib/rateLimit';
 
 // GET  /api/instituciones  → lista todas las instituciones
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    
+      if (!rateLimit(ip, 180, 60 * 1000)) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
   try {
     const instituciones = await prisma.institucion.findMany({
       orderBy: { nombre: "asc" },
@@ -18,6 +27,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+
+if (!rateLimit(ip, 50, 60 * 1000)) {
+  return NextResponse.json(
+    { error: "Demasiadas solicitudes. Intenta más tarde." },
+    { status: 429 }
+  );
+}
   try {
     const body = await req.json();
     const { cct, nombre, estado, zonaEscolar, urlLogo } = body;

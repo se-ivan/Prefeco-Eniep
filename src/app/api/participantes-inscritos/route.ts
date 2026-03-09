@@ -1,6 +1,7 @@
 // src/app/api/participantes-inscritos/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';  
 
 /**
  * GET /api/participantes-inscritos
@@ -13,6 +14,14 @@ import { prisma } from "@/lib/prisma";
  * Devuelve array de inscripciones individuales (equipoId == null)
  */
 export async function GET(req: Request) {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    
+      if (!rateLimit(ip, 150, 60 * 1000)) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
   try {
     const url = new URL(req.url);
     const disciplinaId = url.searchParams.get("disciplinaId");

@@ -1,6 +1,7 @@
 // src/app/api/equipos/[id]/editar/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -18,6 +19,14 @@ const EVENT_START = process.env.EVENT_START_DATE
  * Actualiza los miembros del equipo con validaciones de mín/máx integrantes
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    
+      if (!rateLimit(ip, 45, 60 * 1000)) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
   try {
     const { id } = await params;
     const equipoId = Number(id);

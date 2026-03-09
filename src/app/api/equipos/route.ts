@@ -1,8 +1,17 @@
 // app/api/equipos/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    
+      if (!rateLimit(ip, 50, 60 * 1000)) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
   try {
     const body = await req.json();
     const { disciplinaId, nombreEquipo, folioRegistro, institucionId } = body ?? {};
@@ -35,6 +44,14 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    
+      if (!rateLimit(ip, 180, 60 * 1000)) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
   try {
     const url = new URL(req.url);
     const disciplinaId = url.searchParams.get("disciplinaId");
