@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, Shield, TrendingUp, Zap, Github, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, Shield, TrendingUp, Zap, Github, Loader2, Eye, EyeOff } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ interface LoginModalProps {
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'github' | null>(null);
@@ -125,20 +126,21 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </button>
 
               <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
-                <div className="lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-gray-50 to-white overflow-y-auto">
+                {/* Lado Informativo (Oculto en móviles) */}
+                <div className="hidden lg:block lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-gray-50 to-white dark:from-background dark:to-background overflow-y-auto border-r border-border">
                   <div className="max-w-md mx-auto">
                     {/* Titulo y Logo */}
                     <div className="mb-8">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-24 h-24 bg-[rgba(11,105,125,0.1)] rounded-2xl flex items-center justify-center p-4">
-                          <img src="/logo.png" alt="ENIEP Logo" className="w-full h-full object-contain" />
+                        <div className="w-24 h-24 bg-[rgba(11,105,125,0.1)] dark:bg-[rgba(46,180,204,0.15)] rounded-2xl flex items-center justify-center p-4">
+                          <img src="/logo-eniep.png" alt="ENIEP Logo" className="w-full h-full object-contain dark:brightness-0 dark:invert" onError={(e) => (e.currentTarget.src = '/logo.png')} />
                         </div>
                       </div>
                       <h1 className="text-5xl font-bold mb-2">
-                        <span className="text-[#0a0a0a]">ENIEP </span>
-                        <span className="text-[#0b697d]">2026</span>
+                        <span className="text-foreground">ENIEP </span>
+                        <span className="text-[#0b697d] dark:text-[#2eb4cc]">2026</span>
                       </h1>
-                      <p className="text-xl text-[#717182] leading-relaxed">
+                      <p className="text-xl text-muted-foreground leading-relaxed">
                         Plataforma de Gestión de Eventos Deportivos y Culturales
                       </p>
                     </div>
@@ -156,8 +158,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
                           </div>
                           <div>
-                            <h3 className="font-bold text-[#0a0a0a] mb-1">{feature.title}</h3>
-                            <p className="text-sm text-[#717182] leading-relaxed">{feature.description}</p>
+                            <h3 className="font-bold text-foreground mb-1">{feature.title}</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                           </div>
                         </motion.div>
                       ))}
@@ -166,28 +168,35 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 </div>
 
                 {/*Formulario del login */}
-                <div className="lg:w-1/2 p-8 lg:p-12 flex items-center bg-white overflow-y-auto">
-                  <div className="w-full max-w-md mx-auto">
-                    <div className="mb-8">
-                      <h2 className="text-3xl font-bold text-[#0a0a0a] mb-2">Bienvenido</h2>
-                      <p className="text-[#717182]">Inicia sesión para acceder a la plataforma</p>
+                <div className="w-full lg:w-1/2 p-6 lg:p-12 flex items-center bg-card text-card-foreground overflow-y-auto relative">
+                  <div className="w-full max-w-md mx-auto mt-4 sm:mt-0">
+                    {/* Logo solo en móviles */}
+                    <div className="flex lg:hidden items-center justify-center mb-8">
+                        <div className="w-20 h-20 bg-[rgba(11,105,125,0.1)] dark:bg-[rgba(46,180,204,0.15)] rounded-2xl flex items-center justify-center p-3">
+                          <img src="/logo-eniep.png" alt="ENIEP Logo" className="w-full h-full object-contain dark:brightness-0 dark:invert" onError={(e) => (e.currentTarget.src = '/logo.png')} />
+                        </div>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-6">
+                    <div className="mb-8 text-center lg:text-left">
+                      <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
+                      <p className="text-muted-foreground">Inicia sesión para acceder a la plataforma</p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="space-y-5 lg:space-y-6">
                       {/* Email Input */}
                       <div>
-                        <label className="block text-sm font-semibold text-[#0a0a0a] mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           Correo electrónico
                         </label>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                           <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="tu@email.com"
+                            placeholder="nombre@prefecomelchorocampo.edu.mx"
                             disabled={isAnyLoading}
-                            className="w-full pl-12 pr-4 py-3.5 bg-[#f5f7fa] border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b697d] focus:border-transparent transition-all"
+                            className="w-full pl-12 pr-4 py-3.5 bg-input-background dark:bg-input border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-foreground"
                             required
                           />
                         </div>
@@ -195,20 +204,28 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
                       {/* Password */}
                       <div>
-                        <label className="block text-sm font-semibold text-[#0a0a0a] mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           Contraseña
                         </label>
                         <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                           <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                             disabled={isAnyLoading}
-                            className="w-full pl-12 pr-4 py-3.5 bg-[#f5f7fa] border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b697d] focus:border-transparent transition-all"
+                            className="w-full pl-12 pr-12 py-3.5 bg-input-background dark:bg-input border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-foreground"
                             required
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            disabled={isAnyLoading}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
                         </div>
                       </div>
 
@@ -220,11 +237,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
                             disabled={isAnyLoading}
-                            className="w-4 h-4 rounded border-[#e3e3e3] text-[#0b697d] focus:ring-[#0b697d]"
+                            className="w-4 h-4 rounded border-border text-primary focus:ring-ring dark:bg-input"
                           />
-                          <span className="text-sm text-[#717182]">Mantener sesión iniciada</span>
+                          <span className="text-sm text-muted-foreground">Mantener sesión iniciada</span>
                         </label>
-                        <button type="button" className="text-sm text-[#0b697d] hover:underline">
+                        <button type="button" className="text-sm text-[#0b697d] dark:text-[#2eb4cc] hover:underline font-medium">
                           ¿Olvidaste tu contraseña?
                         </button>
                       </div>
@@ -234,18 +251,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-4 bg-red-50 border border-red-200 rounded-xl"
+                          className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl"
                         >
-                          <p className="text-sm text-red-600">{error}</p>
+                          <p className="text-sm text-destructive">{error}</p>
                         </motion.div>
                       )}
-
 
                       {/* Iniciar Sesion */}
                       <button
                         type="submit"
                         disabled={isAnyLoading}
-                        className="w-full py-4 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] text-white rounded-xl font-semibold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isLoading ? (
                           <>
@@ -255,7 +271,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         ) : socialLoading ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Redirigiendo con {socialLoading === 'google' ? 'Google' : 'GitHub'}...
+                            Redirigiendo...
                           </>
                         ) : (
                           'Iniciar Sesión'
@@ -263,12 +279,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       </button>
 
                       {/* Divisor */}
-                      <div className="relative">
+                      <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-100"></span>
+                          <span className="w-full border-t border-border"></span>
                         </div>
                         <div className="relative flex justify-center text-sm uppercase">
-                          <span className="bg-white px-4 text-[#717182] text-xs font-medium">O continúa con</span>
+                          <span className="bg-card px-4 text-muted-foreground text-xs font-medium">O continúa con</span>
                         </div>
                       </div>
 
@@ -278,10 +294,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           type="button"
                           onClick={() => handleSocialLogin('google')}
                           disabled={isAnyLoading}
-                          className="flex items-center justify-center gap-3 px-4 py-3 border border-[#e3e3e3] rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-xl hover:bg-muted/50 dark:hover:bg-muted/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {socialLoading === 'google' ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-[#0a0a0a]" />
+                            <Loader2 className="w-5 h-5 animate-spin text-foreground" />
                           ) : (
                             <svg viewBox="0 0 24 24" className="w-5 h-5">
                               <path
@@ -302,27 +318,27 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                               />
                             </svg>
                           )}
-                          <span className="text-sm font-semibold text-[#0a0a0a]">Google</span>
+                          <span className="text-sm font-semibold text-foreground">Google</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSocialLogin('github')}
                           disabled={isAnyLoading}
-                          className="flex items-center justify-center gap-3 px-4 py-3 border border-[#e3e3e3] rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-xl hover:bg-muted/50 dark:hover:bg-muted/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {socialLoading === 'github' ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-[#0a0a0a]" />
+                            <Loader2 className="w-5 h-5 animate-spin text-foreground" />
                           ) : (
-                            <Github className="w-5 h-5 text-[#0a0a0a]" />
+                            <Github className="w-5 h-5 text-foreground" />
                           )}
-                          <span className="text-sm font-semibold text-[#0a0a0a]">GitHub</span>
+                          <span className="text-sm font-semibold text-foreground">GitHub</span>
                         </button>
                       </div>
 
                       {/* Ayuda */}
-                      <p className="text-center text-sm text-[#717182]">
+                      <p className="text-center text-sm text-muted-foreground">
                         ¿Necesitas ayuda?{' '}
-                        <button type="button" className="text-[#0b697d] hover:underline">
+                        <button type="button" className="text-[#0b697d] dark:text-[#2eb4cc] hover:underline">
                           Contacta soporte técnico
                         </button>
                       </p>

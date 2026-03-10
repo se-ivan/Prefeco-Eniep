@@ -52,12 +52,12 @@ export default function UsuariosPage() {
     name: "",
     email: "",
     password: "",
-    role: "RESPONSABLE_INSTITUCION" as "ADMIN" | "RESPONSABLE_INSTITUCION",
+    role: "" as any,
     institucionId: "",
   });
 
   const [editData, setEditData] = useState({
-    role: "RESPONSABLE_INSTITUCION" as "ADMIN" | "RESPONSABLE_INSTITUCION",
+    role: "" as any,
     institucionId: "",
   });
 
@@ -130,6 +130,11 @@ export default function UsuariosPage() {
   async function createUser() {
     if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password.trim()) {
       toast.error("Nombre, correo y contraseña son obligatorios");
+      return;
+    }
+
+    if (!newUser.role) {
+      toast.error("Debes seleccionar un cargo (rol)");
       return;
     }
 
@@ -294,6 +299,7 @@ export default function UsuariosPage() {
               }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             >
+              <option value="">Selecciona un cargo</option>
               <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
               <option value="ADMIN">ADMIN</option>
             </select>
@@ -335,6 +341,7 @@ export default function UsuariosPage() {
               }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             >
+              <option value="">Selecciona un cargo</option>
               <option value="ADMIN">ADMIN</option>
               <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
             </select>
