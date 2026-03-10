@@ -96,13 +96,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       });
 
       if (participantesValidos.length !== newParticipantIds.length) {
-        const foundIds = new Set(participantesValidos.map((p) => p.id));
+        const foundIds = new Set(participantesValidos.map((p: any) => p.id));
         const missing = newParticipantIds.filter((id) => !foundIds.has(id));
         throw { status: 404, message: `Participante(s) ${missing.join(", ")} no encontrado(s)` };
       }
 
       const badInst = participantesValidos.filter(
-        (p) => Number(p.institucionId) !== Number(equipo.institucionId)
+        (p: any) => Number(p.institucionId) !== Number(equipo.institucionId)
       );
       if (badInst.length > 0) {
         throw {
@@ -147,7 +147,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         });
 
         const disciplinasSet = new Set<string>(
-          inscripcionesActuales.map((i) => i.disciplina.nombre)
+          inscripcionesActuales.map((i: any) => i.disciplina.nombre)
         );
         disciplinasSet.add(equipo.disciplina.nombre);
         if (disciplinasSet.size > 2) {
@@ -161,13 +161,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       // Obtener inscripciones actuales
       const currentInscripciones = equipo.inscripciones;
       const currentParticipantIds = new Set(
-        currentInscripciones.map((i) => i.participanteId)
+        currentInscripciones.map((i: any) => i.participanteId)
       );
 
       // Determinar qué eliminar y qué crear
       const toDelete = currentInscripciones
-        .filter((i) => !newParticipantIds.includes(i.participanteId))
-        .map((i) => i.id);
+        .filter((i: any) => !newParticipantIds.includes(i.participanteId))
+        .map((i: any) => i.id);
 
       const toCreate = newParticipantIds
         .filter((pid) => !currentParticipantIds.has(pid))

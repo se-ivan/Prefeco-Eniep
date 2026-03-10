@@ -99,17 +99,17 @@ export async function POST(req: Request) {
           select: { id: true, nombres: true, institucionId: true, fechaNacimiento: true, genero: true },
         });
         if (fetchedParts.length !== uniqueParticipantIds.length) {
-          const foundIds = new Set(fetchedParts.map(p => p.id));
+          const foundIds = new Set(fetchedParts.map((p: any) => p.id));
           const missing = uniqueParticipantIds.filter((id) => !foundIds.has(id));
           throw { status: 404, message: `Participante(s) ${missing.join(", ")} no encontrado(s)` };
         }
 
-        const badInst = fetchedParts.filter(p => Number(p.institucionId) !== Number(institucionId));
+        const badInst = fetchedParts.filter((p: any) => Number(p.institucionId) !== Number(institucionId));
         if (badInst.length > 0) {
           throw { status: 409, message: `Algunos participantes no pertenecen a la institución ${institucionId}` };
         }
 
-        for (const p of fetchedParts) {
+        for (const p of fetchedParts as any[]) {
           const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
           if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
 
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
             where: { participanteId: p.id },
             select: { disciplina: { select: { nombre: true } } },
           });
-          const disciplinasSet = new Set<string>(inscripcionesActuales.map(i => i.disciplina.nombre));
+          const disciplinasSet = new Set<string>(inscripcionesActuales.map((i: any) => i.disciplina.nombre));
           disciplinasSet.add(disciplina.nombre);
           if (disciplinasSet.size > 2) {
             throw { status: 409, message: `${p.nombres} excede el maximo de 2 disciplinas distintas` };
@@ -152,7 +152,7 @@ export async function POST(req: Request) {
         });
 
         const now = new Date();
-        const insData = participantes.map(p => ({
+        const insData = participantes.map((p: any) => ({
           participanteId: Number(p.participanteId),
           equipoId: equipo.id,
           disciplinaId: Number(disciplinaId),
@@ -195,13 +195,13 @@ export async function POST(req: Request) {
           select: { id: true, nombres: true, institucionId: true, fechaNacimiento: true, genero: true },
         });
         if (fetchedParts.length !== uniqueParticipantIds.length) {
-          const foundIds = new Set(fetchedParts.map(p => p.id));
+          const foundIds = new Set(fetchedParts.map((p: any) => p.id));
           const missing = uniqueParticipantIds.filter((id) => !foundIds.has(id));
           throw { status: 404, message: `Participante(s) ${missing.join(", ")} no encontrado(s)` };
         }
 
         let nuevosPorInst = 0;
-        for (const p of fetchedParts) {
+        for (const p of fetchedParts as any[]) {
           // Verificar si ya existe alguna inscripción en esta disciplina (cualquier categoría)
           const yaInscritoEnDisciplina = await tx.inscripcion.findFirst({
             where: {
@@ -240,7 +240,7 @@ export async function POST(req: Request) {
             where: { participanteId: p.id },
             select: { disciplina: { select: { nombre: true } } },
           });
-          const disciplinasSet = new Set<string>(inscripcionesActuales.map(i => i.disciplina.nombre));
+          const disciplinasSet = new Set<string>(inscripcionesActuales.map((i: any) => i.disciplina.nombre));
           disciplinasSet.add(disciplina.nombre);
           if (disciplinasSet.size > 2) {
             throw { status: 409, message: `${p.nombres} excede el maximo de 2 disciplinas distintas` };
@@ -252,7 +252,7 @@ export async function POST(req: Request) {
         }
 
         const now = new Date();
-        const insData = fetchedParts.map(p => ({
+        const insData = fetchedParts.map((p: any) => ({
           participanteId: p.id,
           disciplinaId: Number(disciplinaId),
           categoriaId: Number(categoriaId),

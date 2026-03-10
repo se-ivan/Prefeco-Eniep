@@ -1,5 +1,5 @@
 {
-    "name": "Landing page with animations",
+    "name": "ENIEP | Preparatorias Federales por Cooperación",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -73,6 +73,7 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "type-check": "tsc --noEmit"
     }
 }
