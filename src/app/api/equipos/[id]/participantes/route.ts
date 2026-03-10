@@ -46,7 +46,7 @@ export async function GET(
       return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 });
     }
 
-    const mapped = equipo.inscripciones.map((ins) => ({
+    const mapped = equipo.inscripciones.map((ins: any) => ({
       participanteId: ins.participanteId,
       nombreCompleto: `${ins.participante.apellidoPaterno} ${ins.participante.apellidoMaterno} ${ins.participante.nombres}`,
       matricula: ins.participante.matricula,

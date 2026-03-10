@@ -72,7 +72,7 @@ export async function GET(req: Request) {
       orderBy: { id: "desc" },
     });
 
-    const mapped = asignaciones.map((a) => ({
+    const mapped = asignaciones.map((a: any) => ({
       asignacionId: a.id,
       personalId: a.personal.id,
       nombres: a.personal.nombres,

@@ -77,7 +77,7 @@ export async function GET(req: Request) {
       orderBy: { id: "asc" },
     });
 
-    const mapped = equipos.map((e) => ({
+    const mapped = equipos.map((e: any) => ({
       id: e.id,
       nombreEquipo: e.nombreEquipo,
       institucionId: e.institucionId,
