@@ -30,7 +30,7 @@ export async function GET() {
       },
     });
 
-    const mapped = disciplinas.map((d) => ({
+    const mapped = (disciplinas as any[]).map((d) => ({
       id: d.id,
       nombre: d.nombre,
       tipo: d.tipo,
