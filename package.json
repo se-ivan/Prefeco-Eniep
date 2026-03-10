@@ -71,6 +71,9 @@
     },
     "scripts": {
         "dev": "next dev",
+        "prisma:generate": "prisma generate",
+        "postinstall": "pnpm prisma:generate",
+        "prebuild": "pnpm prisma:generate",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",

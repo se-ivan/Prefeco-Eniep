@@ -38,6 +38,18 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getActiveHref(pathname: string, sections: MenuSection[]) {
+  const candidates = sections
+    .flatMap((section) => section.items)
+    .map((item) => item.href)
+    .filter((href) => isItemActive(pathname, href));
+
+  if (candidates.length === 0) return null;
+
+  // Keep only one active item: exact match wins, otherwise longest prefix match.
+  return candidates.sort((a, b) => b.length - a.length)[0];
+}
+
 export default function DashboardSidebar({
   isAdmin,
   userName,
@@ -86,6 +98,8 @@ export default function DashboardSidebar({
     },
   ];
 
+  const activeHref = getActiveHref(pathname, sections);
+
   return (
     <aside className="w-72 bg-[#08677a] text-white hidden md:flex md:flex-col">
       <div className="p-8">
@@ -102,7 +116,7 @@ export default function DashboardSidebar({
               </p>
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const active = isItemActive(pathname, item.href);
+                  const active = activeHref === item.href;
 
                   return (
                     <Link
