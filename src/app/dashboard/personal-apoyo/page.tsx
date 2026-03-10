@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Phone, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, Phone, FileText, ChevronLeft, ChevronRight, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 const STEPS = [
   { id: 1, title: "Datos Personales", icon: User },
@@ -30,9 +31,12 @@ export default function RegistrarPersonalApoyoPage() {
   const [scope, setScope] = useState<UserScope | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     institucionId: "",
+    fotoUrl: "",
     nombres: "",
     apellidoPaterno: "",
     apellidoMaterno: "",
@@ -105,8 +109,36 @@ export default function RegistrarPersonalApoyoPage() {
     setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
+  const clearPhotoSelection = () => {
+    setPhotoPreview(null);
+    setFormData((prev) => ({ ...prev, fotoUrl: "" }));
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadingPhoto(true);
+    setStepError(null);
+
+    try {
+      const { url } = await uploadImageToFirebase(selectedFile, "personal-apoyo");
+      setPhotoPreview(url);
+      setFormData((prev) => ({ ...prev, fotoUrl: url }));
+      toast.success("Fotografia subida correctamente");
+    } catch (error: any) {
+      const message = error?.message || "No se pudo subir la fotografia";
+      setStepError(message);
+      toast.error(message);
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
   const validateStep1 = () => {
-    if (!formData.institucionId) return "Selecciona una institución.";
+    const resolvedInstitucionId = Number(formData.institucionId || scope?.institucionId || 0);
+    if (!resolvedInstitucionId) return "No se encontró una institución válida para el registro.";
     if (!formData.nombres.trim()) return "El nombre es obligatorio.";
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
     if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
@@ -152,10 +184,11 @@ export default function RegistrarPersonalApoyoPage() {
     setSubmitting(true);
     try {
       const payload = {
-        institucionId: Number(formData.institucionId),
+        institucionId: Number(formData.institucionId || scope?.institucionId || 0),
         nombres: formData.nombres,
         apellidoPaterno: formData.apellidoPaterno,
         apellidoMaterno: formData.apellidoMaterno,
+        fotoUrl: formData.fotoUrl || null,
         curp: formData.curp,
         puesto: formData.puesto,
         telefono: formData.telefono,
@@ -181,7 +214,7 @@ export default function RegistrarPersonalApoyoPage() {
       }
 
       toast.success("Personal de apoyo registrado exitosamente");
-      router.push("/dashboard/personal-apoyo");
+      router.push("/dashboard/personal-apoyo/lista");
       router.refresh();
     } catch (err: any) {
       console.error(err);
@@ -249,24 +282,67 @@ export default function RegistrarPersonalApoyoPage() {
               <p className="text-xs text-gray-500 mb-8">Información general del personal de apoyo</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                {scope?.role !== "RESPONSABLE_INSTITUCION" && (
+                  <div className="group md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                      Institución <span className="text-[#08677a]">*</span>
+                    </label>
+                    <select
+                      name="institucionId"
+                      value={formData.institucionId}
+                      onChange={handleInputChange}
+                      disabled={loadingInstituciones}
+                      className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
+                    >
+                      <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
+                      {instituciones.map((institucion) => (
+                        <option key={institucion.id} value={institucion.id}>
+                          {institucion.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="group md:col-span-2">
-                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
-                    Institución <span className="text-[#08677a]">*</span>
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1 mb-2">
+                    Fotografia infantil (3:4 vertical)
                   </label>
-                  <select
-                    name="institucionId"
-                    value={formData.institucionId}
-                    onChange={handleInputChange}
-                    disabled={loadingInstituciones || scope?.role === "RESPONSABLE_INSTITUCION"}
-                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
-                  >
-                    <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
-                    {(scope?.role === "RESPONSABLE_INSTITUCION" ? instituciones.filter((i) => i.id === scope.institucionId) : instituciones).map((institucion) => (
-                      <option key={institucion.id} value={institucion.id}>
-                        {institucion.nombre}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="rounded-xl border border-dashed border-gray-300 p-4 bg-gray-50/60">
+                    <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                      <div className="text-xs text-gray-500">
+                        Formatos: JPG, PNG o WEBP. Maximo 3MB. Proporcion aproximada 3:4.
+                      </div>
+                      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#08677a] text-white text-sm font-semibold cursor-pointer hover:bg-teal-800 transition-colors">
+                        {uploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+                        {uploadingPhoto ? "Subiendo..." : "Seleccionar fotografia"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={handlePhotoChange}
+                          disabled={uploadingPhoto}
+                        />
+                      </label>
+                    </div>
+
+                    {photoPreview && (
+                      <div className="mt-4 flex items-start gap-3">
+                        <img
+                          src={photoPreview}
+                          alt="Vista previa de fotografia"
+                          className="h-36 w-28 rounded-lg border border-gray-200 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearPhotoSelection}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          Quitar fotografia
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="group">

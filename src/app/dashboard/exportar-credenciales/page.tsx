@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 import { 
   Building2, 
   MapPin, 
@@ -12,8 +12,7 @@ import {
   FileText,
   Users,
   CheckCircle2,
-  UserCog,
-  TestTube
+  UserCog
 } from 'lucide-react';
 import { CredencialesPDF } from '@/components/pdf/CredencialesPDF';
 import { CedulaRegistroPDF } from '@/components/pdf/CedulaRegistroPDF';
@@ -34,50 +33,6 @@ type Institucion = {
 
 type TipoCredencial = 'ALUMNO' | 'PERSONAL';
 
-const MOCK_PARTICIPANTES = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  nombres: `Participante ${i + 1}`,
-  apellidoPaterno: `Paterno ${i + 1}`,
-  apellidoMaterno: `Materno ${i + 1}`,
-  matricula: `MAT-${String(1000 + i)}`,
-  curp: `CURP${String(i + 1).padStart(14, '0')}`,
-  telefono: `55${String(10000000 + i)}`,
-  semestre: `${(i % 6) + 1}`,
-  institucion: {
-    nombre: 'Instituto Mock Participantes',
-    cct: '15ABC0001X',
-    estado: 'Estado de Mexico',
-  },
-  disciplina: { nombre: i % 2 === 0 ? 'Futbol' : 'Ajedrez' },
-  categoria: { nombre: i % 2 === 0 ? 'Juvenil' : 'Libre' },
-}));
-
-const MOCK_PERSONAL_APOYO = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  nombres: `Personal ${i + 1}`,
-  apellidoPaterno: `Apoyo ${i + 1}`,
-  apellidoMaterno: `Mock ${i + 1}`,
-  curp: `PER${String(i + 1).padStart(15, '0')}`,
-  telefono: `81${String(20000000 + i)}`,
-  puesto: i % 2 === 0 ? 'Entrenador' : 'Delegado',
-  institucion: {
-    nombre: 'Instituto Mock Personal',
-    cct: '19DEF0002Y',
-    estado: 'Nuevo Leon',
-  },
-  disciplina: { nombre: i % 2 === 0 ? 'Basquetbol' : 'Oratoria' },
-  categoria: { nombre: i % 2 === 0 ? 'Senior' : 'General' },
-}));
-
-const MOCK_CEDULA_REGISTRO = Array.from({ length: 18 }, (_, i) => ({
-  id: i + 1,
-  nombres: `Alumno ${i + 1}`,
-  apellidoPaterno: `Registro ${i + 1}`,
-  apellidoMaterno: `Demo ${i + 1}`,
-  matricula: `ALU-${String(3000 + i)}`,
-  institucion: { nombre: 'Campus Mock Cedula' },
-}));
-
 export default function ExportarPage() {
   const { data: instituciones = [], isLoading } = useSWR<Institucion[]>('/api/instituciones');
   const [registros, setRegistros] = useState<any[]>([]);
@@ -86,10 +41,20 @@ export default function ExportarPage() {
   const [isClient, setIsClient] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoCredencial, setTipoCredencial] = useState<TipoCredencial>('ALUMNO');
+  const [generandoCredenciales, setGenerandoCredenciales] = useState(false);
+  const [generandoCedula, setGenerandoCedula] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!institucionSeleccionada && instituciones.length === 1) {
+      const unica = instituciones[0];
+      setInstitucionSeleccionada(unica);
+      fetchRegistros(unica.id, tipoCredencial);
+    }
+  }, [instituciones, institucionSeleccionada, tipoCredencial]);
 
   const fetchRegistros = async (institucionId: number, tipo: TipoCredencial) => {
     setLoadingDatos(true);
@@ -132,6 +97,53 @@ export default function ExportarPage() {
       inst.cct.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inst.estado.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDescargarCredenciales = useCallback(async () => {
+    if (!institucionSeleccionada || registros.length === 0) return;
+    setGenerandoCredenciales(true);
+    try {
+      const blob = await pdf(
+        <CredencialesPDF usuarios={registros} tipo={tipoCredencial} />
+      ).toBlob();
+      const fileName = `credenciales_${tipoCredencial.toLowerCase()}_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
+      downloadBlob(blob, fileName);
+      toast.success('Credenciales descargadas correctamente');
+    } catch (err) {
+      console.error('Error generando credenciales:', err);
+      toast.error('Error al generar las credenciales');
+    } finally {
+      setGenerandoCredenciales(false);
+    }
+  }, [institucionSeleccionada, registros, tipoCredencial]);
+
+  const handleDescargarCedula = useCallback(async () => {
+    if (!institucionSeleccionada || registros.length === 0) return;
+    setGenerandoCedula(true);
+    try {
+      const blob = await pdf(
+        <CedulaRegistroPDF participantes={registros} />
+      ).toBlob();
+      const fileName = `cedula_registro_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
+      downloadBlob(blob, fileName);
+      toast.success('Cédula descargada correctamente');
+    } catch (err) {
+      console.error('Error generando cédula:', err);
+      toast.error('Error al generar la cédula');
+    } finally {
+      setGenerandoCedula(false);
+    }
+  }, [institucionSeleccionada, registros]);
 
   return (
     <div className="min-h-screen">
@@ -226,94 +238,48 @@ export default function ExportarPage() {
           
           <div className="flex gap-3 w-full sm:w-auto">
             {institucionSeleccionada && registros.length > 0 && isClient && (
-              <PDFDownloadLink
-                document={<CredencialesPDF usuarios={registros} tipo={tipoCredencial} />}
-                fileName={`credenciales_${tipoCredencial.toLowerCase()}_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`}
-                className="w-full sm:w-auto"
-              >
-                {({ loading }) => (
-                  <Button 
-                    className="w-full h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-                    disabled={loading}
+              <>
+                <Button 
+                  className="w-full sm:w-auto h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                  disabled={generandoCredenciales}
+                  onClick={handleDescargarCredenciales}
+                >
+                  {generandoCredenciales ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Descargar Credenciales PDF
+                    </>
+                  )}
+                </Button>
+
+                {tipoCredencial === 'ALUMNO' && (
+                  <Button
+                    className="w-full sm:w-auto h-11 gap-2 bg-[#0b697d] text-white hover:bg-[#095667]"
+                    disabled={generandoCedula}
+                    onClick={handleDescargarCedula}
                   >
-                    {loading ? (
+                    {generandoCedula ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Generando PDF...
+                        Generando Cédula...
                       </>
                     ) : (
                       <>
-                        <Download className="h-4 w-4" />
-                        Descargar Credenciales PDF
+                        <FileText className="h-4 w-4" />
+                        Descargar Cédula PDF
                       </>
                     )}
                   </Button>
                 )}
-              </PDFDownloadLink>
+              </>
             )}
           </div>
         </div>
-
-        {/* Botones MOCK separados de la funcionalidad final */}
-        {isClient && (
-          <Card className="mb-8 border-dashed border-purple-300 bg-purple-50/60">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-purple-900">
-                <TestTube className="h-4 w-4" />
-                Botones MOCK / Prueba (separados)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-3">
-              <PDFDownloadLink
-                document={<CredencialesPDF usuarios={MOCK_PARTICIPANTES} tipo="ALUMNO" />}
-                fileName={`mock_credenciales_participantes_${new Date().toISOString().split('T')[0]}.pdf`}
-                className="w-full sm:w-auto"
-              >
-                {({ loading }) => (
-                  <Button
-                    className="w-full h-11 gap-2 bg-[#0b697d] text-white hover:bg-[#095667]"
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-                    MOCK Credenciales Participantes
-                  </Button>
-                )}
-              </PDFDownloadLink>
-
-              <PDFDownloadLink
-                document={<CredencialesPDF usuarios={MOCK_PERSONAL_APOYO} tipo="PERSONAL" />}
-                fileName={`mock_credenciales_personal_${new Date().toISOString().split('T')[0]}.pdf`}
-                className="w-full sm:w-auto"
-              >
-                {({ loading }) => (
-                  <Button
-                    className="w-full h-11 gap-2 bg-[#ffa52d] text-white hover:bg-[#ea9222]"
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCog className="h-4 w-4" />}
-                    MOCK Credenciales Personal
-                  </Button>
-                )}
-              </PDFDownloadLink>
-
-              <PDFDownloadLink
-                document={<CedulaRegistroPDF participantes={MOCK_CEDULA_REGISTRO} />}
-                fileName={`mock_cedula_registro_${new Date().toISOString().split('T')[0]}.pdf`}
-                className="w-full sm:w-auto"
-              >
-                {({ loading }) => (
-                  <Button
-                    className="w-full h-11 gap-2 bg-purple-600 text-white hover:bg-purple-700"
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                    MOCK Cédula Registro PDF
-                  </Button>
-                )}
-              </PDFDownloadLink>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Contenido principal */}
         {isLoading ? (

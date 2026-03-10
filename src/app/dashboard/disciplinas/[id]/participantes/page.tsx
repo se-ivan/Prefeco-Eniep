@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ParticipantsTable from "@/components/ParticipantsTable";
 import TeamMembersModal from "@/components/TeamMembersModal";
 
@@ -42,6 +42,7 @@ type ParticipanteRow = {
 
 export default function ParticipantesPage() {
   const params = useParams();
+  const router = useRouter();
   const disciplinaIdFromUrl = Number(params?.id ?? NaN);
 
   const [disciplina, setDisciplina] = useState<PageDisciplina | null>(null);
@@ -244,6 +245,14 @@ export default function ParticipantesPage() {
     }
   }
 
+  function handleEditParticipantFromList(participantId: number) {
+    router.push(`/dashboard/participantes/lista?editId=${participantId}`);
+  }
+
+  function handleEditApoyoFromList(personalId: number) {
+    router.push(`/dashboard/personal-apoyo/lista?editId=${personalId}`);
+  }
+
   const ramaPretty = (r?: string | null) => {
     if (!r) return "—";
     switch (r) {
@@ -389,7 +398,9 @@ export default function ParticipantesPage() {
           selectedCategoriaId={selectedCategoriaId}
           onViewTeam={handleOpenTeam}
           onDeleteTeam={(id) => handleDeleteTeamLocally(id)}
+          onEditParticipant={(id) => handleEditParticipantFromList(id)}
           onDeleteParticipant={(id) => handleDeleteInscripcionLocally(id)}
+          onEditApoyo={(id) => handleEditApoyoFromList(id)}
           onDeleteApoyo={(id) => handleDeleteApoyoLocally(id)}
         />
       </div>

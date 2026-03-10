@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ function formatDate(date: Date) {
 export default function InstitucionesPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFileName, setLogoFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,6 +123,7 @@ export default function InstitucionesPage() {
     }
     setLogoPreview(null);
     setLogoFileName("");
+    setValue("urlLogo", "");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -142,13 +145,25 @@ export default function InstitucionesPage() {
       return;
     }
 
-    if (logoPreview) {
-      URL.revokeObjectURL(logoPreview);
-    }
-
-    const previewUrl = URL.createObjectURL(selectedFile);
-    setLogoPreview(previewUrl);
-    setLogoFileName(selectedFile.name);
+    setUploadingLogo(true);
+    (async () => {
+      try {
+        const { url } = await uploadImageToFirebase(selectedFile, "institucion");
+        if (logoPreview) {
+          URL.revokeObjectURL(logoPreview);
+        }
+        setLogoPreview(url);
+        setLogoFileName(selectedFile.name);
+        setValue("urlLogo", url, { shouldValidate: true });
+        toast.success("Logo subido correctamente");
+      } catch (error: any) {
+        clearLogoSelection();
+        toast.error(error?.message || "No se pudo subir el logo");
+      } finally {
+        setUploadingLogo(false);
+        e.target.value = "";
+      }
+    })();
   };
 
   // ── Registrar institución ──
@@ -295,18 +310,23 @@ export default function InstitucionesPage() {
                 <div className="mt-1 flex items-center justify-center w-full">
                   <label htmlFor="logo" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-lg cursor-pointer bg-slate-50/50 hover:bg-slate-50 hover:border-teal-400 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <ImageIcon className="w-8 h-8 mb-2 text-slate-400" />
+                      {uploadingLogo ? (
+                        <Loader2 className="w-8 h-8 mb-2 text-slate-400 animate-spin" />
+                      ) : (
+                        <ImageIcon className="w-8 h-8 mb-2 text-slate-400" />
+                      )}
                       <p className="mb-1 text-sm text-slate-500"><span className="font-semibold text-teal-600">Haz clic para subir</span></p>
-                      <p className="text-xs text-slate-400">SVG, PNG, JPG</p>
+                      <p className="text-xs text-slate-400">PNG, JPG o WEBP. Maximo 3MB</p>
                     </div>
                     <Input
                       id="logo"
                       ref={fileInputRef}
                       type="file"
                       className="hidden"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       multiple={false}
                       onChange={handleLogoChange}
+                      disabled={uploadingLogo}
                     />
                   </label>
                 </div>

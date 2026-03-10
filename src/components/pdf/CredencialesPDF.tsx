@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 
 const COLORS = {
   teal: '#3aa5b8',
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   titlePersonal: { fontSize: 14, fontWeight: '900', color: COLORS.teal, letterSpacing: 1, backgroundColor: COLORS.white, paddingHorizontal: 10 },
 
   // --- CUERPO PRINCIPAL ---
-  mainBody: { position: 'absolute', top: 38, left: 10, right: 10, bottom: 45, flexDirection: 'row' },
+  mainBody: { position: 'absolute', top: 38, left: 10, right: 10, bottom: 42, flexDirection: 'row' },
 
   // --- FOTO ---
   photoSection: { width: 60, height: 80, position: 'relative' },
@@ -48,40 +48,43 @@ const styles = StyleSheet.create({
   // --- SECCIÓN CENTRAL (DATOS) ---
   centerSection: { flex: 1, paddingHorizontal: 8, justifyContent: 'flex-start' },
   
-  nameRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5 },
+  nameRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
   chevron: { color: COLORS.orange, fontSize: 18, fontWeight: 'bold', lineHeight: 0.8, marginRight: 5, marginTop: 1 },
   
-  // Contenedor del nombre con control estricto de overflow
-  nameContainer: { flex: 1, paddingRight: 5, height: 14, overflow: 'hidden' },
-  firstName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal, lineHeight: 1, textOverflow: 'ellipsis' },
-  lastName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal, lineHeight: 1, textOverflow: 'ellipsis' },
+  // SOLUCIÓN 1: Se eliminó el "height" fijo miniatura para que los nombres puedan respirar en dos líneas
+  nameContainer: { flex: 1, paddingRight: 5, justifyContent: 'center' },
+  firstName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal },
+  lastName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal },
 
   // --- CAJA DE DATOS ---
-  dataBox: { border: `1pt solid ${COLORS.orange}`, borderRadius: 4, padding: 5, flex: 1, justifyContent: 'space-between' },
+  // SOLUCIÓN 2: justify-content space-evenly distribuye las filas sin aplastarlas
+  dataBox: { border: `1pt solid ${COLORS.orange}`, borderRadius: 4, padding: 5, flex: 1, justifyContent: 'space-evenly' },
   
-  // Filas con altura fija (height: 9) para asegurar que el contenido extra se oculte y no empuje nada
-  dataRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 2, height: 9, overflow: 'hidden' },
-  dataRowTwoCols: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 2, height: 9, overflow: 'hidden' },
+  // SOLUCIÓN 3: Altura fija de 10pt (exactamente 1 línea de texto) y overflow hidden cortan cualquier salto de línea extra.
+  dataRow: { flexDirection: 'row', alignItems: 'flex-end', height: 10, overflow: 'hidden' },
+  dataRowTwoCols: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 10, overflow: 'hidden' },
   
-  // Separación explícita del 48% para dejar un "gap" de 4% en el medio
-  dataColLeft: { width: '48%', flexDirection: 'row', alignItems: 'flex-end', overflow: 'hidden' },
-  dataColRight: { width: '48%', flexDirection: 'row', alignItems: 'flex-end', overflow: 'hidden' },
+  // SOLUCIÓN 4: Ajustamos proporciones para dar más espacio al Estado (Edo.)
+  dataColLeft: { width: '45%', flexDirection: 'row', alignItems: 'flex-end', paddingRight: 4, overflow: 'hidden' },
+  dataColRight: { width: '55%', flexDirection: 'row', alignItems: 'flex-end', overflow: 'hidden' },
   
   dataLabel: { fontSize: 6.5, color: COLORS.textDark, fontWeight: 'bold', marginRight: 2 },
-  // El textOverflow: 'ellipsis' hace el trabajo de truncamiento visualmente
-  dataValueLine: { fontSize: 6.5, color: COLORS.textDark, flex: 1, textOverflow: 'ellipsis' },
+  dataValueLine: { fontSize: 6.5, color: COLORS.textDark, flex: 1 },
 
   // --- LOGOS ---
   logosSection: { width: 45, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 0 },
-  logoTop: { width: 40, height: 45, backgroundColor: COLORS.bgGray, border: '0.5pt dashed #ccc', justifyContent: 'center' },
-  logoBottom: { width: 36, height: 36, backgroundColor: COLORS.bgGray, border: '0.5pt dashed #ccc', borderRadius: 18, justifyContent: 'center' },
+  logoTop: { width: 40, height: 45, justifyContent: 'center' },
+  logoBottom: { width: 36, height: 36, justifyContent: 'center' },
+  logoTopImage: { width: '100%', height: '100%', objectFit: 'contain' },
+  logoBottomImage: { width: '100%', height: '100%', objectFit: 'contain' },
 
   // --- PIE DE PÁGINA ---
   footerTags: { position: 'absolute', bottom: 6, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  tagGroup: { flexDirection: 'row', alignItems: 'center', height: 12, overflow: 'hidden' },
-  tagLabel: { fontSize: 7, color: COLORS.teal, marginRight: 4, fontWeight: 'bold' },
-  tagBox: { border: `0.5pt solid ${COLORS.orange}`, borderRadius: 6, width: 45, height: 12, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2, overflow: 'hidden' },
-  tagValue: { fontSize: 5.5, color: COLORS.textDark, textOverflow: 'ellipsis' }
+  // SOLUCIÓN 5: Usar flex: 1 en lugar de width: 60 permite que las pastillas se estiren si el texto ("Ajedrez Individual") lo necesita
+  tagGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 4, overflow: 'hidden' },
+  tagLabel: { fontSize: 6.5, color: COLORS.teal, marginRight: 2, fontWeight: 'bold' },
+  tagBox: { border: `0.5pt solid ${COLORS.orange}`, borderRadius: 6, flex: 1, height: 12, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, overflow: 'hidden' },
+  tagValue: { fontSize: 5.5, color: COLORS.textDark }
 });
 
 const Diagonals = ({ isAlumno }: { isAlumno: boolean }) => (
@@ -91,6 +94,24 @@ const Diagonals = ({ isAlumno }: { isAlumno: boolean }) => (
 );
 
 const safeText = (value: unknown) => (value == null || value === '' ? 'N/A' : String(value));
+
+const LEFT_LOGO_SRC = '/logo-escuela.png';
+const RIGHT_LOGO_SRC = '/logo-eniep.png';
+
+const getProxiedImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('http')) {
+    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+};
+
+const fitFontSize = (value: unknown, base: number, min: number, step = 12) => {
+  const len = safeText(value).length;
+  if (len <= step) return base;
+  const reduced = base - Math.ceil((len - step) / step) * 0.5;
+  return Math.max(min, reduced);
+};
 
 export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[], tipo: 'ALUMNO' | 'PERSONAL' }) => {
   const isAlumno = tipo === 'ALUMNO';
@@ -113,6 +134,11 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
               const disciplina = user?.disciplina ?? {};
               const categoria = user?.categoria ?? {};
               const nombreCompleto = [user?.nombres, user?.apellidoPaterno, user?.apellidoMaterno].filter(Boolean).join(' ').trim();
+              const nameFont = fitFontSize(nombreCompleto, 13, 9, 10);
+              const dataFont = fitFontSize(`${institucion?.nombre ?? ''}${institucion?.cct ?? ''}${user?.puesto ?? ''}`, 6.5, 5, 14);
+              const tagFont = fitFontSize(`${disciplina?.nombre ?? ''}${categoria?.nombre ?? ''}${disciplina?.rama ?? ''}`, 5.5, 4.5, 10);
+              const edoFont = fitFontSize(institucion?.estado ?? '', 6.5, 4.5, 14); // Nuevo cálculo dinámico extra para Edo
+              const photoUrl = user?.fotoUrl ? String(user.fotoUrl) : '';
 
               return (
                 <View key={i} style={styles.card}>
@@ -133,7 +159,11 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                     {/* FOTO */}
                     <View style={styles.photoSection}>
                       <View style={styles.photoBorderBox} />
-                      <View style={[styles.photoImage, { backgroundColor: '#e0e0e0' }]} /> 
+                      {photoUrl ? (
+                        <Image src={getProxiedImageUrl(photoUrl)} style={styles.photoImage} />
+                      ) : (
+                        <View style={[styles.photoImage, { backgroundColor: '#e0e0e0' }]} />
+                      )}
                     </View>
 
                     {/* DATOS CENTRALES */}
@@ -141,25 +171,25 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                       <View style={styles.nameRow}>
                         <Text style={styles.chevron}>{'>'}</Text>
                         <View style={styles.nameContainer}>
-                          <Text style={styles.firstName}>{safeText(user?.nombres)}</Text>
-                          <Text style={styles.lastName}>{safeText(user?.apellidoPaterno)}</Text>
+                          <Text style={[styles.firstName, { fontSize: nameFont }]}>{safeText(user?.nombres)}</Text>
+                          <Text style={[styles.lastName, { fontSize: nameFont }]}>{safeText(user?.apellidoPaterno)}</Text>
                         </View>
                       </View>
 
                       <View style={styles.dataBox}>
                         <View style={styles.dataRow}>
                           <Text style={styles.dataLabel}>Inst:</Text>
-                          <Text style={styles.dataValueLine}>{safeText(institucion.nombre)}</Text>
+                          <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(institucion.nombre)}</Text>
                         </View>
                         
                         <View style={styles.dataRowTwoCols}>
                           <View style={styles.dataColLeft}>
                             <Text style={styles.dataLabel}>Clave:</Text>
-                            <Text style={styles.dataValueLine}>{safeText(institucion.cct)}</Text>
+                            <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(institucion.cct)}</Text>
                           </View>
                           <View style={styles.dataColRight}>
                             <Text style={styles.dataLabel}>Edo:</Text>
-                            <Text style={styles.dataValueLine}>{safeText(institucion.estado)}</Text>
+                            <Text style={[styles.dataValueLine, { fontSize: edoFont }]}>{safeText(institucion.estado)}</Text>
                           </View>
                         </View>
                         
@@ -167,25 +197,25 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                           <>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Alumno:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(nombreCompleto)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(nombreCompleto)}</Text>
                             </View>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Matrícula:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(user?.matricula)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.matricula)}</Text>
                             </View>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>CURP:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(user?.curp)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.curp)}</Text>
                             </View>
                             
                             <View style={styles.dataRowTwoCols}>
                               <View style={styles.dataColLeft}>
                                 <Text style={styles.dataLabel}>Tel:</Text>
-                                <Text style={styles.dataValueLine}>{safeText(user?.telefono)}</Text>
+                                <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.telefono)}</Text>
                               </View>
                               <View style={styles.dataColRight}>
                                 <Text style={styles.dataLabel}>Sem:</Text>
-                                <Text style={styles.dataValueLine}>{safeText(user?.semestre)}</Text>
+                                <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.semestre)}</Text>
                               </View>
                             </View>
                           </>
@@ -195,15 +225,15 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                           <>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>CURP:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(user?.curp)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.curp)}</Text>
                             </View>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Tel:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(user?.telefono)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.telefono)}</Text>
                             </View>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Cargo:</Text>
-                              <Text style={styles.dataValueLine}>{safeText(user?.puesto ?? user?.rol)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(user?.puesto ?? user?.rol)}</Text>
                             </View>
                           </>
                         )}
@@ -212,8 +242,12 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
 
                     {/* LOGOS */}
                     <View style={styles.logosSection}>
-                      <View style={styles.logoTop}><Text style={{fontSize: 5, textAlign: 'center'}}>ENIEP</Text></View>
-                      <View style={styles.logoBottom}><Text style={{fontSize: 5, textAlign: 'center'}}>PREPA</Text></View>
+                      <View style={styles.logoTop}>
+                        <Image src={RIGHT_LOGO_SRC} style={styles.logoTopImage} />
+                      </View>
+                      <View style={styles.logoBottom}>
+                        <Image src={LEFT_LOGO_SRC} style={styles.logoBottomImage} />
+                      </View>
                     </View>
 
                   </View>
@@ -225,20 +259,20 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                   <View style={styles.footerTags}>
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagLabel}>Disciplina:</Text>
-                      <View style={[styles.tagBox, { width: 60 }]}>
-                        <Text style={styles.tagValue}>{safeText(disciplina.nombre)}</Text>
+                      <View style={styles.tagBox}>
+                        <Text style={[styles.tagValue, { fontSize: tagFont }]}>{safeText(disciplina.nombre)}</Text>
                       </View>
                     </View>
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagLabel}>Categoría:</Text>
                       <View style={styles.tagBox}>
-                        <Text style={styles.tagValue}>{safeText(categoria.nombre)}</Text>
+                        <Text style={[styles.tagValue, { fontSize: tagFont }]}>{safeText(categoria.nombre)}</Text>
                       </View>
                     </View>
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagLabel}>Rama:</Text>
                       <View style={styles.tagBox}>
-                        <Text style={styles.tagValue}>{safeText(disciplina.rama)}</Text>
+                        <Text style={[styles.tagValue, { fontSize: tagFont }]}>{safeText(disciplina.rama)}</Text>
                       </View>
                     </View>
                   </View>
