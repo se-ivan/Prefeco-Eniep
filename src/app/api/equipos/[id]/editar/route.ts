@@ -42,7 +42,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "IDs de participantes duplicados en el payload" }, { status: 400 });
     }
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       // Obtener equipo y disciplina
       const equipo = await tx.equipo.findUnique({
         where: { id: equipoId },

@@ -34,7 +34,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     }
 
     // transacción: borrar inscripciones (si existen) y el equipo
-    const res = await prisma.$transaction(async (tx) => {
+    const res = await prisma.$transaction(async (tx: any) => {
       // opcional: obtener conteo o comprobación antes de borrar
       await tx.inscripcion.deleteMany({ where: { equipoId } });
       const deleted = await tx.equipo.delete({ where: { id: equipoId } });

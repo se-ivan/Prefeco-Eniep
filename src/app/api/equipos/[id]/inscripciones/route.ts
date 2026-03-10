@@ -20,7 +20,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }
 
     // transaction: create many inscripciones only if all checks pass
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       const equipo = await tx.equipo.findUnique({
         where: { id: equipoId },
         include: { disciplina: true },

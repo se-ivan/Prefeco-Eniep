@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "IDs de participantes duplicados en el payload" }, { status: 400 });
     }
 
-    const res = await prisma.$transaction(async (tx) => {
+    const res = await prisma.$transaction(async (tx: any) => {
       const disciplina = await tx.disciplina.findUnique({
         where: { id: Number(disciplinaId) },
         include: { categorias: true },

@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       let tutorId: number | null = null;
 
       if (hasTutorData) {

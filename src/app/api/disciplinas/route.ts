@@ -130,7 +130,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Esta disciplina ya existe" }, { status: 409 });
     }
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       const disciplina = await tx.disciplina.create({
         data: {
           nombre: nombre.trim(),

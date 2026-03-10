@@ -102,7 +102,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       let tutorId = currentParticipante.tutorId;
 
       if (hasTutorData) {
