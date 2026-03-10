@@ -44,7 +44,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         } else {
             toast.success('¡Inicio de sesión exitoso!');
             onClose();
-            window.location.reload();
+            window.location.href = '/dashboard';
         }
     } catch (err: any) {
         setError('Ocurrió un error inesperado');

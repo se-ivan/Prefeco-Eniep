@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { Loader2, ShieldCheck, Search, Save } from "lucide-react";
+import { Loader2, Plus, Save, Search, ShieldCheck, UserCog, X } from "lucide-react";
 import { toast } from "sonner";
 
 type Institucion = {
@@ -42,8 +42,12 @@ export default function UsuariosPage() {
   const { data: instituciones = [] } = useSWR<Institucion[]>(isAdmin ? "/api/instituciones" : null, fetcher);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -51,54 +55,60 @@ export default function UsuariosPage() {
     role: "RESPONSABLE_INSTITUCION" as "ADMIN" | "RESPONSABLE_INSTITUCION",
     institucionId: "",
   });
-  const [drafts, setDrafts] = useState<Record<string, { role: "ADMIN" | "RESPONSABLE_INSTITUCION"; institucionId: string }>>({});
+
+  const [editData, setEditData] = useState({
+    role: "RESPONSABLE_INSTITUCION" as "ADMIN" | "RESPONSABLE_INSTITUCION",
+    institucionId: "",
+  });
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return users;
-    return users.filter((u) =>
-      `${u.name} ${u.email}`.toLowerCase().includes(q) ||
-      (u.institucion?.nombre ?? "").toLowerCase().includes(q)
-    );
+    return users.filter((u) => {
+      const joined = `${u.name} ${u.email} ${u.institucion?.nombre ?? ""}`.toLowerCase();
+      return joined.includes(q);
+    });
   }, [users, searchTerm]);
 
-  function getDraft(user: UserItem) {
-    return (
-      drafts[user.id] ?? {
-        role: user.role,
-        institucionId: user.institucionId ? String(user.institucionId) : "",
-      }
-    );
-  }
+  const responsables = users.filter((u) => u.role === "RESPONSABLE_INSTITUCION").length;
 
-  function setDraft(user: UserItem, patch: Partial<{ role: "ADMIN" | "RESPONSABLE_INSTITUCION"; institucionId: string }>) {
-    const current = getDraft(user);
-    setDrafts((prev) => ({
-      ...prev,
-      [user.id]: {
-        role: patch.role ?? current.role,
-        institucionId: patch.institucionId ?? current.institucionId,
-      },
-    }));
-  }
+  const openEditModal = (user: UserItem) => {
+    setSelectedUser(user);
+    setEditData({
+      role: user.role,
+      institucionId: user.institucionId ? String(user.institucionId) : "",
+    });
+    setIsEditOpen(true);
+  };
 
-  async function saveUser(user: UserItem) {
-    const draft = getDraft(user);
+  const closeEditModal = () => {
+    if (saving) return;
+    setIsEditOpen(false);
+    setSelectedUser(null);
+  };
 
-    if (draft.role === "RESPONSABLE_INSTITUCION" && !draft.institucionId) {
-      toast.error("Debes seleccionar una institución para el responsable");
+  const closeCreateModal = () => {
+    if (creating) return;
+    setIsCreateOpen(false);
+  };
+
+  async function saveUser() {
+    if (!selectedUser) return;
+
+    if (editData.role === "RESPONSABLE_INSTITUCION" && !editData.institucionId) {
+      toast.error("Debes seleccionar una institución para el encargado");
       return;
     }
 
-    setSavingUserId(user.id);
+    setSaving(true);
     try {
       const res = await fetch("/api/usuarios", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.id,
-          role: draft.role,
-          institucionId: draft.role === "RESPONSABLE_INSTITUCION" ? Number(draft.institucionId) : null,
+          userId: selectedUser.id,
+          role: editData.role,
+          institucionId: editData.role === "RESPONSABLE_INSTITUCION" ? Number(editData.institucionId) : null,
         }),
       });
 
@@ -108,11 +118,12 @@ export default function UsuariosPage() {
       }
 
       toast.success("Usuario actualizado");
+      closeEditModal();
       await mutate();
     } catch (error: any) {
       toast.error(error?.message || "No se pudo actualizar el usuario");
     } finally {
-      setSavingUserId(null);
+      setSaving(false);
     }
   }
 
@@ -147,7 +158,14 @@ export default function UsuariosPage() {
       }
 
       toast.success("Usuario creado y asignado correctamente");
-      setNewUser({ name: "", email: "", password: "", role: "RESPONSABLE_INSTITUCION", institucionId: "" });
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        role: "RESPONSABLE_INSTITUCION",
+        institucionId: "",
+      });
+      closeCreateModal();
       await mutate();
     } catch (error: any) {
       toast.error(error?.message || "No se pudo crear el usuario");
@@ -175,70 +193,27 @@ export default function UsuariosPage() {
 
   return (
     <main className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Registro de Encargados de Institución</h1>
-        <p className="text-sm text-gray-500 mt-1">Asigna rol y alcance por institución a usuarios existentes.</p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Encargados de Institución</h1>
+          <p className="text-sm text-gray-500 mt-1">Administra roles y alcance por plantel con control centralizado.</p>
+        </div>
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
+        >
+          <Plus className="h-4 w-4" />
+          Nuevo encargado
+        </button>
       </div>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 space-y-4">
-        <h2 className="text-base font-semibold text-gray-800">Crear nuevo usuario</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input
-            value={newUser.name}
-            onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))}
-            placeholder="Nombre completo"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          />
-          <input
-            value={newUser.email}
-            onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
-            placeholder="correo@dominio.com"
-            type="email"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          />
-          <input
-            value={newUser.password}
-            onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
-            placeholder="Contraseña temporal"
-            type="password"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          />
-          <select
-            value={newUser.role}
-            onChange={(e) => {
-              const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
-              setNewUser((p) => ({ ...p, role, institucionId: role === "ADMIN" ? "" : p.institucionId }));
-            }}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          >
-            <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
-          <select
-            value={newUser.institucionId}
-            disabled={newUser.role !== "RESPONSABLE_INSTITUCION"}
-            onChange={(e) => setNewUser((p) => ({ ...p, institucionId: e.target.value }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-60"
-          >
-            <option value="">Selecciona una institución</option>
-            {instituciones.map((i) => (
-              <option key={i.id} value={i.id}>{i.nombre} ({i.cct})</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex justify-end">
-          <button
-            onClick={createUser}
-            disabled={creating}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
-          >
-            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Crear usuario
-          </button>
-        </div>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard title="Usuarios totales" value={String(users.length)} />
+        <StatCard title="Encargados activos" value={String(responsables)} />
+        <StatCard title="Instituciones" value={String(instituciones.length)} />
       </section>
 
-      <div className="relative max-w-md">
+      <div className="relative max-w-lg">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
         <input
           value={searchTerm}
@@ -267,56 +242,29 @@ export default function UsuariosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((u) => {
-                const d = getDraft(u);
-                return (
-                  <tr key={u.id}>
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-gray-800">{u.name}</div>
-                      <div className="text-xs text-gray-500">{u.email}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={d.role}
-                        onChange={(e) => {
-                          const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
-                          setDraft(u, {
-                            role,
-                            institucionId: role === "ADMIN" ? "" : d.institucionId,
-                          });
-                        }}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                      >
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={d.institucionId}
-                        disabled={d.role !== "RESPONSABLE_INSTITUCION"}
-                        onChange={(e) => setDraft(u, { institucionId: e.target.value })}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-60"
-                      >
-                        <option value="">Selecciona una institución</option>
-                        {instituciones.map((i) => (
-                          <option key={i.id} value={i.id}>{i.nombre} ({i.cct})</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => saveUser(u)}
-                        disabled={savingUserId === u.id}
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-3 py-2 text-xs font-semibold text-white disabled:opacity-70"
-                      >
-                        {savingUserId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                        Guardar
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {filtered.map((u) => (
+                <tr key={u.id}>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-gray-800">{u.name}</div>
+                    <div className="text-xs text-gray-500">{u.email}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <RoleBadge role={u.role} />
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {u.institucion ? `${u.institucion.nombre} (${u.institucion.cct})` : "Sin institución"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => openEditModal(u)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 hover:border-[#08677a] hover:text-[#08677a]"
+                    >
+                      <UserCog className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
@@ -331,6 +279,157 @@ export default function UsuariosPage() {
           Los responsables solo podrán operar participantes y personal de apoyo de su institución asignada.
         </p>
       </div>
+
+      {isCreateOpen && (
+        <ModalShell title="Registrar nuevo usuario" onClose={closeCreateModal}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FieldInput value={newUser.name} onChange={(v) => setNewUser((p) => ({ ...p, name: v }))} placeholder="Nombre completo" />
+            <FieldInput value={newUser.email} onChange={(v) => setNewUser((p) => ({ ...p, email: v }))} placeholder="correo@dominio.com" type="email" />
+            <FieldInput value={newUser.password} onChange={(v) => setNewUser((p) => ({ ...p, password: v }))} placeholder="Contraseña temporal" type="password" />
+            <select
+              value={newUser.role}
+              onChange={(e) => {
+                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
+                setNewUser((p) => ({ ...p, role, institucionId: role === "ADMIN" ? "" : p.institucionId }));
+              }}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            >
+              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <select
+              value={newUser.institucionId}
+              disabled={newUser.role !== "RESPONSABLE_INSTITUCION"}
+              onChange={(e) => setNewUser((p) => ({ ...p, institucionId: e.target.value }))}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-60"
+            >
+              <option value="">Selecciona una institución</option>
+              {instituciones.map((i) => (
+                <option key={i.id} value={i.id}>{i.nombre} ({i.cct})</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={closeCreateModal} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700">Cancelar</button>
+            <button
+              onClick={createUser}
+              disabled={creating}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
+            >
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Crear usuario
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {isEditOpen && selectedUser && (
+        <ModalShell title={`Editar usuario: ${selectedUser.name}`} onClose={closeEditModal}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm bg-gray-50">{selectedUser.email}</div>
+            <select
+              value={editData.role}
+              onChange={(e) => {
+                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
+                setEditData((p) => ({ ...p, role, institucionId: role === "ADMIN" ? "" : p.institucionId }));
+              }}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            >
+              <option value="ADMIN">ADMIN</option>
+              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
+            </select>
+            <select
+              value={editData.institucionId}
+              disabled={editData.role !== "RESPONSABLE_INSTITUCION"}
+              onChange={(e) => setEditData((p) => ({ ...p, institucionId: e.target.value }))}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-60 md:col-span-2"
+            >
+              <option value="">Selecciona una institución</option>
+              {instituciones.map((i) => (
+                <option key={i.id} value={i.id}>{i.nombre} ({i.cct})</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={closeEditModal} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700">Cancelar</button>
+            <button
+              onClick={saveUser}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Guardar cambios
+            </button>
+          </div>
+        </ModalShell>
+      )}
     </main>
+  );
+}
+
+function StatCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
+      <div className="text-xs text-gray-500">{title}</div>
+      <div className="text-2xl font-bold text-gray-800 mt-1">{value}</div>
+    </div>
+  );
+}
+
+function RoleBadge({ role }: { role: "ADMIN" | "RESPONSABLE_INSTITUCION" }) {
+  if (role === "ADMIN") {
+    return <span className="rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-700">ADMIN</span>;
+  }
+
+  return (
+    <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+      RESPONSABLE_INSTITUCION
+    </span>
+  );
+}
+
+function ModalShell({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FieldInput({
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+}) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      type={type}
+      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+    />
   );
 }

@@ -152,6 +152,10 @@ model Participante {
   docCartaResponsiva       Boolean @default(false) @map("doc_carta_responsiva")
   docCertificadoMedico     Boolean @default(false) @map("doc_certificado_medico")
   docIneTutor              Boolean @default(false) @map("doc_ine_tutor")
+  docCredencialUrl         String? @map("doc_credencial_url")
+  docCartaResponsivaTutorUrl String? @map("doc_carta_responsiva_tutor_url")
+  docHistorialMedicoUrl    String? @map("doc_historial_medico_url")
+  docActaNacimientoUrl     String? @map("doc_acta_nacimiento_url")
 
   institucion Institucion @relation(fields: [institucionId], references: [id])
   tutor       Tutor?      @relation(fields: [tutorId], references: [id])
@@ -242,6 +246,7 @@ model PersonalApoyo {
   nombres                   String
   apellidoPaterno           String
   apellidoMaterno           String
+  fotoUrl                   String? @map("foto_url")
   puesto                    String
   telefono                  String
   email                     String?

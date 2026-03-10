@@ -32,7 +32,9 @@ type Props = {
   selectedCategoriaId?: number | "";
   onViewTeam: (t: any) => void;
   onDeleteTeam: (id: number) => void;
+  onEditParticipant: (participantId: number) => void;
   onDeleteParticipant: (inscripcionId: number) => void;
+  onEditApoyo: (personalId: number) => void;
   onDeleteApoyo: (asignacionId: number) => void;
 };
 
@@ -46,7 +48,9 @@ export default function ParticipantsTable({
   selectedCategoriaId,
   onViewTeam,
   onDeleteTeam,
+  onEditParticipant,
   onDeleteParticipant,
+  onEditApoyo,
   onDeleteApoyo,
 }: Props) {
   // Filtrar por categoría si está seleccionada
@@ -132,12 +136,20 @@ export default function ParticipantsTable({
                     <td className="px-3 py-3">{p.institucion?.nombre ?? "—"}</td>
                     <td className="px-3 py-3">{p.categoria?.nombre ?? "—"}</td>
                     <td className="px-3 py-3 text-right">
-                      <button
-                        onClick={() => onDeleteParticipant(p.inscripcionId ?? p.id)}
-                        className="px-2 py-1 text-xs border rounded text-red-600"
-                      >
-                        Eliminar
-                      </button>
+                      <div className="inline-flex gap-2">
+                        <button
+                          onClick={() => onEditParticipant(p.id)}
+                          className="px-2 py-1 text-xs border rounded text-[#08677a]"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => onDeleteParticipant(p.inscripcionId ?? p.id)}
+                          className="px-2 py-1 text-xs border rounded text-red-600"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -173,12 +185,20 @@ export default function ParticipantsTable({
                   <td className="px-3 py-3">{p.institucion?.nombre ?? "—"}</td>
                   <td className="px-3 py-3">{p.categoria?.nombre ?? "—"}</td>
                   <td className="px-3 py-3 text-right">
-                    <button
-                      onClick={() => onDeleteApoyo(p.asignacionId ?? p.id)}
-                      className="px-2 py-1 text-xs border rounded text-red-600"
-                    >
-                      Eliminar
-                    </button>
+                    <div className="inline-flex gap-2">
+                      <button
+                        onClick={() => onEditApoyo(p.id)}
+                        className="px-2 py-1 text-xs border rounded text-[#08677a]"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => onDeleteApoyo(p.asignacionId ?? p.id)}
+                        className="px-2 py-1 text-xs border rounded text-red-600"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

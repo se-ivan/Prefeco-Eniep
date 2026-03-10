@@ -7,10 +7,15 @@ import {
   Heart, 
   Users, 
   FileText, 
+  ImagePlus,
+  Loader2,
+  Upload,
   ChevronLeft, 
   ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
+import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { uploadParticipantDocumentToFirebase } from "@/lib/document-upload";
 
 // Definición de los pasos del Stepper
 const STEPS = [
@@ -33,6 +38,27 @@ type UserScope = {
   institucion: { id: number; nombre: string; cct: string } | null;
 };
 
+type ParticipantDocumentField =
+  | "docCredencialUrl"
+  | "docCartaResponsivaTutorUrl"
+  | "docHistorialMedicoUrl"
+  | "docActaNacimientoUrl";
+
+const DOCUMENT_UPLOAD_CONFIG: Array<{
+  field: ParticipantDocumentField;
+  label: string;
+  category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento";
+}> = [
+  { field: "docCredencialUrl", label: "Credencial", category: "credencial" },
+  {
+    field: "docCartaResponsivaTutorUrl",
+    label: "Carta responsiva del tutor",
+    category: "carta-responsiva-tutor",
+  },
+  { field: "docHistorialMedicoUrl", label: "Historial médico", category: "historial-medico" },
+  { field: "docActaNacimientoUrl", label: "Acta de nacimiento", category: "acta-nacimiento" },
+];
+
 export default function RegistrarAlumnoPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -41,9 +67,18 @@ export default function RegistrarAlumnoPage() {
   const [scope, setScope] = useState<UserScope | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingDocuments, setUploadingDocuments] = useState<Record<ParticipantDocumentField, boolean>>({
+    docCredencialUrl: false,
+    docCartaResponsivaTutorUrl: false,
+    docHistorialMedicoUrl: false,
+    docActaNacimientoUrl: false,
+  });
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     institucionId: "",
+    fotoUrl: "",
     nombres: "",
     apellidoPaterno: "",
     apellidoMaterno: "",
@@ -62,6 +97,10 @@ export default function RegistrarAlumnoPage() {
     tutorTelefono: "",
     tutorEmail: "",
     tutorDireccion: "",
+    docCredencialUrl: "",
+    docCartaResponsivaTutorUrl: "",
+    docHistorialMedicoUrl: "",
+    docActaNacimientoUrl: "",
     docCurp: false,
     docComprobanteEstudios: false,
     docCartaResponsiva: false,
@@ -120,14 +159,65 @@ export default function RegistrarAlumnoPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
+  const clearPhotoSelection = () => {
+    setPhotoPreview(null);
+    setFormData((prev) => ({ ...prev, fotoUrl: "" }));
+  };
+
+  const clearDocumentSelection = (field: ParticipantDocumentField) => {
+    setFormData((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: ParticipantDocumentField,
+    category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento"
+  ) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
     setStepError(null);
-    setFormData((prev) => ({ ...prev, [name]: checked }));
+    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
+
+    try {
+      const { url } = await uploadParticipantDocumentToFirebase(selectedFile, category);
+      setFormData((prev) => ({ ...prev, [field]: url }));
+      toast.success(`${selectedFile.name} subido correctamente`);
+    } catch (error: any) {
+      const message = error?.message || "No se pudo subir el documento";
+      setStepError(message);
+      toast.error(message);
+    } finally {
+      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
+      e.target.value = "";
+    }
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadingPhoto(true);
+    setStepError(null);
+
+    try {
+      const { url } = await uploadImageToFirebase(selectedFile, "participante");
+      setPhotoPreview(url);
+      setFormData((prev) => ({ ...prev, fotoUrl: url }));
+      toast.success("Fotografia subida correctamente");
+    } catch (error: any) {
+      const message = error?.message || "No se pudo subir la fotografia";
+      toast.error(message);
+      setStepError(message);
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
   };
 
   const validateStep1 = () => {
-    if (!formData.institucionId) return "Selecciona una institución.";
+    const resolvedInstitucionId = Number(formData.institucionId || scope?.institucionId || 0);
+    if (!resolvedInstitucionId) return "No se encontró una institución válida para el registro.";
     if (!formData.nombres.trim()) return "El nombre es obligatorio.";
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
     if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
@@ -213,7 +303,7 @@ export default function RegistrarAlumnoPage() {
     setSubmitting(true);
     try {
       const payload = {
-        institucionId: Number(formData.institucionId),
+        institucionId: Number(formData.institucionId || scope?.institucionId || 0),
         curp: formData.curp,
         matricula: formData.matricula,
         nombres: formData.nombres,
@@ -221,17 +311,22 @@ export default function RegistrarAlumnoPage() {
         apellidoMaterno: formData.apellidoMaterno,
         fechaNacimiento: formData.fechaNacimiento,
         genero: formData.genero,
+        fotoUrl: formData.fotoUrl || null,
         alergias: formData.alergias || null,
         tipoSangre: formData.tipoSangre || null,
         padecimientos: formData.padecimientos || null,
         medicamentos: formData.medicamentos || null,
         contactoEmergenciaNombre: formData.contactoEmergenciaNombre || null,
         contactoEmergenciaTelefono: formData.contactoEmergenciaTelefono || null,
-        docCurp: formData.docCurp,
-        docComprobanteEstudios: formData.docComprobanteEstudios,
-        docCartaResponsiva: formData.docCartaResponsiva,
-        docCertificadoMedico: formData.docCertificadoMedico,
+        docCurp: !!formData.docActaNacimientoUrl,
+        docComprobanteEstudios: !!formData.docCredencialUrl,
+        docCartaResponsiva: !!formData.docCartaResponsivaTutorUrl,
+        docCertificadoMedico: !!formData.docHistorialMedicoUrl,
         docIneTutor: formData.docIneTutor,
+        docCredencialUrl: formData.docCredencialUrl || null,
+        docCartaResponsivaTutorUrl: formData.docCartaResponsivaTutorUrl || null,
+        docHistorialMedicoUrl: formData.docHistorialMedicoUrl || null,
+        docActaNacimientoUrl: formData.docActaNacimientoUrl || null,
         tutor: hasTutorData
           ? {
               nombreCompleto: formData.tutorNombreCompleto,
@@ -256,7 +351,7 @@ export default function RegistrarAlumnoPage() {
       }
 
       toast.success("Alumno registrado exitosamente");
-      router.push("/dashboard/participantes");
+      router.push("/dashboard/participantes/lista");
       router.refresh();
     } catch (err: any) {
       console.error(err);
@@ -336,24 +431,67 @@ export default function RegistrarAlumnoPage() {
               <p className="text-xs text-gray-500 mb-8">Información personal básica</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                {scope?.role !== "RESPONSABLE_INSTITUCION" && (
+                  <div className="group md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                      Institución <span className="text-[#08677a]">*</span>
+                    </label>
+                    <select
+                      name="institucionId"
+                      value={formData.institucionId}
+                      onChange={handleInputChange}
+                      disabled={loadingInstituciones}
+                      className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
+                    >
+                      <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
+                      {instituciones.map((institucion) => (
+                        <option key={institucion.id} value={institucion.id}>
+                          {institucion.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="group md:col-span-2">
-                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
-                    Institución <span className="text-[#08677a]">*</span>
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1 mb-2">
+                    Fotografia infantil (3:4 vertical)
                   </label>
-                  <select
-                    name="institucionId"
-                    value={formData.institucionId}
-                    onChange={handleInputChange}
-                    disabled={loadingInstituciones || scope?.role === "RESPONSABLE_INSTITUCION"}
-                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-500 focus:ring-0 focus:border-[#08677a] transition-colors outline-none appearance-none cursor-pointer disabled:opacity-60"
-                  >
-                    <option value="">{loadingInstituciones ? "Cargando instituciones..." : "Selecciona una institución"}</option>
-                    {(scope?.role === "RESPONSABLE_INSTITUCION" ? instituciones.filter((i) => i.id === scope.institucionId) : instituciones).map((institucion) => (
-                      <option key={institucion.id} value={institucion.id}>
-                        {institucion.nombre}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="rounded-xl border border-dashed border-gray-300 p-4 bg-gray-50/60">
+                    <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                      <div className="text-xs text-gray-500">
+                        Formatos: JPG, PNG o WEBP. Maximo 3MB. Proporcion aproximada 3:4.
+                      </div>
+                      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#08677a] text-white text-sm font-semibold cursor-pointer hover:bg-teal-800 transition-colors">
+                        {uploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+                        {uploadingPhoto ? "Subiendo..." : "Seleccionar fotografia"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={handlePhotoChange}
+                          disabled={uploadingPhoto}
+                        />
+                      </label>
+                    </div>
+
+                    {photoPreview && (
+                      <div className="mt-4 flex items-start gap-3">
+                        <img
+                          src={photoPreview}
+                          alt="Vista previa de fotografia"
+                          className="h-36 w-28 rounded-lg border border-gray-200 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearPhotoSelection}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          Quitar fotografia
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Input: Nombres */}
@@ -624,63 +762,49 @@ export default function RegistrarAlumnoPage() {
            {currentStep === 4 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
               <h3 className="text-lg font-bold text-gray-800 mb-1">Documentación</h3>
-              <p className="text-xs text-gray-500 mb-8">Marca los documentos entregados</p>
+              <p className="text-xs text-gray-500 mb-8">Sube los archivos en PDF, JPG, PNG o WEBP (máximo 10MB)</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docCurp"
-                    checked={formData.docCurp}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300 text-[#08677a] focus:ring-[#08677a]"
-                  />
-                  CURP
-                </label>
+                {DOCUMENT_UPLOAD_CONFIG.map((doc) => {
+                  const hasFile = !!formData[doc.field];
+                  const isUploading = uploadingDocuments[doc.field];
+                  return (
+                    <div key={doc.field} className="rounded-xl border border-gray-200 p-4 bg-white">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-800">{doc.label}</p>
+                        {hasFile ? (
+                          <span className="text-xs rounded-full bg-emerald-100 text-emerald-700 px-2 py-1">Subido</span>
+                        ) : (
+                          <span className="text-xs rounded-full bg-slate-100 text-slate-600 px-2 py-1">Pendiente</span>
+                        )}
+                      </div>
 
-                <label className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docComprobanteEstudios"
-                    checked={formData.docComprobanteEstudios}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300 text-[#08677a] focus:ring-[#08677a]"
-                  />
-                  Comprobante de estudios
-                </label>
+                      <div className="mt-3 flex items-center gap-2">
+                        <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#08677a] text-white text-xs font-semibold cursor-pointer hover:bg-teal-800 transition-colors">
+                          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          {isUploading ? "Subiendo..." : "Seleccionar archivo"}
+                          <input
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => handleDocumentUpload(e, doc.field, doc.category)}
+                            disabled={isUploading}
+                          />
+                        </label>
 
-                <label className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docCartaResponsiva"
-                    checked={formData.docCartaResponsiva}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300 text-[#08677a] focus:ring-[#08677a]"
-                  />
-                  Carta responsiva
-                </label>
-
-                <label className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docCertificadoMedico"
-                    checked={formData.docCertificadoMedico}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300 text-[#08677a] focus:ring-[#08677a]"
-                  />
-                  Certificado médico
-                </label>
-
-                <label className="flex items-center gap-3 rounded-xl border border-gray-200 p-4 text-sm font-medium text-gray-700 md:col-span-2">
-                  <input
-                    type="checkbox"
-                    name="docIneTutor"
-                    checked={formData.docIneTutor}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300 text-[#08677a] focus:ring-[#08677a]"
-                  />
-                  INE del tutor
-                </label>
+                        {hasFile && (
+                          <button
+                            type="button"
+                            onClick={() => clearDocumentSelection(doc.field)}
+                            className="text-xs text-red-600 hover:underline"
+                          >
+                            Quitar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

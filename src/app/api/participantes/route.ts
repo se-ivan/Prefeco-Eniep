@@ -91,6 +91,10 @@ export async function POST(req: NextRequest) {
       docCartaResponsiva,
       docCertificadoMedico,
       docIneTutor,
+      docCredencialUrl,
+      docCartaResponsivaTutorUrl,
+      docHistorialMedicoUrl,
+      docActaNacimientoUrl,
       tutor,
     } = body ?? {};
 
@@ -174,11 +178,15 @@ export async function POST(req: NextRequest) {
           medicamentos: medicamentos ? String(medicamentos).trim() : null,
           contactoEmergenciaNombre: contactoEmergenciaNombre ? String(contactoEmergenciaNombre).trim() : null,
           contactoEmergenciaTelefono: contactoEmergenciaTelefono ? String(contactoEmergenciaTelefono).trim() : null,
-          docCurp: !!docCurp,
-          docComprobanteEstudios: !!docComprobanteEstudios,
-          docCartaResponsiva: !!docCartaResponsiva,
-          docCertificadoMedico: !!docCertificadoMedico,
+          docCurp: !!docCurp || !!docActaNacimientoUrl,
+          docComprobanteEstudios: !!docComprobanteEstudios || !!docCredencialUrl,
+          docCartaResponsiva: !!docCartaResponsiva || !!docCartaResponsivaTutorUrl,
+          docCertificadoMedico: !!docCertificadoMedico || !!docHistorialMedicoUrl,
           docIneTutor: !!docIneTutor,
+          docCredencialUrl: docCredencialUrl ? String(docCredencialUrl).trim() : null,
+          docCartaResponsivaTutorUrl: docCartaResponsivaTutorUrl ? String(docCartaResponsivaTutorUrl).trim() : null,
+          docHistorialMedicoUrl: docHistorialMedicoUrl ? String(docHistorialMedicoUrl).trim() : null,
+          docActaNacimientoUrl: docActaNacimientoUrl ? String(docActaNacimientoUrl).trim() : null,
         },
         include: {
           institucion: {

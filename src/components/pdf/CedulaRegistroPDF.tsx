@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Colores extraídos de la imagen
 const COLORS = {
@@ -14,7 +14,8 @@ const styles = StyleSheet.create({
   
   // Encabezado principal
   headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  logoPlaceholder: { width: 65, height: 75, backgroundColor: '#f9f9f9', border: '1pt dashed #ccc', justifyContent: 'center' },
+  logoPlaceholder: { width: 100, height: 75, justifyContent: 'center' },
+  logoImage: { width: '100%', height: '100%', objectFit: 'contain' },
   headerTextContainer: { alignItems: 'center', flex: 1 },
   title: { fontSize: 20, color: COLORS.teal, fontWeight: 'bold' },
   subtitle: { fontSize: 13, color: COLORS.orange, marginVertical: 4, fontWeight: 'bold' },
@@ -26,7 +27,8 @@ const styles = StyleSheet.create({
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between' },
   fieldHeader: { backgroundColor: COLORS.teal, paddingVertical: 4, paddingHorizontal: 6 },
   fieldHeaderText: { color: COLORS.textLight, fontSize: 9, fontWeight: 'bold' },
-  fieldBody: { border: `1pt solid ${COLORS.teal}`, borderTop: 'none', height: 20, backgroundColor: '#ffffff' },
+  fieldBody: { border: `1pt solid ${COLORS.teal}`, borderTop: 'none', height: 20, backgroundColor: '#ffffff', justifyContent: 'center', paddingHorizontal: 6 },
+  fieldBodyText: { fontSize: 8, color: COLORS.textDark },
 
   // Cuadrícula de Credenciales (AHORA A 2 COLUMNAS)
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
@@ -48,6 +50,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginTop: 8
   },
+  photoImage: { width: 55, height: 72, objectFit: 'cover', marginRight: 8, marginTop: 8 },
   cardDataContainer: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
   
   // Fila superior de la credencial
@@ -57,7 +60,8 @@ const styles = StyleSheet.create({
   // numberOfLines={1} fuerza a que no haga wrap. Con 2 columnas ahora hay espacio suficiente.
   studentName: { fontSize: 9, fontWeight: 'bold', borderBottom: '1pt solid #e0e0e0', flex: 1, paddingBottom: 2, textTransform: 'uppercase' },
   
-  miniLogo: { width: 22, height: 28, backgroundColor: '#f0f0f0', position: 'absolute', top: -2, right: -2, border: '0.5pt solid #ccc', justifyContent: 'center' },
+  miniLogo: { width: 22, height: 28, position: 'absolute', top: -2, right: -2, justifyContent: 'center' },
+  miniLogoImage: { width: 22, height: 28, objectFit: 'contain' },
   
   // Datos del estudiante
   dataRow: { flexDirection: 'row', marginBottom: 2.5, alignItems: 'flex-end' },
@@ -70,6 +74,25 @@ const styles = StyleSheet.create({
   signatureLine: { borderTop: '1pt solid #000', width: '30%', textAlign: 'center', paddingTop: 4, fontSize: 9 },
   disclaimer: { fontSize: 7, textAlign: 'center', marginTop: 15, color: '#444' }
 });
+
+const LEFT_LOGO_SRC = '/logo-escuela.png';
+const RIGHT_LOGO_SRC = '/logo-eniep.png';
+
+const getProxiedImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('http')) {
+    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+};
+
+const safeText = (value: unknown) => (value == null || value === '' ? 'N/A' : String(value));
+const fitFontSize = (value: unknown, base: number, min: number, step = 14) => {
+  const len = safeText(value).length;
+  if (len <= step) return base;
+  const reduced = base - Math.ceil((len - step) / step) * 0.5;
+  return Math.max(min, reduced);
+};
 
 // Cambiamos el límite de 18 a 10 participantes por página (2 columnas x 5 filas)
 const chunkArray = (arr: any[], size: number) => {
@@ -86,11 +109,18 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
     <Document>
       {pages.map((pageData, pageIndex) => (
         <Page key={pageIndex} size="A4" style={styles.page}>
+          {(() => {
+            const first = pageData?.[0] ?? {};
+            const eventName = safeText(first?.disciplina?.nombre);
+            const campus = safeText(first?.institucion?.nombre);
+            const sede = safeText(first?.institucion?.estado);
+            return (
+              <>
           
           {/* ENCABEZADO */}
           <View style={styles.headerContainer}>
             <View style={styles.logoPlaceholder}>
-              <Text style={{ fontSize: 7, textAlign: 'center' }}>LOGO IZQ</Text>
+              <Image src={LEFT_LOGO_SRC} style={styles.logoImage} />
             </View>
             <View style={styles.headerTextContainer}>
               <Text style={styles.title}>Interprefecos 2026</Text>
@@ -99,7 +129,7 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
               <Text style={styles.dateText}>FECHA DE EXPEDICIÓN: {new Date().toLocaleDateString()}</Text>
             </View>
             <View style={styles.logoPlaceholder}>
-              <Text style={{ fontSize: 7, textAlign: 'center' }}>LOGO DER</Text>
+              <Image src={RIGHT_LOGO_SRC} style={styles.logoImage} />
             </View>
           </View>
 
@@ -108,7 +138,9 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldHeaderText}>EVENTO / ACTIVIDAD</Text>
             </View>
-            <View style={styles.fieldBody} />
+            <View style={styles.fieldBody}>
+              <Text style={[styles.fieldBodyText, { fontSize: fitFontSize(eventName, 8, 6, 16) }]}>{eventName}</Text>
+            </View>
           </View>
 
           {/* CAMPUS Y SEDE */}
@@ -117,13 +149,17 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
               <View style={styles.fieldHeader}>
                 <Text style={styles.fieldHeaderText}>CAMPUS</Text>
               </View>
-              <View style={styles.fieldBody} />
+              <View style={styles.fieldBody}>
+                <Text style={[styles.fieldBodyText, { fontSize: fitFontSize(campus, 8, 6, 16) }]}>{campus}</Text>
+              </View>
             </View>
             <View style={{ width: '48%' }}>
               <View style={styles.fieldHeader}>
                 <Text style={styles.fieldHeaderText}>SEDE</Text>
               </View>
-              <View style={styles.fieldBody} />
+              <View style={styles.fieldBody}>
+                <Text style={[styles.fieldBodyText, { fontSize: fitFontSize(sede, 8, 6, 16) }]}>{sede}</Text>
+              </View>
             </View>
           </View>
 
@@ -131,9 +167,22 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
           <View style={styles.grid}>
             {pageData.map((p, i) => (
               <View key={i} style={styles.card}>
+                {(() => {
+                  const fullName = `${safeText(p?.nombres)} ${safeText(p?.apellidoPaterno)}`;
+                  const institucionNombre = safeText(p?.institucion?.nombre);
+                  const institucionEstado = safeText(p?.institucion?.estado);
+                  const institucionClave = safeText(p?.institucion?.cct);
+                  const matricula = safeText(p?.matricula);
+                  const telefono = safeText(p?.telefono);
+                  const semestre = safeText(p?.semestre);
+                  const fotoUrl = p?.fotoUrl ? String(p.fotoUrl) : '';
+                  const valueFont = fitFontSize(`${institucionNombre}${institucionClave}${fullName}`, 7.5, 6, 12);
+
+                  return (
+                    <>
                 
                 {/* Cuadro de foto */}
-                <View style={styles.photoBox}></View>
+                {fotoUrl ? <Image src={getProxiedImageUrl(fotoUrl)} style={styles.photoImage} /> : <View style={styles.photoBox}></View>}
 
                 {/* Contenido derecho */}
                 <View style={styles.cardDataContainer}>
@@ -141,45 +190,48 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
                   {/* Fila del nombre */}
                   <View style={styles.cardTopRow}>
                     <Text style={styles.chevron}>{'>'}</Text>
-                    <Text style={styles.studentName}>
-                      {p.nombres} {p.apellidoPaterno}
+                    <Text style={[styles.studentName, { fontSize: fitFontSize(fullName, 9, 7, 10) }]}>
+                      {fullName}
                     </Text>
                   </View>
                   
                   {/* Mini Logo */}
                   <View style={styles.miniLogo}>
-                    <Text style={{fontSize: 5, textAlign: 'center'}}>LOGO</Text>
+                    <Image src={RIGHT_LOGO_SRC} style={styles.miniLogoImage} />
                   </View>
 
                   {/* Lista de datos (Fuentes más grandes) */}
                   <View style={{ marginTop: 2 }}>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Institución:</Text>
-                      <Text style={styles.value}>{p.institucion?.nombre}</Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{institucionNombre}</Text>
                     </View>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Estado:</Text>
-                      <Text style={styles.value}></Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{institucionEstado}</Text>
                     </View>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Clave:</Text>
-                      <Text style={styles.value}></Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{institucionClave}</Text>
                     </View>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Matrícula:</Text>
-                      <Text style={styles.value}>{p.matricula}</Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{matricula}</Text>
                     </View>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Teléfono:</Text>
-                      <Text style={styles.value}></Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{telefono}</Text>
                     </View>
                     <View style={styles.dataRow}>
                       <Text style={styles.label}>Semestre:</Text>
-                      <Text style={styles.value}></Text>
+                      <Text style={[styles.value, { fontSize: valueFont }]}>{semestre}</Text>
                     </View>
                   </View>
 
                 </View>
+                    </>
+                  );
+                })()}
               </View>
             ))}
           </View>
@@ -195,6 +247,10 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
               Este documento será inválido si presenta tachadura, correcciones, marcas, sobreimpresión, sobreposición de fotos, falta de una o más fotos, así como cualquier tipo de modificación.
             </Text>
           </View>
+
+              </>
+            );
+          })()}
 
         </Page>
       ))}

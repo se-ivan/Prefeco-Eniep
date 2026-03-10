@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import useSWR from "swr";
 import {
   Building2,
@@ -11,12 +11,41 @@ import {
   Loader2,
   Plus,
   Trash2,
+  Pencil,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Institucion = {
   id: number;
@@ -27,19 +56,143 @@ type Institucion = {
   urlLogo: string | null;
 };
 
+type InstitucionEditForm = {
+  id: number;
+  cct: string;
+  nombre: string;
+  estado: string;
+  zonaEscolar: string;
+  urlLogo: string;
+};
+
+const estadosMexico = [
+  "Aguascalientes",
+  "Baja California",
+  "Baja California Sur",
+  "Campeche",
+  "Chiapas",
+  "Chihuahua",
+  "Ciudad de México",
+  "Coahuila",
+  "Colima",
+  "Durango",
+  "Estado de México",
+  "Guanajuato",
+  "Guerrero",
+  "Hidalgo",
+  "Jalisco",
+  "Michoacán",
+  "Morelos",
+  "Nayarit",
+  "Nuevo León",
+  "Oaxaca",
+  "Puebla",
+  "Querétaro",
+  "Quintana Roo",
+  "San Luis Potosí",
+  "Sinaloa",
+  "Sonora",
+  "Tabasco",
+  "Tamaulipas",
+  "Tlaxcala",
+  "Veracruz",
+  "Yucatán",
+  "Zacatecas",
+];
+
 export default function ListaInstitucionesPage() {
   const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones");
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Institucion | null>(null);
+  const [editTarget, setEditTarget] = useState<InstitucionEditForm | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Seguro que deseas eliminar esta institución?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/instituciones/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/instituciones/${deleteTarget.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       toast.success("Institución eliminada");
+      setDeleteTarget(null);
       mutate();
     } catch {
       toast.error("Error al eliminar institución");
+    }
+  };
+
+  const openEdit = (inst: Institucion) => {
+    setEditTarget({
+      id: inst.id,
+      cct: inst.cct,
+      nombre: inst.nombre,
+      estado: inst.estado,
+      zonaEscolar: inst.zonaEscolar,
+      urlLogo: inst.urlLogo ?? "",
+    });
+  };
+
+  const closeEdit = () => {
+    if (savingEdit || uploadingLogo) return;
+    setEditTarget(null);
+  };
+
+  const onEditField = (field: keyof InstitucionEditForm, value: string) => {
+    if (!editTarget) return;
+    setEditTarget({ ...editTarget, [field]: value });
+  };
+
+  const onEditLogoChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile || !editTarget) return;
+
+    setUploadingLogo(true);
+    try {
+      const { url } = await uploadImageToFirebase(selectedFile, "institucion");
+      setEditTarget({ ...editTarget, urlLogo: url });
+      toast.success("Logo subido correctamente");
+    } catch (error: any) {
+      toast.error(error?.message || "No se pudo subir el logo");
+    } finally {
+      setUploadingLogo(false);
+      e.target.value = "";
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!editTarget) return;
+
+    if (!editTarget.nombre.trim() || !editTarget.cct.trim() || !editTarget.estado.trim() || !editTarget.zonaEscolar.trim()) {
+      toast.error("Completa todos los campos obligatorios");
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/instituciones/${editTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cct: editTarget.cct.trim().toUpperCase(),
+          nombre: editTarget.nombre.trim(),
+          estado: editTarget.estado,
+          zonaEscolar: editTarget.zonaEscolar.trim(),
+          urlLogo: editTarget.urlLogo.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "No se pudo actualizar la institución");
+      }
+
+      toast.success("Institución actualizada");
+      setEditTarget(null);
+      mutate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error al actualizar institución");
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -107,15 +260,26 @@ export default function ListaInstitucionesPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0b697d]/10 text-[#0b697d]">
                     <Building2 className="h-6 w-6" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDelete(inst.id)}
-                    title="Eliminar institución"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-[#0b697d] hover:bg-[#0b697d]/10"
+                      onClick={() => openEdit(inst)}
+                      title="Editar institución"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                      onClick={() => setDeleteTarget(inst)}
+                      title="Eliminar institución"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-800 mb-1 leading-tight line-clamp-2">
@@ -163,6 +327,131 @@ export default function ListaInstitucionesPage() {
           </div>
         )}
       </main>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar institución</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará la institución {deleteTarget?.nombre}. No se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && closeEdit()}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar institución</DialogTitle>
+            <DialogDescription>
+              Actualiza los datos del plantel y guarda los cambios.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editTarget && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="edit-nombre">Nombre</Label>
+                <Input
+                  id="edit-nombre"
+                  value={editTarget.nombre}
+                  onChange={(e) => onEditField("nombre", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-cct">CCT</Label>
+                <Input
+                  id="edit-cct"
+                  maxLength={15}
+                  value={editTarget.cct}
+                  onChange={(e) => onEditField("cct", e.target.value.toUpperCase())}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-zona">Zona escolar</Label>
+                <Input
+                  id="edit-zona"
+                  value={editTarget.zonaEscolar}
+                  onChange={(e) => onEditField("zonaEscolar", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Estado</Label>
+                <Select
+                  value={editTarget.estado}
+                  onValueChange={(value) => onEditField("estado", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estadosMexico.map((estado) => (
+                      <SelectItem key={estado} value={estado}>
+                        {estado}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="edit-logo">Logo (opcional)</Label>
+                <div className="flex items-center gap-3">
+                  <label
+                    htmlFor="edit-logo"
+                    className="inline-flex h-10 px-3 items-center gap-2 rounded-md border border-slate-200 bg-white text-sm cursor-pointer hover:bg-slate-50"
+                  >
+                    {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                    {uploadingLogo ? "Subiendo logo..." : "Subir logo"}
+                  </label>
+                  <Input
+                    id="edit-logo"
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={onEditLogoChange}
+                    disabled={uploadingLogo}
+                  />
+                  {editTarget.urlLogo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => onEditField("urlLogo", "")}
+                    >
+                      Quitar logo
+                    </Button>
+                  )}
+                </div>
+
+                {editTarget.urlLogo && (
+                  <img
+                    src={editTarget.urlLogo}
+                    alt="Vista previa del logo"
+                    className="h-24 w-full rounded-md border border-slate-200 bg-white object-contain p-2"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeEdit} disabled={savingEdit || uploadingLogo}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={saveEdit} disabled={savingEdit || uploadingLogo}>
+              {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
