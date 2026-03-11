@@ -44,7 +44,7 @@ export function Footer() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <img src="/logo.png" alt="PREFECO Logo" className="h-12 w-12 object-contain brightness-0 invert" />
+              <img src="/logo.png" alt="PREFECO Logo" className="h-12 w-12 object-contain" />
               <div className="flex flex-col text-white">
                 <span className="font-bold text-xl leading-tight">PREFECO</span>
                 <span className="text-sm text-white/70">Melchor Ocampo</span>
