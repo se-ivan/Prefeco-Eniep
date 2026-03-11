@@ -103,6 +103,7 @@ enum TipoDisciplina {
   CULTURAL
   CIVICA
   ACADEMICA
+  EXHIBICION
 }
 
 enum Modalidad {

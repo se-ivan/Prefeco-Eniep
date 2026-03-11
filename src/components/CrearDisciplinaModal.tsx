@@ -13,7 +13,7 @@ import React, { useState } from "react";
  * Nota: el backend espera `categorias: string[]`.
  */
 
-type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA";
+type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION";
 type Modalidad = "EQUIPO" | "INDIVIDUAL";
 type Rama = "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
 
@@ -147,6 +147,8 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
               <option value="DEPORTIVA">Deportiva</option>
               <option value="CULTURAL">Cultural</option>
               <option value="CIVICA">Cívica</option>
+              <option value="ACADEMICA">Académica</option>
+              <option value="EXHIBICION">Exhibición</option>
             </select>
           </div>
 
