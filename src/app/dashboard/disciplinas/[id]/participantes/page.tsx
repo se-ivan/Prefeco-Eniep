@@ -356,18 +356,23 @@ export default function ParticipantesPage() {
             <label htmlFor="filtro-institucion" className="block text-xs text-gray-500 mb-1">
               Institución
             </label>
-            <select
-              id="filtro-institucion"
-              value={selectedInstitucionId ?? ""}
-              onChange={(e) => setSelectedInstitucionId(e.target.value ? Number(e.target.value) : "")}
-              disabled={isResponsable}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {!isResponsable && <option value="">(todas las instituciones)</option>}
-              {instituciones.map((ins) => (
-                <option key={ins.id} value={ins.id}>{ins.nombre}</option>
-              ))}
-            </select>
+            {isResponsable ? (
+              <div className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm bg-slate-50 text-slate-600">
+                {instituciones.find((ins) => ins.id === Number(selectedInstitucionId))?.nombre || "Cargando..."}
+              </div>
+            ) : (
+              <select
+                id="filtro-institucion"
+                value={selectedInstitucionId ?? ""}
+                onChange={(e) => setSelectedInstitucionId(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">(todas las instituciones)</option>
+                {instituciones.map((ins) => (
+                  <option key={ins.id} value={ins.id}>{ins.nombre}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
       </div>

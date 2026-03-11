@@ -78,6 +78,8 @@ export default function NuevoParticipanteModal({
   const [categoriaId, setCategoriaId] = useState<number | "">("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [isResponsable, setIsResponsable] = useState(false);
+  const [userInstitucionId, setUserInstitucionId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -87,9 +89,34 @@ export default function NuevoParticipanteModal({
       setSearchError(null);
       setCategoriaId("");
       setTipo("");
-      setInstitucionId("");
+      if (!isResponsable) {
+        setInstitucionId("");
+      }
       initialRef.current = null;
     }
+  }, [open, isResponsable]);
+
+  // Obtener datos del usuario actual (rol e institucionId)
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) return;
+        const me = await res.json();
+        if (me?.role === "RESPONSABLE_INSTITUCION" && me?.institucionId) {
+          setIsResponsable(true);
+          setUserInstitucionId(Number(me.institucionId));
+          setInstitucionId(Number(me.institucionId));
+        } else {
+          setIsResponsable(false);
+          setUserInstitucionId(null);
+        }
+      } catch (err) {
+        setIsResponsable(false);
+        setUserInstitucionId(null);
+      }
+    })();
   }, [open]);
 
   useEffect(() => {
@@ -327,17 +354,27 @@ export default function NuevoParticipanteModal({
             {/* Controles fijos arriba */}
             <div className="p-6 pb-2 flex-shrink-0 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Institución</label>
-                  <select
-                    className="w-full border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#08677a]/20 outline-none transition-all"
-                    value={institucionId ?? ""}
-                    onChange={(e) => setInstitucionId(e.target.value ? Number(e.target.value) : "")}
-                  >
-                    <option value="">Selecciona institución</option>
-                    {instituciones.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
-                  </select>
-                </div>
+                {!isResponsable && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Institución</label>
+                    <select
+                      className="w-full border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#08677a]/20 outline-none transition-all"
+                      value={institucionId ?? ""}
+                      onChange={(e) => setInstitucionId(e.target.value ? Number(e.target.value) : "")}
+                    >
+                      <option value="">Selecciona institución</option>
+                      {instituciones.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+                {isResponsable && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Institución</label>
+                    <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-600">
+                      {instituciones.find((ins) => ins.id === userInstitucionId)?.nombre || "Cargando..."}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Tipo participante</label>
                   <div className="flex gap-2">
