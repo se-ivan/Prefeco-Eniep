@@ -53,7 +53,7 @@ export function Navigation() {
             className="flex items-center gap-2 sm:gap-3 cursor-pointer"
             onClick={() => scrollToSection('#inicio')}
           >
-            <img src="/logo.png" alt="PREFECO Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain dark:brightness-0 dark:invert" />
+            <img src="/logo.png" alt="PREFECO Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
             <div className="flex flex-col">
               <span className="font-bold text-[#0b697d] dark:text-[#2eb4cc] text-sm sm:text-base">PREFECO</span>
               <span className="text-xs text-muted-foreground hidden sm:block">Melchor Ocampo</span>
