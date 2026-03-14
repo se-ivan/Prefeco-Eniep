@@ -6,6 +6,7 @@ export type AppRole = "ADMIN" | "RESPONSABLE_INSTITUCION";
 export type UserScope = {
   id: string;
   name: string;
+  username: string | null;
   email: string;
   role: AppRole;
   institucionId: number | null;
@@ -30,6 +31,7 @@ export async function getUserScope(headersValue: Headers): Promise<UserScope | n
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         role: true,
         institucionId: true,
@@ -46,6 +48,7 @@ export async function getUserScope(headersValue: Headers): Promise<UserScope | n
   return {
     id: user.id,
     name: user.name,
+    username: user.username ?? null,
     email: user.email,
     role: user.role as AppRole,
     institucionId: user.institucionId ?? null,
