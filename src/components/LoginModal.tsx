@@ -186,8 +186,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
               <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
                 {/* Lado Informativo (Oculto en móviles) */}
-                <div className="hidden lg:block lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-gray-50 to-white dark:from-background dark:to-background overflow-y-auto border-r border-border">
-                  <div className="max-w-md mx-auto">
+                <div className="hidden lg:flex flex-col justify-center lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-gray-50 to-white dark:from-background dark:to-background overflow-y-auto border-r border-border">
+                  <div className="max-w-md mx-auto w-full">
                     {/* Titulo y Logo */}
                     <div className="mb-8">
                       <div className="flex items-center gap-4 mb-6">
