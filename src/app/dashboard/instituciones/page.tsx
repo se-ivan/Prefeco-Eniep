@@ -54,6 +54,7 @@ type Institucion = {
   estado: string;
   zonaEscolar: string;
   urlLogo: string | null;
+  nombreDirector: string | null;
 };
 
 type InstitucionEditForm = {
@@ -63,6 +64,7 @@ type InstitucionEditForm = {
   estado: string;
   zonaEscolar: string;
   urlLogo: string;
+  nombreDirector: string;
 };
 
 const estadosMexico = [
@@ -129,6 +131,7 @@ export default function ListaInstitucionesPage() {
       estado: inst.estado,
       zonaEscolar: inst.zonaEscolar,
       urlLogo: inst.urlLogo ?? "",
+      nombreDirector: inst.nombreDirector ?? "",
     });
   };
 
@@ -178,6 +181,7 @@ export default function ListaInstitucionesPage() {
           estado: editTarget.estado,
           zonaEscolar: editTarget.zonaEscolar.trim(),
           urlLogo: editTarget.urlLogo.trim() || null,
+          nombreDirector: editTarget.nombreDirector?.trim() || null,
         }),
       });
 
@@ -299,10 +303,22 @@ export default function ListaInstitucionesPage() {
                     <span>{inst.estado}</span>
                   </div>
 
-                  <div className="flex items-start gap-2.5 text-sm text-slate-60">
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
                     <Globe className="h-4 w-4 text-[#ffa52d] shrink-0 mt-0.5" />
                     <span>{inst.zonaEscolar}</span>
                   </div>
+
+                  {inst.nombreDirector && (
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-[#ffa52d] shrink-0 mt-0.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span className="truncate">Dir. {inst.nombreDirector}</span>
+                    </div>
+                  )}
                 </div>
 
                 {inst.urlLogo ? (
@@ -360,6 +376,15 @@ export default function ListaInstitucionesPage() {
                   id="edit-nombre"
                   value={editTarget.nombre}
                   onChange={(e) => onEditField("nombre", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="edit-director">Nombre del director (Opcional)</Label>
+                <Input
+                  id="edit-director"
+                  value={editTarget.nombreDirector || ""}
+                  onChange={(e) => onEditField("nombreDirector", e.target.value)}
                 />
               </div>
 

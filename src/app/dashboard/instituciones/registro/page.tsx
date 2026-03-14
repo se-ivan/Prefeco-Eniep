@@ -36,6 +36,7 @@ const institucionSchema = z.object({
   estado: z.string().min(2, "Selecciona un estado"),
   zonaEscolar: z.string().min(1, "La zona escolar es obligatoria"),
   urlLogo: z.string().url("URL inválida").optional().or(z.literal("")),
+  nombreDirector: z.string().optional().or(z.literal("")),
 });
 
 type InstitucionForm = z.infer<typeof institucionSchema>;
@@ -112,6 +113,7 @@ export default function InstitucionesPage() {
       estado: "",
       zonaEscolar: "",
       urlLogo: "",
+      nombreDirector: "",
     },
   });
 
@@ -213,7 +215,7 @@ export default function InstitucionesPage() {
             <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
               
               {/* Nombre de Institución */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="nombre" className="text-[13px] font-semibold text-slate-700">
                   Nombre de la Institución <span className="text-slate-400 font-normal">*</span>
                 </Label>
@@ -226,6 +228,24 @@ export default function InstitucionesPage() {
                 {errors.nombre && (
                   <p className="text-[11px] text-red-500 mt-1">
                     {errors.nombre.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Director */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="nombreDirector" className="text-[13px] font-semibold text-slate-700">
+                  Nombre del Director <span className="text-slate-400 font-normal">(Opcional)</span>
+                </Label>
+                <Input
+                  id="nombreDirector"
+                  placeholder="Ej: Juan Pérez"
+                  className={inputFixedThemeClass}
+                  {...register("nombreDirector")}
+                />
+                {errors.nombreDirector && (
+                  <p className="text-[11px] text-red-500 mt-1">
+                    {errors.nombreDirector.message}
                   </p>
                 )}
               </div>

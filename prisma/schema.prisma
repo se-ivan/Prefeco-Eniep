@@ -70,12 +70,13 @@ model Verification {
 
 
 model Institucion {
-  id          Int      @id @default(autoincrement())
-  cct         String   @unique
-  nombre      String
-  estado      String
-  zonaEscolar String   @map("zona_escolar")
-  urlLogo     String?  @map("url_logo")
+  id             Int      @id @default(autoincrement())
+  cct            String   @unique
+  nombre         String
+  estado         String
+  zonaEscolar    String   @map("zona_escolar")
+  urlLogo        String?  @map("url_logo")
+  nombreDirector String?  @map("nombre_director")
 
   equipos       Equipo[]        
   participantes Participante[] 

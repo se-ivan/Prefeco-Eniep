@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { cct, nombre, estado, zonaEscolar, urlLogo } = body;
+    const { cct, nombre, estado, zonaEscolar, urlLogo, nombreDirector } = body;
 
     if (!cct || !nombre || !estado || !zonaEscolar) {
       return NextResponse.json(
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         estado,
         zonaEscolar,
         urlLogo: urlLogo || null,
+        nombreDirector: nombreDirector || null,
       },
     });
 
