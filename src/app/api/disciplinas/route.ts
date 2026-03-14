@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "nombre es requerido" }, { status: 400 });
     }
 
-    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA"];
+    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION"];
     const allowedRamas = ["VARONIL", "FEMENIL", "UNICA", "MIXTO"];
     const allowedModalidades = ["INDIVIDUAL", "EQUIPO"];
 

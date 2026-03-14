@@ -1,6 +1,7 @@
 // src/app/api/equipos/[id]/editar/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -19,6 +20,16 @@ const EVENT_START = process.env.EVENT_START_DATE
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!isAdmin(scope) && !isResponsable(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
     const { id } = await params;
     const equipoId = Number(id);
     if (!Number.isInteger(equipoId)) {
@@ -62,6 +73,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       });
 
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
+
+      if (isResponsable(scope) && Number(scope.institucionId) !== Number(equipo.institucionId)) {
+        throw { status: 403, message: "No tienes permisos para editar equipos de otra institución" };
+      }
+
       if (equipo.disciplina?.deletedAt) {
         throw { status: 409, message: "La disciplina de este equipo está inactiva" };
       }
@@ -155,6 +171,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             status: 409,
             message: `${p.nombres} ya esta inscrito en esta disciplina y categoria`,
           };
+        }
+
+        const inscripcionesMismaDisciplina = await tx.inscripcion.findMany({
+          where: {
+            participanteId: p.id,
+            disciplinaId: Number(equipo.disciplinaId),
+            NOT: { equipoId },
+          },
+          select: { categoriaId: true },
+        });
+
+        const categoriasInscritas = new Set<number>(
+          inscripcionesMismaDisciplina.map((inscripcion: any) => Number(inscripcion.categoriaId))
+        );
+
+        if (categoriasInscritas.size >= 2) {
+          throw { status: 409, message: `Alumno ${p.nombres} ya esta inscrito en 2 categorias` };
         }
 
         const inscripcionesActuales = await tx.inscripcion.findMany({
