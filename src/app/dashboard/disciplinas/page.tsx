@@ -58,7 +58,7 @@ export default function DisciplinasPage() {
   // Determinar qué ramas mostrar según la modalidad
   const ramasDisponibles = (() => {
     if (filtroModalidad === "INDIVIDUAL") {
-      return ["TODAS", "UNICA", "MIXTO"];
+      return ["TODAS", "VARONIL", "FEMENIL", "UNICA", "MIXTO"];
     } else if (filtroModalidad === "EQUIPO") {
       return ["TODAS", "VARONIL", "FEMENIL"];
     }
@@ -70,9 +70,7 @@ export default function DisciplinasPage() {
     setFiltroModalidad(nuevaModalidad);
     
     // Ajustar rama si la actual no está disponible en la nueva modalidad
-    if (nuevaModalidad === "INDIVIDUAL" && filtroRama !== "TODAS" && filtroRama !== "UNICA" && filtroRama !== "MIXTO") {
-      setFiltroRama("TODAS");
-    } else if (nuevaModalidad === "EQUIPO" && filtroRama !== "TODAS" && filtroRama !== "VARONIL" && filtroRama !== "FEMENIL") {
+    if (nuevaModalidad === "EQUIPO" && filtroRama !== "TODAS" && filtroRama !== "VARONIL" && filtroRama !== "FEMENIL") {
       setFiltroRama("TODAS");
     }
   };
@@ -204,7 +202,7 @@ export default function DisciplinasPage() {
           <div className="flex-1 min-w-50">
             <label htmlFor="filtro-rama" className="block text-sm font-medium text-slate-700 mb-1">
               Rama
-              {filtroModalidad === "INDIVIDUAL" && <span className="text-xs text-slate-500 ml-1">(Única/Mixto)</span>}
+              {filtroModalidad === "INDIVIDUAL" && <span className="text-xs text-slate-500 ml-1">(Varonil/Femenil/Única/Mixto)</span>}
               {filtroModalidad === "EQUIPO" && <span className="text-xs text-slate-500 ml-1">(Varonil/Femenil)</span>}
             </label>
             <select
