@@ -14,7 +14,7 @@ export default async function DashboardLayout({
   const isAdmin = scope?.role === "ADMIN";
 
   const userName = scope?.name || "Usuario";
-  const userEmail = scope?.email || "Sin email";
+  const userEmail = scope?.username ? `@${scope.username}` : (scope?.email || "Sin email");
 
   const currentDate = new Date().toLocaleDateString("es-MX", {
     weekday: "long",

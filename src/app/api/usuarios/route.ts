@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         role: true,
         institucionId: true,
@@ -71,6 +72,7 @@ export async function PATCH(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         role: true,
         institucionId: true,
@@ -99,10 +101,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, email, password, role, institucionId } = body ?? {};
+    const { name, username, password, role, institucionId } = body ?? {};
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "name, email y password son obligatorios" }, { status: 400 });
+    if (!name || !username || !password) {
+      return NextResponse.json({ error: "name, username y password son obligatorios" }, { status: 400 });
     }
 
     const normalizedRole = role ?? "RESPONSABLE_INSTITUCION";
@@ -121,17 +123,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const normalizedUsername = String(username).trim().toLowerCase();
+
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(normalizedUsername)) {
+      return NextResponse.json(
+        { error: "username inválido. Usa 3-30 caracteres alfanuméricos o guion bajo" },
+        { status: 400 }
+      );
+    }
+
+    const internalEmail = `${normalizedUsername}@local.eniep`;
+
     await (auth.api as any).signUpEmail({
       body: {
         name: String(name).trim(),
-        email: String(email).trim().toLowerCase(),
+        email: internalEmail,
         password: String(password),
+        username: normalizedUsername,
       },
       headers: req.headers,
     });
 
     const updated = await prisma.user.update({
-      where: { email: String(email).trim().toLowerCase() },
+      where: { username: normalizedUsername },
       data: {
         role: normalizedRole,
         institucionId: normalizedRole === "RESPONSABLE_INSTITUCION" ? Number(institucionId) : null,
@@ -139,6 +153,7 @@ export async function POST(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         role: true,
         institucionId: true,
@@ -153,8 +168,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Base de datos no disponible temporalmente" }, { status: 503 });
     }
     const message = error?.message || "Error interno";
-    if (/existing email|already exists|already been taken|duplicate|P2002/i.test(message)) {
-      return NextResponse.json({ error: "El correo ya existe" }, { status: 409 });
+    if (/existing email|already exists|already been taken|duplicate|P2002|username is already taken/i.test(message)) {
+      return NextResponse.json({ error: "El username ya existe" }, { status: 409 });
     }
     return NextResponse.json({ error: message }, { status: 500 });
   }

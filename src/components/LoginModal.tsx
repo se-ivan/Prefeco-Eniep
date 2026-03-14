@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, Shield, TrendingUp, Zap, Github, Loader2, Eye, EyeOff } from 'lucide-react';
+import { X, User, Lock, Shield, TrendingUp, Zap, Github, Loader2, Eye, EyeOff } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 
@@ -13,7 +13,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -34,8 +34,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setIsLoading(true);
 
     try {
-        const { data, error } = await authClient.signIn.email({
-            email,
+      const { error } = await authClient.signIn.username({
+        username: username.trim().toLowerCase(),
             password,
         });
 
@@ -183,18 +183,18 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-5 lg:space-y-6">
-                      {/* Email Input */}
+                      {/* Username Input */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-2">
-                          Correo electrónico
+                          Username
                         </label>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                           <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="nombre@prefecomelchorocampo.edu.mx"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="usuario_prefeco"
                             disabled={isAnyLoading}
                             className="w-full pl-12 pr-4 py-3.5 bg-input-background dark:bg-input border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-foreground"
                             required

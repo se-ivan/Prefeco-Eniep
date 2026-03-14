@@ -14,6 +14,7 @@ type Institucion = {
 type UserItem = {
   id: string;
   name: string;
+  username: string | null;
   email: string;
   role: "ADMIN" | "RESPONSABLE_INSTITUCION";
   institucionId: number | null;
@@ -50,7 +51,7 @@ export default function UsuariosPage() {
 
   const [newUser, setNewUser] = useState({
     name: "",
-    email: "",
+    username: "",
     password: "",
     role: "" as any,
     institucionId: "",
@@ -65,7 +66,7 @@ export default function UsuariosPage() {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return users;
     return users.filter((u) => {
-      const joined = `${u.name} ${u.email} ${u.institucion?.nombre ?? ""}`.toLowerCase();
+      const joined = `${u.name} ${u.username ?? ""} ${u.institucion?.nombre ?? ""}`.toLowerCase();
       return joined.includes(q);
     });
   }, [users, searchTerm]);
@@ -128,8 +129,8 @@ export default function UsuariosPage() {
   }
 
   async function createUser() {
-    if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password.trim()) {
-      toast.error("Nombre, correo y contraseña son obligatorios");
+    if (!newUser.name.trim() || !newUser.username.trim() || !newUser.password.trim()) {
+      toast.error("Nombre, username y contraseña son obligatorios");
       return;
     }
 
@@ -150,7 +151,7 @@ export default function UsuariosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newUser.name.trim(),
-          email: newUser.email.trim().toLowerCase(),
+          username: newUser.username.trim().toLowerCase(),
           password: newUser.password,
           role: newUser.role,
           institucionId: newUser.role === "RESPONSABLE_INSTITUCION" ? Number(newUser.institucionId) : null,
@@ -165,7 +166,7 @@ export default function UsuariosPage() {
       toast.success("Usuario creado y asignado correctamente");
       setNewUser({
         name: "",
-        email: "",
+        username: "",
         password: "",
         role: "RESPONSABLE_INSTITUCION",
         institucionId: "",
@@ -223,7 +224,7 @@ export default function UsuariosPage() {
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar por nombre, correo o institución"
+          placeholder="Buscar por nombre, username o institución"
           className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#08677a]"
         />
       </div>
@@ -251,7 +252,7 @@ export default function UsuariosPage() {
                 <tr key={u.id}>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-gray-800">{u.name}</div>
-                    <div className="text-xs text-gray-500">{u.email}</div>
+                    <div className="text-xs text-gray-500">{u.username ? `@${u.username}` : "Sin username"}</div>
                   </td>
                   <td className="px-4 py-3">
                     <RoleBadge role={u.role} />
@@ -289,7 +290,7 @@ export default function UsuariosPage() {
         <ModalShell title="Registrar nuevo usuario" onClose={closeCreateModal}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FieldInput value={newUser.name} onChange={(v) => setNewUser((p) => ({ ...p, name: v }))} placeholder="Nombre completo" />
-            <FieldInput value={newUser.email} onChange={(v) => setNewUser((p) => ({ ...p, email: v }))} placeholder="correo@dominio.com" type="email" />
+            <FieldInput value={newUser.username} onChange={(v) => setNewUser((p) => ({ ...p, username: v }))} placeholder="username_unico" type="text" />
             <FieldInput value={newUser.password} onChange={(v) => setNewUser((p) => ({ ...p, password: v }))} placeholder="Contraseña temporal" type="password" />
             <select
               value={newUser.role}
@@ -332,7 +333,7 @@ export default function UsuariosPage() {
       {isEditOpen && selectedUser && (
         <ModalShell title={`Editar usuario: ${selectedUser.name}`} onClose={closeEditModal}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm bg-gray-50">{selectedUser.email}</div>
+            <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm bg-gray-50">{selectedUser.username ? `@${selectedUser.username}` : "Sin username"}</div>
             <select
               value={editData.role}
               onChange={(e) => {
