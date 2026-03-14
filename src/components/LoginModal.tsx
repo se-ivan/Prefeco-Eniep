@@ -21,6 +21,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [socialLoading, setSocialLoading] = useState<'google' | 'github' | null>(null);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const registrosNoDisponiblesMessage = 'Todavia no es el momento de los registros para instituciones';
 
   const isAnyLoading = isLoading || socialLoading !== null;
@@ -28,6 +30,32 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!showCountdown) return;
+
+    // 16 de marzo del 2026 a las 18:00 (Hora México/Centro aproximada)
+    const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+
+    const interval = setInterval(() => {
+      const distance = targetDate - new Date().getTime();
+
+      if (distance < 0) {
+        clearInterval(interval);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showCountdown]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,17 +80,31 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               const me = await meResponse.json();
 
               // Si deseas volver a activar el bloqueo descomenta este bloque:
-              if (me?.role === 'RESPONSABLE_INSTITUCION') {
-                await authClient.signOut();
-                setError(registrosNoDisponiblesMessage);
-                toast.error(registrosNoDisponiblesMessage);
-                return;
-              }
+              // if (me?.role === 'RESPONSABLE_INSTITUCION') {
+              //   await authClient.signOut();
+              //   setError(registrosNoDisponiblesMessage);
+              //   toast.error(registrosNoDisponiblesMessage);
+              //   return;
+              // }
             }
 
-            toast.success('¡Inicio de sesión exitoso!');
-            onClose();
-            window.location.href = '/dashboard';
+            // En lugar de redirigir al dashboard, mostramos el contador
+            // toast.success('¡Inicio de sesión exitoso!');
+            // onClose();
+            // window.location.href = '/dashboard';
+            
+            // Calculamos si ya pasó la fecha
+            const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+            const now = new Date().getTime();
+            
+            if (now < targetDate) {
+              await authClient.signOut(); // Cerramos sesión para que no entren si recargan
+              setShowCountdown(true);
+            } else {
+              toast.success('¡Inicio de sesión exitoso!');
+              onClose();
+              window.location.href = '/dashboard';
+            }
         }
     } catch (err: any) {
         setError('Ocurrió un error inesperado');
@@ -184,7 +226,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   </div>
                 </div>
 
-                {/*Formulario del login */}
+                {/*Formulario del login o Contador */}
                 <div className="w-full lg:w-1/2 p-6 lg:p-12 flex items-center bg-card text-card-foreground overflow-y-auto relative">
                   <div className="w-full max-w-md mx-auto mt-4 sm:mt-0">
                     {/* Logo solo en móviles */}
@@ -194,12 +236,68 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         </div>
                     </div>
 
-                    <div className="mb-8 text-center lg:text-left">
-                      <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
-                      <p className="text-muted-foreground">Inicia sesión para acceder a la plataforma</p>
-                    </div>
+                    {showCountdown ? (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center justify-center text-center space-y-6 md:space-y-8"
+                      >
+                        <div className="w-20 h-20 bg-[rgba(255,165,45,0.1)] rounded-full flex items-center justify-center mb-2">
+                          <Lock className="w-10 h-10 text-[#ffa52d]" />
+                        </div>
+                        
+                        <div>
+                          <h2 className="text-3xl font-bold text-foreground mb-4">Registro en Pausa</h2>
+                          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                            Favor de ingresar a partir del <br className="hidden md:block" />
+                            <span className="font-bold text-foreground mx-1">lunes 16 de marzo</span> <br className="hidden md:block" />
+                            para realizar sus registros
+                          </p>
+                        </div>
+                        
+                        <div className="mt-8 p-6 md:p-8 bg-card border border-border rounded-3xl shadow-lg shadow-[rgba(255,165,45,0.05)] w-full">
+                          <h3 className="text-xs md:text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-6">Tiempo restante</h3>
+                          <div className="flex justify-center gap-3 md:gap-5 text-[#ffa52d] font-mono">
+                            <div className="flex flex-col items-center">
+                              <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.days.toString().padStart(2, '0')}</span>
+                              <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Días</span>
+                            </div>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.hours.toString().padStart(2, '0')}</span>
+                              <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Hrs</span>
+                            </div>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.minutes.toString().padStart(2, '0')}</span>
+                              <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Min</span>
+                            </div>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.seconds.toString().padStart(2, '0')}</span>
+                              <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Seg</span>
+                            </div>
+                          </div>
+                        </div>
 
-                    <form onSubmit={handleLogin} className="space-y-5 lg:space-y-6">
+                        <button
+                          onClick={() => {
+                            setShowCountdown(false);
+                            onClose();
+                          }}
+                          className="w-full mt-4 py-4 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all"
+                        >
+                          Entendido
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <>
+                        <div className="mb-8 text-center lg:text-left">
+                          <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
+                          <p className="text-muted-foreground">Inicia sesión para acceder a la plataforma</p>
+                        </div>
+
+                        <form onSubmit={handleLogin} className="space-y-5 lg:space-y-6">
                       {/* Username Input */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-2">
@@ -259,7 +357,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           <span className="text-sm text-muted-foreground">Mantener sesión iniciada</span>
                         </label>
                         <button type="button" className="text-sm text-[#0b697d] dark:text-[#2eb4cc] hover:underline font-medium">
-                          ¿Olvidaste tu contraseña?
+                          Restablecer Contraseña
                         </button>
                       </div>
 
@@ -360,6 +458,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         </button>
                       </p>
                     </form>
+                    </>
+                    )}
                   </div>
                 </div>
               </div>
