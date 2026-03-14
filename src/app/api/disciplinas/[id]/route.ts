@@ -218,8 +218,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const did = Number(id);
     if (!Number.isInteger(did)) return NextResponse.json({ error: "id inválido" }, { status: 400 });
 
-    const now = new Date();
-
     const result = await prisma.$transaction(async (tx: any) => {
       const disciplina = await tx.disciplina.findFirst({
         where: { id: did, deletedAt: null },
@@ -227,17 +225,33 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       });
       if (!disciplina) return null;
 
-      await tx.disciplina.update({
-        where: { id: did },
-        data: { deletedAt: now },
-      });
+      // Verificar si la disciplina ha sido usada
+      const [inscripciones, equipos, asignaciones] = await Promise.all([
+        tx.inscripcion.count({ where: { disciplinaId: did } }),
+        tx.equipo.count({ where: { disciplinaId: did } }),
+        tx.asignacionApoyo.count({ where: { disciplinaId: did } }),
+      ]);
 
-      await tx.categoria.updateMany({
-        where: { disciplinaId: did, deletedAt: null },
-        data: { deletedAt: now },
-      });
+      const tieneUso = inscripciones > 0 || equipos > 0 || asignaciones > 0;
 
-      return { ok: true };
+      if (tieneUso) {
+        // Soft-delete: marcar como eliminada lógicamente
+        const now = new Date();
+        await tx.disciplina.update({
+          where: { id: did },
+          data: { deletedAt: now },
+        });
+        await tx.categoria.updateMany({
+          where: { disciplinaId: did, deletedAt: null },
+          data: { deletedAt: now },
+        });
+        return { ok: true, tipo: "soft" };
+      } else {
+        // Hard-delete: eliminar permanentemente categorías y disciplina
+        await tx.categoria.deleteMany({ where: { disciplinaId: did } });
+        await tx.disciplina.delete({ where: { id: did } });
+        return { ok: true, tipo: "hard" };
+      }
     });
 
     if (!result) return NextResponse.json({ error: "Disciplina no encontrada" }, { status: 404 });
