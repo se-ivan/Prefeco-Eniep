@@ -50,6 +50,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         new Set(participantesRaw.map((p: any) => Number(p.participanteId)))
       );
 
+      if (participantIds.length !== participantesRaw.length) {
+        throw { status: 400, message: "El payload contiene participantes duplicados" };
+      }
+
       // quick capacity check
         const maxIntegrantes = equipo.disciplina.maxIntegrantes ?? Infinity;
         if (existingCount + participantIds.length > maxIntegrantes) {
@@ -77,8 +81,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       // all validations passed -> create inscripciones
       const now = new Date();
-      const data = participantesRaw.map((p: any) => ({
-        participanteId: Number(p.participanteId),
+      const data = participantIds.map((participanteId: number) => ({
+        participanteId,
         equipoId: equipoId,
         disciplinaId: equipo.disciplinaId,
         categoriaId: Number(categoriaId),

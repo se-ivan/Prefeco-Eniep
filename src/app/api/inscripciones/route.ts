@@ -92,6 +92,20 @@ export async function POST(req: Request) {
           throw { status: 400, message: "institucionId es obligatorio para modalidad EQUIPO" };
         }
 
+        const existingTeam = await tx.equipo.findFirst({
+          where: {
+            disciplinaId: Number(disciplinaId),
+            institucionId: Number(institucionId),
+          },
+          select: { id: true, nombreEquipo: true },
+        });
+        if (existingTeam) {
+          throw {
+            status: 409,
+            message: `La institución ya tiene un equipo registrado en esta disciplina (${existingTeam.nombreEquipo})`,
+          };
+        }
+
         const minI = disciplina.minIntegrantes ?? 0;
         const maxI = disciplina.maxIntegrantes ?? Infinity;
         const total = uniqueParticipantIds.length;

@@ -38,6 +38,12 @@ export type PersonalApi = {
 
 type Categoria = { id: number; nombre: string };
 
+type InstitucionOption = {
+  id: number;
+  nombre: string;
+  municipio?: string | null;
+};
+
 type Disciplina = {
   id: number;
   nombre: string;
@@ -64,6 +70,36 @@ export default function NuevoParticipanteModal({
   maxIntegrantes,
   existingParticipants = [],
 }: Props) {
+  function buildInstitutionTeamName(nombreInstitucion: string, municipio?: string | null) {
+    const quotedMatch = nombreInstitucion.match(/"([^"]+)"/);
+    const quotedText = quotedMatch?.[1]?.trim() || "";
+    const prioritizedText = quotedText || nombreInstitucion;
+
+    const normalizedWords = prioritizedText
+      .replace(/["'“”‘’.,;:()\[\]{}]/g, " ")
+      .split(/\s+/)
+      .map((word) => word.trim())
+      .filter(Boolean);
+
+    const safeMunicipio = (municipio ?? "").trim();
+
+    if (quotedText) {
+      return safeMunicipio ? `${quotedText} - ${safeMunicipio}` : quotedText;
+    }
+
+    const importantWords = normalizedWords.filter((word) => word.length >= 4);
+    const sourceWords = importantWords.length > 0 ? importantWords : normalizedWords;
+
+    const acronym = sourceWords
+      .slice(0, 3)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join("");
+
+    const fallbackAcronym = prioritizedText.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g, "").slice(0, 3).toUpperCase() || "EQP";
+
+    return safeMunicipio ? `${acronym || fallbackAcronym} - ${safeMunicipio}` : acronym || fallbackAcronym;
+  }
+
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<ParticipanteApi[] | PersonalApi[]>([]);
   const [seleccionados, setSeleccionados] = useState<SeleccionParticipante[]>([]);
@@ -72,7 +108,7 @@ export default function NuevoParticipanteModal({
   const [searchError, setSearchError] = useState<string | null>(null);
   const initialRef = useRef<string | null>(null);
 
-  const [instituciones, setInstituciones] = useState<{ id: number; nombre: string }[]>([]);
+  const [instituciones, setInstituciones] = useState<InstitucionOption[]>([]);
   const [institucionId, setInstitucionId] = useState<number | "">("");
   const [tipo, setTipo] = useState<"ALUMNO" | "APOYO" | "">("");
   const [categoriaId, setCategoriaId] = useState<number | "">("");
@@ -258,6 +294,7 @@ export default function NuevoParticipanteModal({
           (ins) => ins.id === Number(institucionId)
         );
         const nombreInstitucion = institucionSeleccionada?.nombre?.trim() || String(institucionId);
+        const municipioInstitucion = institucionSeleccionada?.municipio?.trim() || "";
 
         const payload: any = {
           disciplinaId: Number(disciplina.id),
@@ -268,7 +305,7 @@ export default function NuevoParticipanteModal({
           participantes: seleccionados.map((s) => ({ participanteId: s.participanteId })),
         };
         if (disciplina.modalidad === "EQUIPO") {
-          payload.nombreEquipo = `Equipo - ${nombreInstitucion}`;
+          payload.nombreEquipo = buildInstitutionTeamName(nombreInstitucion, municipioInstitucion);
         }
         const res = await fetch("/api/inscripciones", {
           method: "POST",
