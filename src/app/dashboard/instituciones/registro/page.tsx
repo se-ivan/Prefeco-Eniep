@@ -34,7 +34,7 @@ const institucionSchema = z.object({
     .max(15, "La CCT no puede exceder 15 caracteres"),
   nombre: z.string().min(3, "El nombre es obligatorio"),
   estado: z.string().min(2, "Selecciona un estado"),
-  zonaEscolar: z.string().min(1, "La zona escolar es obligatoria"),
+  municipio: z.string().min(1, "El municipio es obligatorio"),
   urlLogo: z.string().url("URL inválida").optional().or(z.literal("")),
   nombreDirector: z.string().optional().or(z.literal("")),
 });
@@ -111,7 +111,7 @@ export default function InstitucionesPage() {
       cct: "",
       nombre: "",
       estado: "",
-      zonaEscolar: "",
+      municipio: "",
       urlLogo: "",
       nombreDirector: "",
     },
@@ -273,20 +273,20 @@ export default function InstitucionesPage() {
                 )}
               </div>
 
-              {/* Zona Escolar */}
+              {/* Municipio */}
               <div className="space-y-1.5">
-                <Label htmlFor="zonaEscolar" className="text-[13px] font-semibold text-slate-700">
-                  Zona Escolar <span className="text-slate-400 font-normal">*</span>
+                <Label htmlFor="municipio" className="text-[13px] font-semibold text-slate-700">
+                  Municipio <span className="text-slate-400 font-normal">*</span>
                 </Label>
                 <Input
-                  id="zonaEscolar"
-                  placeholder="Ej: Zona 01"
+                  id="municipio"
+                  placeholder="Ej: Morelia"
                   className={inputFixedThemeClass}
-                  {...register("zonaEscolar")}
+                  {...register("municipio")}
                 />
-                {errors.zonaEscolar && (
+                {errors.municipio && (
                   <p className="text-[11px] text-red-500 mt-1">
-                    {errors.zonaEscolar.message}
+                    {errors.municipio.message}
                   </p>
                 )}
               </div>

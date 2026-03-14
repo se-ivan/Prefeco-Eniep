@@ -74,7 +74,7 @@ model Institucion {
   cct            String   @unique
   nombre         String
   estado         String
-  zonaEscolar    String   @map("zona_escolar")
+  municipio      String
   urlLogo        String?  @map("url_logo")
   nombreDirector String?  @map("nombre_director")
 

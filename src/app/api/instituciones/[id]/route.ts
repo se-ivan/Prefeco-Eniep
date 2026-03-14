@@ -20,11 +20,11 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { cct, nombre, estado, zonaEscolar, urlLogo, nombreDirector } = body;
+    const { cct, nombre, estado, municipio, urlLogo, nombreDirector } = body;
 
-    if (!cct || !nombre || !estado || !zonaEscolar) {
+    if (!cct || !nombre || !estado || !municipio) {
       return NextResponse.json(
-        { error: "Faltan campos obligatorios (cct, nombre, estado, zonaEscolar)" },
+        { error: "Faltan campos obligatorios (cct, nombre, estado, municipio)" },
         { status: 400 }
       );
     }
@@ -50,7 +50,7 @@ export async function PUT(
         cct,
         nombre,
         estado,
-        zonaEscolar,
+        municipio,
         urlLogo: urlLogo || null,
         nombreDirector: nombreDirector || null,
       },

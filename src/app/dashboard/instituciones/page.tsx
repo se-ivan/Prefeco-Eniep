@@ -52,7 +52,7 @@ type Institucion = {
   cct: string;
   nombre: string;
   estado: string;
-  zonaEscolar: string;
+  municipio: string;
   urlLogo: string | null;
   nombreDirector: string | null;
 };
@@ -62,7 +62,7 @@ type InstitucionEditForm = {
   cct: string;
   nombre: string;
   estado: string;
-  zonaEscolar: string;
+  municipio: string;
   urlLogo: string;
   nombreDirector: string;
 };
@@ -129,7 +129,7 @@ export default function ListaInstitucionesPage() {
       cct: inst.cct,
       nombre: inst.nombre,
       estado: inst.estado,
-      zonaEscolar: inst.zonaEscolar,
+      municipio: inst.municipio,
       urlLogo: inst.urlLogo ?? "",
       nombreDirector: inst.nombreDirector ?? "",
     });
@@ -165,7 +165,7 @@ export default function ListaInstitucionesPage() {
   const saveEdit = async () => {
     if (!editTarget) return;
 
-    if (!editTarget.nombre.trim() || !editTarget.cct.trim() || !editTarget.estado.trim() || !editTarget.zonaEscolar.trim()) {
+    if (!editTarget.nombre.trim() || !editTarget.cct.trim() || !editTarget.estado.trim() || !editTarget.municipio.trim()) {
       toast.error("Completa todos los campos obligatorios");
       return;
     }
@@ -179,7 +179,7 @@ export default function ListaInstitucionesPage() {
           cct: editTarget.cct.trim().toUpperCase(),
           nombre: editTarget.nombre.trim(),
           estado: editTarget.estado,
-          zonaEscolar: editTarget.zonaEscolar.trim(),
+          municipio: editTarget.municipio.trim(),
           urlLogo: editTarget.urlLogo.trim() || null,
           nombreDirector: editTarget.nombreDirector?.trim() || null,
         }),
@@ -305,7 +305,7 @@ export default function ListaInstitucionesPage() {
 
                   <div className="flex items-start gap-2.5 text-sm text-slate-600">
                     <Globe className="h-4 w-4 text-[#ffa52d] shrink-0 mt-0.5" />
-                    <span>{inst.zonaEscolar}</span>
+                    <span>{inst.municipio}</span>
                   </div>
 
                   {inst.nombreDirector && (
@@ -399,11 +399,11 @@ export default function ListaInstitucionesPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-zona">Zona escolar</Label>
+                <Label htmlFor="edit-municipio">Municipio</Label>
                 <Input
-                  id="edit-zona"
-                  value={editTarget.zonaEscolar}
-                  onChange={(e) => onEditField("zonaEscolar", e.target.value)}
+                  id="edit-municipio"
+                  value={editTarget.municipio}
+                  onChange={(e) => onEditField("municipio", e.target.value)}
                 />
               </div>
 
