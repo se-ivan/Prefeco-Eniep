@@ -21,6 +21,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [socialLoading, setSocialLoading] = useState<'google' | 'github' | null>(null);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const registrosNoDisponiblesMessage = 'Todavia no es el momento de los registros para instituciones';
 
   const isAnyLoading = isLoading || socialLoading !== null;
 
@@ -43,6 +44,22 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             setError(error.message || 'Error al iniciar sesión');
             toast.error(error.message || 'Error al iniciar sesión');
         } else {
+            const meResponse = await fetch('/api/me', {
+              credentials: 'include',
+            });
+
+            if (meResponse.ok) {
+              const me = await meResponse.json();
+
+              // Si deseas volver a activar el bloqueo descomenta este bloque:
+              if (me?.role === 'RESPONSABLE_INSTITUCION') {
+                await authClient.signOut();
+                setError(registrosNoDisponiblesMessage);
+                toast.error(registrosNoDisponiblesMessage);
+                return;
+              }
+            }
+
             toast.success('¡Inicio de sesión exitoso!');
             onClose();
             window.location.href = '/dashboard';

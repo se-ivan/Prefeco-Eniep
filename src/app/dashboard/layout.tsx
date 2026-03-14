@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardAnimationWrapper from "@/components/DashboardAnimationWrapper";
 import SidebarFooterActions from "@/components/SidebarFooterActions";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import { InstitucionOnboardingModal } from "@/components/InstitucionOnboardingModal";
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +44,8 @@ export default async function DashboardLayout({
           </section>
         </DashboardAnimationWrapper>
       </main>
+
+      <InstitucionOnboardingModal />
     </div>
   );
 }

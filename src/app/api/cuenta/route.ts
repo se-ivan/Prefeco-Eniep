@@ -28,28 +28,57 @@ export async function PATCH(req: NextRequest) {
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const body = await req.json();
-    const { name } = body ?? {};
+    const { name, email, telefono } = body ?? {};
 
-    if (!name || !String(name).trim()) {
-      return NextResponse.json({ error: "El nombre es obligatorio" }, { status: 400 });
+    const dataToUpdate: any = {};
+    if (name && String(name).trim()) dataToUpdate.name = String(name).trim();
+    if (email && String(email).trim()) dataToUpdate.email = String(email).trim().toLowerCase();
+
+    if (Object.keys(dataToUpdate).length === 0 && !telefono) {
+      return NextResponse.json({ error: "No hay datos para actualizar" }, { status: 400 });
     }
 
-    const updated = await prisma.user.update({
-      where: { id: scope.id },
-      data: { name: String(name).trim() },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        institucionId: true,
-        institucion: { select: { id: true, nombre: true, cct: true } },
-      },
-    });
+    if (telefono && scope.institucionId) {
+      await prisma.institucion.update({
+        where: { id: scope.institucionId },
+        data: { telefono: String(telefono).trim() },
+      });
+    }
+
+    let updated = null;
+    if (Object.keys(dataToUpdate).length > 0) {
+      updated = await prisma.user.update({
+        where: { id: scope.id },
+        data: dataToUpdate,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          institucionId: true,
+          institucion: { select: { id: true, nombre: true, cct: true, telefono: true } },
+        },
+      });
+    } else {
+      updated = await prisma.user.findUnique({
+        where: { id: scope.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          institucionId: true,
+          institucion: { select: { id: true, nombre: true, cct: true, telefono: true } },
+        },
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error("PATCH /api/cuenta error:", error);
+    if (error?.code === "P2002" && error.meta?.target?.includes("email")) {
+      return NextResponse.json({ error: "Este correo electrónico ya está en uso por otra cuenta" }, { status: 409 });
+    }
     if (error?.code === "P1001") {
       return NextResponse.json({ error: "Base de datos no disponible temporalmente" }, { status: 503 });
     }
