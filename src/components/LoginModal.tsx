@@ -51,6 +51,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             if (meResponse.ok) {
               const me = await meResponse.json();
 
+              // Si deseas volver a activar el bloqueo descomenta este bloque:
               if (me?.role === 'RESPONSABLE_INSTITUCION') {
                 await authClient.signOut();
                 setError(registrosNoDisponiblesMessage);
