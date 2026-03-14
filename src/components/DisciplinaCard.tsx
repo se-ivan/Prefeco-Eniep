@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-type Categoria = { id: number; nombre: string };
+type Categoria = { id: number; nombre: string; deletedAt?: Date | null };
 
 type Disciplina = {
   id: number;
@@ -17,6 +17,7 @@ type Disciplina = {
   totalParticipantes?: number | null;
   totalApoyos?: number | null;
   categorias?: Categoria[] | null | undefined;
+  deletedAt?: Date | null;
 };
 
 type Props = {
@@ -32,6 +33,9 @@ type Props = {
    * /dashboard/disciplinas/{disciplina.id}/participantes
    */
   onViewParticipants?: (d: Disciplina) => void | Promise<void>;
+  isAdmin?: boolean;
+  onEditDisciplina?: (d: Disciplina) => void | Promise<void>;
+  onDeleteDisciplina?: (d: Disciplina) => void | Promise<void>;
 };
 
 function prettyRama(rama?: string | null) {
@@ -59,6 +63,9 @@ export default function DisciplinaCard({
   disciplina,
   onCreateTeam,
   onViewParticipants,
+  isAdmin = false,
+  onEditDisciplina,
+  onDeleteDisciplina,
 }: Props) {
   const router = useRouter();
 
@@ -88,6 +95,26 @@ export default function DisciplinaCard({
     <article className="bg-white rounded-xl shadow border p-5 flex flex-col justify-between">
       {/* HEADER */}
       <div>
+        {isAdmin && (
+          <div className="flex justify-end gap-2 mb-2">
+            <button
+              type="button"
+              onClick={() => onEditDisciplina?.(disciplina)}
+              className="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
+              aria-label={`Editar disciplina ${disciplina.nombre}`}
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeleteDisciplina?.(disciplina)}
+              className="text-xs px-2 py-1 rounded border border-red-200 text-red-700 hover:bg-red-50"
+              aria-label={`Borrar disciplina ${disciplina.nombre}`}
+            >
+              Borrar
+            </button>
+          </div>
+        )}
         <h3 className="text-lg font-semibold">{disciplina.nombre}</h3>
 
         {/* Rama y Modalidad - debajo del nombre para mejor responsive */}

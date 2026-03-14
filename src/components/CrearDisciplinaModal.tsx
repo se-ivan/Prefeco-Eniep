@@ -195,7 +195,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
 
           {modalidad === "INDIVIDUAL" && (
             <div className="md:col-span-2">
-              <label className="block text-sm mb-1">Max participantes por escuela</label>
+              <label className="block text-sm mb-1">Max participantes por categoria de una escuela</label>
               <input type="number" min={1} className="w-full border rounded p-2"
                 value={maxParticipantesPorEscuela}
                 onChange={(e) => setMaxParticipantesPorEscuela(Number(e.target.value))}

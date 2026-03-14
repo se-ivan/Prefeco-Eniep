@@ -54,11 +54,16 @@ export async function POST(req: Request) {
     }
 
     const res = await prisma.$transaction(async (tx: any) => {
-      const disciplina = await tx.disciplina.findUnique({
-        where: { id: Number(disciplinaId) },
-        include: { categorias: true },
+      const disciplina = await tx.disciplina.findFirst({
+        where: { id: Number(disciplinaId), deletedAt: null },
+        include: { categorias: { where: { deletedAt: null } } },
       });
       if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
+
+      const categoriaActiva = (disciplina.categorias ?? []).some((c: any) => c.id === Number(categoriaId));
+      if (!categoriaActiva) {
+        throw { status: 404, message: "Categoría no encontrada para la disciplina indicada" };
+      }
 
       // minPersonalApoyo not present in schema => default 0. // CHANGED
       const minPersonal = 0;
@@ -85,6 +90,20 @@ export async function POST(req: Request) {
         }
         if (!institucionId) {
           throw { status: 400, message: "institucionId es obligatorio para modalidad EQUIPO" };
+        }
+
+        const existingTeam = await tx.equipo.findFirst({
+          where: {
+            disciplinaId: Number(disciplinaId),
+            institucionId: Number(institucionId),
+          },
+          select: { id: true, nombreEquipo: true },
+        });
+        if (existingTeam) {
+          throw {
+            status: 409,
+            message: `La institución ya tiene un equipo registrado en esta disciplina (${existingTeam.nombreEquipo})`,
+          };
         }
 
         const minI = disciplina.minIntegrantes ?? 0;
@@ -186,6 +205,7 @@ export async function POST(req: Request) {
         const existentesPorInst = await tx.inscripcion.count({
           where: {
             disciplinaId: Number(disciplinaId),
+            categoriaId: Number(categoriaId),
             participante: { institucionId: Number(institucionId) },
           },
         });
@@ -202,18 +222,17 @@ export async function POST(req: Request) {
 
         let nuevosPorInst = 0;
         for (const p of fetchedParts as any[]) {
-          // Verificar si ya existe alguna inscripción en esta disciplina (cualquier categoría)
-          const yaInscritoEnDisciplina = await tx.inscripcion.findFirst({
+          if (Number(p.institucionId) !== Number(institucionId)) {
+            throw { status: 409, message: `${p.nombres} no pertenece a la institución ${institucionId}` };
+          }
+
+          const inscripcionesMismaDisciplina = await tx.inscripcion.findMany({
             where: {
               participanteId: p.id,
               disciplinaId: Number(disciplinaId),
             },
+            select: { categoriaId: true },
           });
-
-          // Solo contar como nuevo si no tiene inscripción previa en esta disciplina Y es de esta institución
-          if (!yaInscritoEnDisciplina && Number(p.institucionId) === Number(institucionId)) {
-            nuevosPorInst++;
-          }
 
           const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
           if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
@@ -227,14 +246,19 @@ export async function POST(req: Request) {
             }
           }
 
-          const already = await tx.inscripcion.findFirst({
-            where: {
-              participanteId: p.id,
-              disciplinaId: Number(disciplinaId),
-              categoriaId: Number(categoriaId),
-            },
-          });
-          if (already) throw { status: 409, message: `${p.nombres} ya esta inscrito en esta disciplina y categoria` };
+          const categoriasInscritas = new Set<number>(
+            inscripcionesMismaDisciplina.map((inscripcion: any) => Number(inscripcion.categoriaId))
+          );
+
+          if (categoriasInscritas.has(Number(categoriaId))) {
+            throw { status: 409, message: `${p.nombres} ya esta inscrito en esta disciplina y categoria` };
+          }
+
+          if (categoriasInscritas.size >= 2) {
+            throw { status: 409, message: `Alumno ${p.nombres} ya esta inscrito en 2 categorias` };
+          }
+
+          nuevosPorInst++;
 
           const inscripcionesActuales = await tx.inscripcion.findMany({
             where: { participanteId: p.id },

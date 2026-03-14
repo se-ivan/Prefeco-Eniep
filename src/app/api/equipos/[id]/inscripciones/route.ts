@@ -26,6 +26,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         include: { disciplina: true },
       });
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
+      if (equipo.disciplina?.deletedAt) {
+        throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const categoria = await tx.categoria.findFirst({
+        where: {
+          id: Number(categoriaId),
+          disciplinaId: Number(equipo.disciplinaId),
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!categoria) {
+        throw { status: 404, message: "Categoría no encontrada o inactiva" };
+      }
 
       // count current inscripciones
       const existingCount = await tx.inscripcion.count({ where: { equipoId } });
@@ -34,6 +49,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const participantIds: number[] = Array.from(
         new Set(participantesRaw.map((p: any) => Number(p.participanteId)))
       );
+
+      if (participantIds.length !== participantesRaw.length) {
+        throw { status: 400, message: "El payload contiene participantes duplicados" };
+      }
 
       // quick capacity check
         const maxIntegrantes = equipo.disciplina.maxIntegrantes ?? Infinity;
@@ -62,8 +81,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       // all validations passed -> create inscripciones
       const now = new Date();
-      const data = participantesRaw.map((p: any) => ({
-        participanteId: Number(p.participanteId),
+      const data = participantIds.map((participanteId: number) => ({
+        participanteId,
         equipoId: equipoId,
         disciplinaId: equipo.disciplinaId,
         categoriaId: Number(categoriaId),

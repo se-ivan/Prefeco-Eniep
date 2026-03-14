@@ -186,6 +186,7 @@ model Disciplina {
   tipo           TipoDisciplina
   rama           Rama
   modalidad      Modalidad
+  deletedAt      DateTime? @map("deleted_at")
 
   minIntegrantes Int? @map("min_integrantes") 
   maxIntegrantes Int? @map("max_integrantes") 
@@ -196,6 +197,8 @@ model Disciplina {
   inscripciones Inscripcion[]
   asignacionesApoyo AsignacionApoyo[]
 
+  @@index([deletedAt])
+
   @@map("disciplinas")
 }
 
@@ -204,10 +207,13 @@ model Categoria {
   id           Int    @id @default(autoincrement())
   nombre       String
   disciplinaId Int
+  deletedAt    DateTime? @map("deleted_at")
   disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
 
   inscripciones Inscripcion[]
   asignacionesApoyo AsignacionApoyo[]
+
+  @@index([deletedAt])
 
   @@map("categorias")
 }

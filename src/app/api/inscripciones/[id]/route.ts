@@ -1,7 +1,7 @@
 // src/app/api/inscripciones/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isResponsable } from "@/lib/rbac";
+import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
 
 /**
  * DELETE /api/inscripciones/:id
@@ -11,6 +11,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!isAdmin(scope) && !isResponsable(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
 
     const { id } = await params;
     const insId = Number(id);

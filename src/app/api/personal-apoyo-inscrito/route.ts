@@ -22,7 +22,10 @@ export async function GET(req: Request) {
     const institucionId = url.searchParams.get("institucionId");
     const q = url.searchParams.get("q")?.trim().toLowerCase();
 
-    const where: any = {};
+    const where: any = {
+      disciplina: { deletedAt: null },
+      categoria: { deletedAt: null },
+    };
     if (disciplinaId) where.disciplinaId = Number(disciplinaId);
     if (categoriaId) where.categoriaId = Number(categoriaId);
     if (isResponsable(scope)) {

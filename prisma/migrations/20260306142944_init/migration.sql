@@ -1,0 +1,1 @@
+-- Empty migration placeholder restored to keep migration history consistent.

@@ -24,7 +24,11 @@ export async function GET(req: Request) {
     const institucionId = url.searchParams.get("institucionId");
     const q = url.searchParams.get("q")?.trim().toLowerCase();
 
-    const where: any = { equipoId: null }; // individual
+    const where: any = {
+      equipoId: null,
+      disciplina: { deletedAt: null },
+      categoria: { deletedAt: null },
+    }; // individual
     if (disciplinaId) where.disciplinaId = Number(disciplinaId);
     if (categoriaId) where.categoriaId = Number(categoriaId);
     // join on participante.institucionId
