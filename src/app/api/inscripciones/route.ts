@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isResponsable } from "@/lib/rbac";
+import { Prisma } from "@prisma/client";
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -11,6 +12,11 @@ function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
 }
 
 const EVENT_START = process.env.EVENT_START_DATE ? new Date(process.env.EVENT_START_DATE) : new Date();
+const MAX_SERIALIZABLE_RETRIES = 3;
+
+function isSerializableConflict(error: any) {
+  return error?.code === "P2034";
+}
 
 export async function POST(req: Request) {
   try {
@@ -53,12 +59,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "IDs de participantes duplicados en el payload" }, { status: 400 });
     }
 
-    const res = await prisma.$transaction(async (tx: any) => {
-      const disciplina = await tx.disciplina.findFirst({
-        where: { id: Number(disciplinaId), deletedAt: null },
-        include: { categorias: { where: { deletedAt: null } } },
-      });
-      if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
+    let res: any;
+    for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
+      try {
+        res = await prisma.$transaction(
+          async (tx: any) => {
+            const disciplina = await tx.disciplina.findFirst({
+              where: { id: Number(disciplinaId), deletedAt: null },
+              include: { categorias: { where: { deletedAt: null } } },
+            });
+            if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
 
       const categoriaActiva = (disciplina.categorias ?? []).some((c: any) => c.id === Number(categoriaId));
       if (!categoriaActiva) {
@@ -300,8 +310,20 @@ export async function POST(req: Request) {
         return { message: "Inscripciones individuales creadas", created: insData.length };
       }
 
-      throw { status: 400, message: "modalidad no soportada" };
-    });
+            throw { status: 400, message: "modalidad no soportada" };
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          }
+        );
+        break;
+      } catch (err: any) {
+        if (isSerializableConflict(err) && attempt < MAX_SERIALIZABLE_RETRIES) {
+          continue;
+        }
+        throw err;
+      }
+    }
 
     return NextResponse.json(res, { status: 201 });
   } catch (err: any) {
