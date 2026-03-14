@@ -17,6 +17,26 @@ export async function POST(req: Request) {
     const personal = await prisma.personalApoyo.findUnique({ where: { id: Number(personalId) } });
     if (!personal) return NextResponse.json({ error: "personal no encontrado" }, { status: 404 });
 
+    if (disciplinaId != null) {
+      const disciplina = await prisma.disciplina.findFirst({
+        where: { id: Number(disciplinaId), deletedAt: null },
+        select: { id: true },
+      });
+      if (!disciplina) {
+        return NextResponse.json({ error: "disciplina no encontrada" }, { status: 404 });
+      }
+    }
+
+    if (categoriaId != null) {
+      const categoria = await prisma.categoria.findFirst({
+        where: { id: Number(categoriaId), deletedAt: null },
+        select: { id: true },
+      });
+      if (!categoria) {
+        return NextResponse.json({ error: "categoria no encontrada" }, { status: 404 });
+      }
+    }
+
     if (isResponsable(scope)) {
       if (!scope.institucionId) {
         return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });

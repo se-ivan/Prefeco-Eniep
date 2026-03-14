@@ -54,11 +54,16 @@ export async function POST(req: Request) {
     }
 
     const res = await prisma.$transaction(async (tx: any) => {
-      const disciplina = await tx.disciplina.findUnique({
-        where: { id: Number(disciplinaId) },
-        include: { categorias: true },
+      const disciplina = await tx.disciplina.findFirst({
+        where: { id: Number(disciplinaId), deletedAt: null },
+        include: { categorias: { where: { deletedAt: null } } },
       });
       if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
+
+      const categoriaActiva = (disciplina.categorias ?? []).some((c: any) => c.id === Number(categoriaId));
+      if (!categoriaActiva) {
+        throw { status: 404, message: "Categoría no encontrada para la disciplina indicada" };
+      }
 
       // minPersonalApoyo not present in schema => default 0. // CHANGED
       const minPersonal = 0;

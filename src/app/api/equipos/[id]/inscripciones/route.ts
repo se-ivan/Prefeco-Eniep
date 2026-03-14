@@ -26,6 +26,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         include: { disciplina: true },
       });
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
+      if (equipo.disciplina?.deletedAt) {
+        throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const categoria = await tx.categoria.findFirst({
+        where: {
+          id: Number(categoriaId),
+          disciplinaId: Number(equipo.disciplinaId),
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!categoria) {
+        throw { status: 404, message: "Categoría no encontrada o inactiva" };
+      }
 
       // count current inscripciones
       const existingCount = await tx.inscripcion.count({ where: { equipoId } });

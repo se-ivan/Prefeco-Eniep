@@ -52,6 +52,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
               id: true,
               nombre: true,
               rama: true,
+              deletedAt: true,
               minIntegrantes: true,
               maxIntegrantes: true,
             },
@@ -61,6 +62,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       });
 
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
+      if (equipo.disciplina?.deletedAt) {
+        throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const categoria = await tx.categoria.findFirst({
+        where: {
+          id: Number(categoriaId),
+          disciplinaId: Number(equipo.disciplinaId),
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!categoria) {
+        throw { status: 404, message: "Categoría no encontrada o inactiva" };
+      }
 
       // Deduplicar participantesIds
       const newParticipantIds = uniqueParticipantIds;

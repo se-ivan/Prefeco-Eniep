@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import CrearDisciplinaModal from "@/components/CrearDisciplinaModal";
 import DisciplinaCard from "@/components/DisciplinaCard";
 import NuevoParticipanteModal from "@/components/NuevoParticipanteModal";
+import DisciplinaModalEditar from "@/components/DisciplinaModalEditar";
 
 /**
  * Página de Disciplinas (dashboard)
@@ -22,7 +23,10 @@ type Disciplina = {
   categorias?: {
     id: number;
     nombre: string;
+    deletedAt?: Date | null;
   }[];
+
+  deletedAt?: Date | null;
 
   totalEquipos?: number | null;
   totalParticipantes?: number | null;
@@ -39,6 +43,8 @@ export default function DisciplinasPage() {
   const [nuevoParticipanteOpen, setNuevoParticipanteOpen] = useState(false);
 
   const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
+  const [editarDisciplinaOpen, setEditarDisciplinaOpen] = useState(false);
+  const [disciplinaAEditar, setDisciplinaAEditar] = useState<Disciplina | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
@@ -105,6 +111,25 @@ export default function DisciplinasPage() {
   // Callback que refresca listas tras crear algo (equipo / inscripcion / asignacion)
   async function handleAfterCreate() {
     await cargarDisciplinas();
+  }
+
+  function handleOpenEditDisciplina(d: Disciplina) {
+    setDisciplinaAEditar(d);
+    setEditarDisciplinaOpen(true);
+  }
+
+  async function handleDeleteDisciplina(d: Disciplina) {
+    if (!confirm(`¿Deseas borrar la disciplina ${d.nombre}?`)) return;
+    try {
+      const res = await fetch(`/api/disciplinas/${d.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(json?.error || `HTTP ${res.status}`);
+      }
+      await handleAfterCreate();
+    } catch (err: any) {
+      alert(err?.message || "No se pudo borrar la disciplina");
+    }
   }
 
   // Filtrar disciplinas según los filtros activos
@@ -224,6 +249,9 @@ export default function DisciplinasPage() {
           <DisciplinaCard
             key={d.id}
             disciplina={d as any}
+            isAdmin={isAdmin}
+            onEditDisciplina={(disc) => handleOpenEditDisciplina(disc as Disciplina)}
+            onDeleteDisciplina={(disc) => handleDeleteDisciplina(disc as Disciplina)}
             onCreateTeam={(disc) => {
               setDisciplinaSeleccionada(disc as Disciplina);
               setNuevoParticipanteOpen(true);
@@ -252,6 +280,22 @@ export default function DisciplinasPage() {
           onClose={() => setCrearDisciplinaOpen(false)}
           onCreated={async () => {
             setCrearDisciplinaOpen(false);
+            await handleAfterCreate();
+          }}
+        />
+      )}
+
+      {isAdmin && (
+        <DisciplinaModalEditar
+          open={editarDisciplinaOpen}
+          disciplina={disciplinaAEditar}
+          onClose={() => {
+            setEditarDisciplinaOpen(false);
+            setDisciplinaAEditar(null);
+          }}
+          onSaved={async () => {
+            setEditarDisciplinaOpen(false);
+            setDisciplinaAEditar(null);
             await handleAfterCreate();
           }}
         />

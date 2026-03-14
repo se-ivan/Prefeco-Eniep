@@ -14,11 +14,14 @@ export async function GET() {
         tipo: true,
         rama: true,
         modalidad: true,
+        deletedAt: true,
         minIntegrantes: true,
         maxIntegrantes: true,
         maxParticipantesPorEscuela: true,
         categorias: {
+          where: { deletedAt: null },
           select: { id: true, nombre: true },
+          orderBy: { nombre: "asc" },
         },
         _count: {
           select: {
@@ -36,6 +39,7 @@ export async function GET() {
       tipo: d.tipo,
       rama: d.rama,
       modalidad: d.modalidad,
+      deletedAt: d.deletedAt,
       minIntegrantes: d.minIntegrantes,
       maxIntegrantes: d.maxIntegrantes,
       maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
@@ -124,6 +128,7 @@ export async function POST(req: Request) {
         nombre: { equals: nombre.trim(), mode: "insensitive" },
         modalidad: modalidad as any,
         rama: rama as any,
+        deletedAt: null,
       },
     });
     if (existe) {
@@ -137,14 +142,15 @@ export async function POST(req: Request) {
           tipo: tipo as any,
           rama: rama as any,
           modalidad: modalidad as any,
+          deletedAt: null,
           minIntegrantes: modalidad === "EQUIPO" ? Number(minIntegrantes) : undefined,
           maxIntegrantes: modalidad === "EQUIPO" ? Number(maxIntegrantes) : undefined,
           maxParticipantesPorEscuela: modalidad === "INDIVIDUAL" ? Number(maxParticipantesPorEscuela) : undefined,
           categorias: {
-            create: cleanCats.map((c: string) => ({ nombre: c })),
+            create: cleanCats.map((c: string) => ({ nombre: c, deletedAt: null })),
           },
         },
-        include: { categorias: true },
+        include: { categorias: { where: { deletedAt: null }, orderBy: { nombre: "asc" } } },
       });
 
       return disciplina;

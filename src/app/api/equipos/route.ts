@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
 
     // validar disciplina
-    const disciplina = await prisma.disciplina.findUnique({ where: { id: Number(disciplinaId) } });
+    const disciplina = await prisma.disciplina.findFirst({ where: { id: Number(disciplinaId), deletedAt: null } });
     if (!disciplina) return NextResponse.json({ error: "Disciplina no encontrada" }, { status: 404 });
 
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
@@ -64,15 +64,25 @@ export async function GET(req: Request) {
     } else if (institucionId) {
       where.institucionId = Number(institucionId);
     }
+    where.disciplina = { deletedAt: null };
+
     if (categoriaId) {
-      where.inscripciones = { some: { categoriaId: Number(categoriaId) } };
+      where.inscripciones = {
+        some: {
+          categoriaId: Number(categoriaId),
+          categoria: { deletedAt: null },
+        },
+      };
     }
 
     const equipos = await prisma.equipo.findMany({
       where,
       include: {
         institucion: { select: { id: true, nombre: true } },
-        inscripciones: { select: { categoria: { select: { id: true, nombre: true } } } },
+        inscripciones: {
+          where: { categoria: { deletedAt: null } },
+          select: { categoria: { select: { id: true, nombre: true } } },
+        },
       },
       orderBy: { id: "asc" },
     });
