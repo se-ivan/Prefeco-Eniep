@@ -12,6 +12,13 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function Home() {
   const institucionesData = await prisma.institucion.findMany({
+    where: {
+      usuariosResponsables: {
+        none: {
+          username: 'prueba'
+        }
+      }
+    },
     include: {
       usuariosResponsables: {
         select: { email: true }

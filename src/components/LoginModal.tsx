@@ -76,12 +76,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               credentials: 'include',
             });
 
-            let isAdmin = false;
+            let isAdminOrPrueba = false;
 
             if (meResponse.ok) {
               const me = await meResponse.json();
-              if (me?.role === 'ADMIN') {
-                isAdmin = true;
+              if (me?.role === 'ADMIN' || me?.username === 'prueba') {
+                isAdminOrPrueba = true;
               }
             }
             
@@ -89,7 +89,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
             const now = new Date().getTime();
             
-            if (now < targetDate && !isAdmin) {
+            if (now < targetDate && !isAdminOrPrueba) {
               await authClient.signOut(); // Cerramos sesión para que no entren si recargan
               setShowCountdown(true);
             } else {
