@@ -9,7 +9,7 @@ interface SendVerificationEmailParams {
 
 export async function sendVerificationEmail({ to, code }: SendVerificationEmailParams) {
   const { data, error } = await resend.emails.send({
-    from: 'ENIEP <onboarding@resend.dev>', // Cambia a tu dominio verificado cuando pases a producción, ej: "ENIEP <no-reply@tudominio.com>"
+    from: 'ENIEP <no-reply@eniep.prefecomelchorocampo.edu.mx>', 
     to: [to],
     subject: 'Código de Verificación - ENIEP',
     html: `
