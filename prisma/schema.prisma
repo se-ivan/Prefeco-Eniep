@@ -267,6 +267,10 @@ model PersonalApoyo {
   docIdentificacionOficial  Boolean @default(false) @map("doc_identificacion_oficial")
   docComprobanteDomicilio   Boolean @default(false) @map("doc_comprobante_domicilio")
   docCartaAntecedentes      Boolean @default(false) @map("doc_carta_antecedentes")
+  docCurpUrl                   String? @map("doc_curp_url")
+  docIdentificacionOficialUrl  String? @map("doc_identificacion_oficial_url")
+  docComprobanteDomicilioUrl   String? @map("doc_comprobante_domicilio_url")
+  docCartaAntecedentesUrl      String? @map("doc_carta_antecedentes_url")
   estatus                   Estatus
 
   institucion Institucion @relation(fields: [institucionId], references: [id])

@@ -10,6 +10,13 @@ import {
   Users as UsersIcon,
   AlertCircle,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* -------------------- Tipos -------------------- */
 
@@ -394,14 +401,22 @@ export default function NuevoParticipanteModal({
                 {!isResponsable && (
                   <div>
                     <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Institución</label>
-                    <select
-                      className="w-full border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#08677a]/20 outline-none transition-all"
-                      value={institucionId ?? ""}
-                      onChange={(e) => setInstitucionId(e.target.value ? Number(e.target.value) : "")}
+                    <Select
+                      value={institucionId ? String(institucionId) : "none"}
+                      onValueChange={(value) => setInstitucionId(value === "none" ? "" : Number(value))}
                     >
-                      <option value="">Selecciona institución</option>
-                      {instituciones.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
-                    </select>
+                      <SelectTrigger className="w-full border border-gray-200 bg-white text-sm font-normal text-gray-700 data-placeholder:text-gray-500 focus:ring-2 focus:ring-[#08677a]/20">
+                        <SelectValue placeholder="Selecciona institución" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-56 w-[min(92vw,28rem)] bg-white text-gray-700">
+                        <SelectItem value="none" className="text-sm font-normal text-gray-700">Selecciona institución</SelectItem>
+                        {instituciones.map((ins) => (
+                          <SelectItem key={ins.id} value={String(ins.id)} className="text-sm font-normal text-gray-700">
+                            {ins.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
                 {isResponsable && (
