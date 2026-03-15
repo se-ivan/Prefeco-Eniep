@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Phone, FileText, ChevronLeft, ChevronRight, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 const STEPS = [
@@ -32,6 +33,7 @@ export default function RegistrarPersonalApoyoPage() {
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -114,15 +116,21 @@ export default function RegistrarPersonalApoyoPage() {
     setFormData((prev) => ({ ...prev, fotoUrl: "" }));
   };
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
+    setPhotoToCrop(selectedFile);
+    e.target.value = "";
+  };
+
+  const handlePhotoCropped = async (croppedFile: File) => {
+    setPhotoToCrop(null);
     setUploadingPhoto(true);
     setStepError(null);
 
     try {
-      const { url } = await uploadImageToFirebase(selectedFile, "personal-apoyo");
+      const { url } = await uploadImageToFirebase(croppedFile, "personal-apoyo");
       setPhotoPreview(url);
       setFormData((prev) => ({ ...prev, fotoUrl: url }));
       toast.success("Fotografia subida correctamente");
@@ -132,7 +140,6 @@ export default function RegistrarPersonalApoyoPage() {
       toast.error(message);
     } finally {
       setUploadingPhoto(false);
-      e.target.value = "";
     }
   };
 
@@ -227,7 +234,16 @@ export default function RegistrarPersonalApoyoPage() {
   const progressPercentage = ((currentStep - 1) / (STEPS.length - 1)) * 100;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <>
+      {photoToCrop && (
+        <PhotoCropperModal
+          file={photoToCrop}
+          onClose={() => setPhotoToCrop(null)}
+          onCropComplete={handlePhotoCropped}
+          aspect={3 / 4}
+        />
+      )}
+      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-8 py-8 border-b border-gray-50">
           <h2 className="text-2xl font-bold text-gray-800">Registro de Personal de Apoyo</h2>
@@ -544,5 +560,6 @@ export default function RegistrarPersonalApoyoPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

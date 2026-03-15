@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 type Institucion = {
@@ -87,6 +88,7 @@ export default function ListaPersonalApoyoPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [scope, setScope] = useState<UserScope | null>(null);
   const [previewItem, setPreviewItem] = useState<PersonalApoyo | null>(null);
   const [editingItem, setEditingItem] = useState<PersonalApoyo | null>(null);
@@ -228,20 +230,25 @@ export default function ListaPersonalApoyoPage() {
     setEditForm((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const handleEditPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
+    setPhotoToCrop(selectedFile);
+    e.target.value = "";
+  };
+
+  const handlePhotoCropped = async (croppedFile: File) => {
+    setPhotoToCrop(null);
     setUploadingPhoto(true);
     try {
-      const { url } = await uploadImageToFirebase(selectedFile, "personal-apoyo");
+      const { url } = await uploadImageToFirebase(croppedFile, "personal-apoyo");
       setEditForm((prev) => ({ ...prev, fotoUrl: url }));
       toast.success("Fotografia actualizada");
     } catch (error: any) {
       toast.error(error?.message || "No se pudo subir la fotografia");
     } finally {
       setUploadingPhoto(false);
-      e.target.value = "";
     }
   };
 
@@ -313,6 +320,14 @@ export default function ListaPersonalApoyoPage() {
 
   return (
     <div className="space-y-6">
+      {photoToCrop && (
+        <PhotoCropperModal
+          file={photoToCrop}
+          onClose={() => setPhotoToCrop(null)}
+          onCropComplete={handlePhotoCropped}
+          aspect={3 / 4}
+        />
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Personal de Apoyo</h1>
