@@ -76,28 +76,20 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               credentials: 'include',
             });
 
+            let isAdmin = false;
+
             if (meResponse.ok) {
               const me = await meResponse.json();
-
-              // Si deseas volver a activar el bloqueo descomenta este bloque:
-              // if (me?.role === 'RESPONSABLE_INSTITUCION') {
-              //   await authClient.signOut();
-              //   setError(registrosNoDisponiblesMessage);
-              //   toast.error(registrosNoDisponiblesMessage);
-              //   return;
-              // }
+              if (me?.role === 'ADMIN') {
+                isAdmin = true;
+              }
             }
-
-            // En lugar de redirigir al dashboard, mostramos el contador
-            // toast.success('¡Inicio de sesión exitoso!');
-            // onClose();
-            // window.location.href = '/dashboard';
             
             // Calculamos si ya pasó la fecha
             const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
             const now = new Date().getTime();
             
-            if (now < targetDate) {
+            if (now < targetDate && !isAdmin) {
               await authClient.signOut(); // Cerramos sesión para que no entren si recargan
               setShowCountdown(true);
             } else {
