@@ -41,7 +41,7 @@ export const hotelesData = [
     contacto: "(443) 312 14 46 | WhatsApp (443) 380 14 88 | reservaciones@hotel-portico.com.mx",
     pdfUrl: "https://drive.google.com/file/d/1Zh64ZHyWtA8YmaCXVAqr_8t0-JuSAeKD/view?usp=sharing",
     mapQuery: "Hotel Portico Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/portico.jpg"
+    imagenUrl: "/hoteles/hotel-portico.jpg"
   },
   {
     id: 5,
@@ -52,7 +52,7 @@ export const hotelesData = [
     contacto: "(443) 737 2451 | contacto@moreliaeventos.com",
     pdfUrl: null,
     mapQuery: "Hotel Rymma Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/rymma.jpg"
+    imagenUrl: "/hoteles/hotel-rymma.jpg"
   },
   {
     id: 6,
@@ -85,7 +85,7 @@ export const hotelesData = [
     contacto: "443 310 8400 | WhatsApp 443 310 8403 | holidayinnexpressmoreliacentro@gosahoteles.com",
     pdfUrl: "https://drive.google.com/file/d/1znwFAOmUUPJNbCHoscwiECbi-dEi8Vz5/view?usp=sharing",
     mapQuery: "Holiday Inn Express Morelia Centro Historico, Morelia, Michoacan",
-    imagenUrl: "/hoteles/holiday-inn-centro.jpg"
+    imagenUrl: "/hoteles/holiday-inn.jpg"
   },
   {
     id: 9,
@@ -96,7 +96,7 @@ export const hotelesData = [
     contacto: "(433) 312 8252 / 312 5206 | (443) 703 0613 | hotelestefania.com.mx",
     pdfUrl: "https://drive.google.com/file/d/1zXU-ypuy2dCZ_dRNhPJFkQOcWbD5Ok4_/view?usp=sharing",
     mapQuery: "Hotel Estefania Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/estefania.jpg"
+    imagenUrl: "/hoteles/hotel-estefania.jpg"
   },
   {
     id: 10,
@@ -118,7 +118,7 @@ export const hotelesData = [
     contacto: "(443) 313 3309 | reservaciones@hotelatilanos.com",
     pdfUrl: "https://drive.google.com/file/d/1NTwLZLpKLG-1L1TO2EJSGuRoXL0XDKUa/view?usp=sharing",
     mapQuery: "Hotel Atilanos Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/atilanos.jpg"
+    imagenUrl: "/hoteles/hotel-atilanos.jpg"
   },
   {
     id: 12,
@@ -129,7 +129,7 @@ export const hotelesData = [
     contacto: "44 34 10 97 33 | +52 (443) 275 6912 | hotelalendemorelia@gmail.com",
     pdfUrl: "https://drive.google.com/file/d/1q4eqjnf0wxeoSR5jF-BkzKKSjKyaoyQ7/view?usp=sharing",
     mapQuery: "Hotel Allende Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/allende.jpg"
+    imagenUrl: "/hoteles/hotel-allende.jpg"
   },
   {
     id: 13,
@@ -140,7 +140,7 @@ export const hotelesData = [
     contacto: "443 343 0660 | WhatsApp 443 682 5042 | reservaciones@casasandiego.com",
     pdfUrl: "https://drive.google.com/file/d/1UlqXfrHeWFLBpiPxPsX7HPsuluH8ijDT/view?usp=sharing",
     mapQuery: "Hotel Boutique Casa San Diego Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/casa-san-diego.jpg"
+    imagenUrl: "/hoteles/hotel-boutique.jpg"
   },
   {
     id: 14,
@@ -151,7 +151,7 @@ export const hotelesData = [
     contacto: "44 3397 2720 | 44 3694 5664 | vicente.torres@hotelpuntagaleria.com.mx",
     pdfUrl: "https://drive.google.com/file/d/16GsgA45gmALGdNNNvwwptgxUv3S12hQ2/view?usp=sharing",
     mapQuery: "Hotel Punta Galeria Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/punta-galeria.jpg"
+    imagenUrl: "/hoteles/hotel-punta.jpg"
   },
   {
     id: 15,
@@ -162,7 +162,7 @@ export const hotelesData = [
     contacto: "(443) 113 15 00 | ventas@horizon.mx",
     pdfUrl: "https://drive.google.com/file/d/1DBBRnnXaoj1qV_AOXJkC1aazGsyq1Y4P/view?usp=sharing",
     mapQuery: "Horizon Hotel & Convention Center Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/horizon.jpg"
+    imagenUrl: "/hoteles/horizon-hotel.jpg"
   },
   {
     id: 16,
@@ -184,7 +184,7 @@ export const hotelesData = [
     contacto: "mariaelena.ventas@grandcantalagua.com",
     pdfUrl: "https://drive.google.com/file/d/1Mjnrr0E6OJjDi931YP01mcjg_Dl_01kY/view?usp=sharing",
     mapQuery: "Grand Cantalagua Hotel Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/cantalagua.jpg"
+    imagenUrl: "/hoteles/grand-cantalagua.jpg"
   },
   {
     id: 18,
@@ -195,7 +195,7 @@ export const hotelesData = [
     contacto: "44 34 68 36 21",
     pdfUrl: "https://drive.google.com/file/d/1Ph1zaeDncereUkIX5_AYpehIMzhc8skq/view?usp=sharing",
     mapQuery: "Estanza Hotel & Suites Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/estanza.jpg"
+    imagenUrl: "/hoteles/estanza-hotel.jpg"
   },
   {
     id: 19,
@@ -206,7 +206,7 @@ export const hotelesData = [
     contacto: "(443) 312 7418 / 312 4034 | reservasvilladelsol@hotmail.com",
     pdfUrl: "https://drive.google.com/file/d/1gPeJtXnQ72U8izAMu8zlNWtXfnwgBbMM/view?usp=sharing",
     mapQuery: "Hotel & Suites Villa del Sol Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/villa-del-sol.jpg"
+    imagenUrl: "/hoteles/suites-villa.jpg"
   },
   {
     id: 20,
@@ -217,7 +217,7 @@ export const hotelesData = [
     contacto: "Recepción 443 317 20 81",
     pdfUrl: "https://drive.google.com/file/d/1fcY6CHiMsrZuEHYY07yJT2lYS3utjwSc/view?usp=sharing",
     mapQuery: "Hotel Diana del Bosque Morelia, Morelia, Michoacan",
-    imagenUrl: "/hoteles/diana-del-bosque.jpg"
+    imagenUrl: "/hoteles/hotel-diana.jpg"
   },
   {
     id: 21,
@@ -228,6 +228,6 @@ export const hotelesData = [
     contacto: "Tel. 443 312 8173 | WhatsApp 443 181 0811 | hotelplazamorelos_rva@outlook.es",
     pdfUrl: "https://drive.google.com/file/d/1unDFkR8LeV46Ko_L_DrTh-PldmvvpEmq/view?usp=sharing",
     mapQuery: "Hotel Plaza Morelos, Morelia, Michoacan",
-    imagenUrl: "/hoteles/plaza-morelos.jpg"
+    imagenUrl: "/hoteles/hotel-plaza.jpg"
   }
 ];
