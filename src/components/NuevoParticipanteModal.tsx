@@ -446,14 +446,24 @@ export default function NuevoParticipanteModal({
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Categoría</label>
-                  <select
-                    className="w-full border-gray-200 rounded-lg p-2 text-sm outline-none"
-                    value={categoriaId ?? ""}
-                    onChange={(e) => setCategoriaId(e.target.value ? Number(e.target.value) : "")}
+                  <Select
+                    value={categoriaId ? String(categoriaId) : "none-category"}
+                    onValueChange={(value) => setCategoriaId(value === "none-category" ? "" : Number(value))}
                   >
-                    <option value="">Selecciona categoría</option>
-                    {(disciplina.categorias ?? []).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                  </select>
+                    <SelectTrigger className="w-full border border-gray-200 bg-white text-sm font-normal text-gray-700 data-placeholder:text-gray-500 focus:ring-2 focus:ring-[#08677a]/20">
+                      <SelectValue placeholder="Selecciona categoría" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-48 w-[min(92vw,24rem)] bg-white text-gray-700">
+                      <SelectItem value="none-category" className="text-sm font-normal text-gray-700">
+                        Selecciona categoría
+                      </SelectItem>
+                      {(disciplina.categorias ?? []).map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)} className="text-sm font-normal text-gray-700">
+                          {c.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

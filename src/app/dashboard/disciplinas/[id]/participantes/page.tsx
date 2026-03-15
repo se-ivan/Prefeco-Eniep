@@ -352,17 +352,27 @@ export default function ParticipantesPage() {
             <label htmlFor="filtro-categoria" className="block text-xs text-gray-500 mb-1">
               Categoría
             </label>
-            <select
-              id="filtro-categoria"
-              value={selectedCategoriaId}
-              onChange={(e) => setSelectedCategoriaId(e.target.value ? Number(e.target.value) : "")}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            <Select
+              value={selectedCategoriaId ? String(selectedCategoriaId) : "all-categories"}
+              onValueChange={(value) => setSelectedCategoriaId(value === "all-categories" ? "" : Number(value))}
             >
-              <option value="">(todas las categorías)</option>
-              {(disciplina?.categorias ?? []).map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
-              ))}
-            </select>
+              <SelectTrigger
+                id="filtro-categoria"
+                className="w-full border border-slate-300 bg-white text-sm font-normal text-slate-700 data-placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500"
+              >
+                <SelectValue placeholder="(todas las categorías)" />
+              </SelectTrigger>
+              <SelectContent className="max-h-48 w-[min(92vw,24rem)] bg-white text-slate-700">
+                <SelectItem value="all-categories" className="text-sm font-normal text-slate-700">
+                  (todas las categorías)
+                </SelectItem>
+                {(disciplina?.categorias ?? []).map((cat) => (
+                  <SelectItem key={cat.id} value={String(cat.id)} className="text-sm font-normal text-slate-700">
+                    {cat.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex-1 min-w-50">
