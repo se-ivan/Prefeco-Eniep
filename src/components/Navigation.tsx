@@ -20,16 +20,30 @@ export function Navigation() {
   }, []);
 
   const navItems = [
-    { label: 'INICIO', href: '#inicio' },
-    { label: 'GALERÍA', href: '#galeria' },
-    { label: 'PLANTELES', href: '#planteles' },
-    { label: 'CONTACTO', href: '#contacto' },
+    { label: 'INICIO', href: '/#inicio' },
+    { label: 'GALERÍA', href: '/#galeria' },
+    { label: 'PLANTELES', href: '/#planteles' },
+    { label: 'CONTACTO', href: '/#contacto' },
+    { label: 'HOTELES', href: '/hoteles' },
   ];
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    // If it's a hash link and we are on home page, scroll to it
+    if (href.startsWith('/#')) {
+      const targetId = href.replace('/', '');
+      if (window.location.pathname === '/') {
+        e.preventDefault();
+        const element = document.querySelector(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setIsMobileMenuOpen(false);
+        }
+      } else {
+        // Just let it navigate to /#hash
+        setIsMobileMenuOpen(false);
+      }
+    } else {
+      // It's a regular route like /hoteles
       setIsMobileMenuOpen(false);
     }
   };
@@ -44,33 +58,35 @@ export function Navigation() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          <motion.div
+          <motion.a
+            href="/#inicio"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer"
-            onClick={() => scrollToSection('#inicio')}
+            onClick={(e) => handleNavClick(e, '/#inicio')}
           >
             <img src="/logo.png" alt="PREFECO Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
             <div className="flex flex-col">
               <span className="font-bold text-[#0b697d] dark:text-[#2eb4cc] text-sm sm:text-base">PREFECO</span>
               <span className="text-xs text-muted-foreground hidden sm:block">Melchor Ocampo</span>
             </div>
-          </motion.div>
+          </motion.a>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-6">
             {navItems.map((item, index) => (
-              <motion.button
+              <motion.a
                 key={item.href}
+                href={item.href}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
-                onClick={() => scrollToSection(item.href)}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className="text-sm font-medium text-foreground/80 hover:text-[#0b697d] transition-colors"
               >
                 {item.label}
-              </motion.button>
+              </motion.a>
             ))}
             <div className="h-6 w-[1px] bg-border mx-2" />
             <ThemeToggle />
@@ -109,13 +125,14 @@ export function Navigation() {
           >
             <div className="px-4 py-4 space-y-3">
               {navItems.map((item) => (
-                <button
+                <a
                   key={item.href}
-                  onClick={() => scrollToSection(item.href)}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className="block w-full text-left px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-[#0b697d]/10 hover:text-[#0b697d] rounded-lg transition-colors"
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
               <button 
                 onClick={() => {

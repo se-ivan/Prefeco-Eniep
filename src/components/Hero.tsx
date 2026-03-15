@@ -1,25 +1,28 @@
 "use client";
 
 import { motion } from 'motion/react';
-import { GraduationCap, Users, BookOpen } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Trophy, Flag, Drum, Shield, Music, Medal } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export function Hero() {
   const cards = [
     {
-      icon: GraduationCap,
-      title: 'ADMISIONES',
-      description: 'Consulta toda la información que tenemos para ti y tramita tu ficha.',
+      icon: Trophy,
+      title: 'ENIEP 2025',
+      description: 'Consulta los detalles y requisitos de la convocatoria vigente para el ENIEP 2025.',
+      href: '#'
     },
     {
-      icon: Users,
-      title: 'EXPERIENCIA PREFECO',
-      description: 'Vive toda la experiencia de ser parte de nuestra gran comunidad.',
+      icon: Flag,
+      title: 'CONCURSO DE ESCOLTAS 2025',
+      description: 'Revisa las bases y lineamientos para participar en el concurso de escoltas 2025.',
+      href: '#'
     },
     {
-      icon: BookOpen,
-      title: 'OFERTA ACADÉMICA',
-      description: 'Conoce nuestro plan de estudios y capacitaciones disponibles.',
+      icon: Drum,
+      title: 'CONCURSO DE BANDAS DE GUERRA 2025',
+      description: 'Infórmate acerca del concurso de bandas de guerra 2025 y sus categorías.',
+      href: '#'
     },
   ];
 
@@ -94,20 +97,21 @@ export function Hero() {
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mt-20">
           {cards.map((card, index) => (
-            <motion.div
+            <motion.a
+              href={card.href}
               key={card.title}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="bg-card/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-border dark:hover:border-primary/50 dark:hover:shadow-primary/20 group"
+              className="bg-card/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-border dark:hover:border-primary/50 dark:hover:shadow-primary/20 group block cursor-pointer"
             >
               <div className="w-14 h-14 bg-gradient-to-br from-[#0b697d] to-[#ffa52d] rounded-xl flex items-center justify-center mb-6 shadow-md group-hover:scale-110 transition-transform duration-300">
                 <card.icon className="w-7 h-7 text-white" />
               </div>
               <h3 className="font-bold text-[#0b697d] dark:text-primary mb-3 text-lg group-hover:text-[#ffa52d] transition-colors">{card.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{card.description}</p>
-            </motion.div>
+            </motion.a>
           ))}
         </div>
 

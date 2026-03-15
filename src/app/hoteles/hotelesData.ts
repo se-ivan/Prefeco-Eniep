@@ -1,0 +1,233 @@
+export const hotelesData = [
+  {
+    id: 1,
+    name: "Howard Johnson Calle Real Morelia",
+    zona: "Oriente / salida por Av. Madero Ote",
+    tarifas: "SGL $1,100 | DBL $1,200 | TPL $1,400 | CDPL $1,600 (solo hospedaje, impuestos incluidos)",
+    detalles: "Alimentos (opcional): Desayuno buffet $290 | Desayuno americano $220 | Comida buffet $380 | Cena buffet $350. Cortesía: 1 hab doble por cada 20 reservadas",
+    contacto: "(443) 313-2923 / 313-2856 | reservaciones@hjmorelia.com",
+    pdfUrl: "https://drive.google.com/file/d/1gaL-sg0dBPx9NK1OvsZN8xgLdO3Bwwzu/view?usp=sharing",
+    mapQuery: "Howard Johnson Calle Real Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/howard-johnson.jpg"
+  },
+  {
+    id: 2,
+    name: "One Hotel Morelia",
+    zona: "Lomas de Hidalgo (5 minutos de PREFECO)",
+    tarifas: "1 cama $1,100 | 2 camas $1,249 | triple $1,499 | cuádruple $1,749",
+    detalles: "Incluye: impuestos, desayuno buffet, estacionamiento 24 hrs",
+    contacto: "800 504 50 00 | 44 33 78 87 66 | 44 32 30 02 52 | ventas2.lmrac@onemorelia.com",
+    pdfUrl: "https://drive.google.com/file/d/1hoADdJcgOFu4gpOrqVZjVUwrpdke-517/view?usp=sharing",
+    mapQuery: "One Hotel Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/one-hotel.jpg"
+  },
+  {
+    id: 3,
+    name: "Qualitel Centro Histórico",
+    zona: "Centro Histórico",
+    tarifas: "1 cama (2 pax) $790 | 2 camas ind (2 pax) $790 | 1 mat + 1 ind (3 pax) $990 | 2 mats (4 pax) $1,120 | 1 King (2 pax) $940",
+    detalles: "Incluye: desayuno (8:00–11:00), Wi-Fi. Estacionamiento: $150/noche",
+    contacto: "(443) 312 4649 | atencionaclientes@hotelqualitel.com.mx",
+    pdfUrl: "https://drive.google.com/file/d/1TISKa1QuIz-3WNpV89x80FRlytQbPKeg/view?usp=sharing",
+    mapQuery: "Qualitel Centro Historico, Morelia, Michoacan",
+    imagenUrl: "/hoteles/qualitel-centro.jpg"
+  },
+  {
+    id: 4,
+    name: "Hotel Pórtico",
+    zona: "Centro Histórico",
+    tarifas: "Estándar $1,200 | Doble (2 camas) $1,380 | Persona adicional $250 (impuestos + desayuno americano)",
+    detalles: "Estacionamiento: con costo adicional | Wi-Fi gratis",
+    contacto: "(443) 312 14 46 | WhatsApp (443) 380 14 88 | reservaciones@hotel-portico.com.mx",
+    pdfUrl: "https://drive.google.com/file/d/1Zh64ZHyWtA8YmaCXVAqr_8t0-JuSAeKD/view?usp=sharing",
+    mapQuery: "Hotel Portico Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/portico.jpg"
+  },
+  {
+    id: 5,
+    name: "Hotel Rymma",
+    zona: "Centro Histórico",
+    tarifas: "Estándar Queen $980 | 2 mats $1,100 | 1 mat + 1 ind $1,100 | 2 ind $980 (impuestos + desayuno tipo comercial)",
+    detalles: "Persona extra: $350 (según tipo)",
+    contacto: "(443) 737 2451 | contacto@moreliaeventos.com",
+    pdfUrl: null,
+    mapQuery: "Hotel Rymma Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/rymma.jpg"
+  },
+  {
+    id: 6,
+    name: "Misión Catedral Morelia",
+    zona: "Centro (muy céntrico)",
+    tarifas: "SGL/DBL: $1,550 (solo hospedaje) / $1,750 (con desayuno) | TPL: $1,850 / $2,150 | CDPL: $2,150 / $2,550",
+    detalles: "Cortesía: 1 por cada 15 habitaciones",
+    contacto: "ventascatedralmorelia@hotelesmision.com",
+    pdfUrl: "https://drive.google.com/file/d/1yTDjxwWBifrA35uoHL8JGuPpBKJqLbNf/view?usp=sharing",
+    mapQuery: "Mision Catedral Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/mision-catedral.jpg"
+  },
+  {
+    id: 7,
+    name: "Hotel La Merced",
+    zona: "Centro",
+    tarifas: "Sencilla $650 | Doble $950 | Cuádruple $1,300",
+    detalles: "NO incluye desayuno",
+    contacto: "lamercedhotel@hotmail.com",
+    pdfUrl: "https://drive.google.com/file/d/1cxuoZkylFBrUVpaJGGk4gXmIQcjHhaQ0/view?usp=sharing",
+    mapQuery: "Hotel La Merced Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/la-merced.jpg"
+  },
+  {
+    id: 8,
+    name: "Holiday Inn Express Morelia Centro Histórico",
+    zona: "Centro Histórico (a metros de catedral)",
+    tarifas: "SGL $1,748 | DBL $1,967 | TPL $2,040 | CDPL $2,185 (impuestos incluidos)",
+    detalles: "Incluye: desayuno buffet en cortesía, Wi-Fi, gimnasio, centro de negocios. Estacionamiento: $120 extra (24 hrs)",
+    contacto: "443 310 8400 | WhatsApp 443 310 8403 | holidayinnexpressmoreliacentro@gosahoteles.com",
+    pdfUrl: "https://drive.google.com/file/d/1znwFAOmUUPJNbCHoscwiECbi-dEi8Vz5/view?usp=sharing",
+    mapQuery: "Holiday Inn Express Morelia Centro Historico, Morelia, Michoacan",
+    imagenUrl: "/hoteles/holiday-inn-centro.jpg"
+  },
+  {
+    id: 9,
+    name: "Hotel Estefanía",
+    zona: "Centro (cerca de Fuente de las Tarascas)",
+    tarifas: "1 cama mats $850 | 1 cama King $950 | Doble 2 camas (2 pax) $1,100 | Doble 2 camas (3–4 pax) $1,300",
+    detalles: "Incluye: impuestos + desayuno continental",
+    contacto: "(433) 312 8252 / 312 5206 | (443) 703 0613 | hotelestefania.com.mx",
+    pdfUrl: "https://drive.google.com/file/d/1zXU-ypuy2dCZ_dRNhPJFkQOcWbD5Ok4_/view?usp=sharing",
+    mapQuery: "Hotel Estefania Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/estefania.jpg"
+  },
+  {
+    id: 10,
+    name: "Hotel El Carmen",
+    zona: "Centro",
+    tarifas: "Estándar $799 | Estándar balcón $884 | Doble $1,054 | Doble balcón $1,139 | “Dos y una”/Triple $1,479",
+    detalles: "Incluye: impuestos + desayuno (7–10 am). Estacionamiento: gratuito a media cuadra (pocos lugares, requiere reservar)",
+    contacto: "443 312 17 25 | WhatsApp 44 31 08 22 87 | reservaciones@hotelelcarmenmorelia.com.mx",
+    pdfUrl: "https://drive.google.com/file/d/1ztP7mYNtguI7eP9DlmI5FqH2ByxqkAW5/view?usp=sharing",
+    mapQuery: "Hotel El Carmen Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/el-carmen.jpg"
+  },
+  {
+    id: 11,
+    name: "Hotel Atilanos",
+    zona: "Centro Histórico",
+    tarifas: "2 pax $800 | Persona extra $150",
+    detalles: "Capacidad: mencionan habitaciones hasta 6 personas (3 camas mats)",
+    contacto: "(443) 313 3309 | reservaciones@hotelatilanos.com",
+    pdfUrl: "https://drive.google.com/file/d/1NTwLZLpKLG-1L1TO2EJSGuRoXL0XDKUa/view?usp=sharing",
+    mapQuery: "Hotel Atilanos Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/atilanos.jpg"
+  },
+  {
+    id: 12,
+    name: "Hotel Allende",
+    zona: "Centro",
+    tarifas: "Sencilla $730 | Estándar $850 | Doble $1,120",
+    detalles: "Incluye: impuestos + Wi-Fi",
+    contacto: "44 34 10 97 33 | +52 (443) 275 6912 | hotelalendemorelia@gmail.com",
+    pdfUrl: "https://drive.google.com/file/d/1q4eqjnf0wxeoSR5jF-BkzKKSjKyaoyQ7/view?usp=sharing",
+    mapQuery: "Hotel Allende Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/allende.jpg"
+  },
+  {
+    id: 13,
+    name: "Hotel Boutique Casa San Diego",
+    zona: "Centro (zona Acueducto/Calzada)",
+    tarifas: "Suite sencilla $2,600 | Jr Suite $2,690 | Suite doble (4 pax) $2,780 | Máster $2,690 (sin desayuno)",
+    detalles: "Desayuno: $290 por persona. Estacionamiento: gratuito externo (8:00–20:00)",
+    contacto: "443 343 0660 | WhatsApp 443 682 5042 | reservaciones@casasandiego.com",
+    pdfUrl: "https://drive.google.com/file/d/1UlqXfrHeWFLBpiPxPsX7HPsuluH8ijDT/view?usp=sharing",
+    mapQuery: "Hotel Boutique Casa San Diego Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/casa-san-diego.jpg"
+  },
+  {
+    id: 14,
+    name: "Hotel Punta Galería",
+    zona: "Periférico (accesos rápidos)",
+    tarifas: "Hab doble $950 | King $1,200",
+    detalles: "Desayuno buffet: $150 por persona",
+    contacto: "44 3397 2720 | 44 3694 5664 | vicente.torres@hotelpuntagaleria.com.mx",
+    pdfUrl: "https://drive.google.com/file/d/16GsgA45gmALGdNNNvwwptgxUv3S12hQ2/view?usp=sharing",
+    mapQuery: "Hotel Punta Galeria Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/punta-galeria.jpg"
+  },
+  {
+    id: 15,
+    name: "Horizon Hotel & Convention Center",
+    zona: "Periférico / Ocolusen",
+    tarifas: "$1,350 (solo hospedaje) | $1,550 (con desayuno americano, hab estándar ejecutiva 1-2 pax)",
+    detalles: "Cortesía: 1 hab (plan EP) por cada 15 pagadas",
+    contacto: "(443) 113 15 00 | ventas@horizon.mx",
+    pdfUrl: "https://drive.google.com/file/d/1DBBRnnXaoj1qV_AOXJkC1aazGsyq1Y4P/view?usp=sharing",
+    mapQuery: "Horizon Hotel & Convention Center Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/horizon.jpg"
+  },
+  {
+    id: 16,
+    name: "Holiday Inn Express",
+    zona: "Periférico / Nueva España",
+    tarifas: "1–2 pax $1,490 | 3 pax $1,840 | 4 pax $2,190",
+    detalles: "Incluye: desayuno buffet en cortesía",
+    contacto: "443-3143111 | Cel 4434910974 | t.zamora@citelis.mx",
+    pdfUrl: "https://drive.google.com/file/d/1Qss4mtngI7m6fXlK3k5vB9-iQM-_qsq5/view?usp=sharing",
+    mapQuery: "Holiday Inn Express Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/holiday-inn-express.jpg"
+  },
+  {
+    id: 17,
+    name: "Grand Cantalagua Hotel Morelia",
+    zona: "Morelia",
+    tarifas: "SGL/DBL $1,490 | TPL $1,790 | CDPL $2,090",
+    detalles: "Desayuno buffet: $315. Estacionamiento: $50 por estancia (sujeto a disponibilidad)",
+    contacto: "mariaelena.ventas@grandcantalagua.com",
+    pdfUrl: "https://drive.google.com/file/d/1Mjnrr0E6OJjDi931YP01mcjg_Dl_01kY/view?usp=sharing",
+    mapQuery: "Grand Cantalagua Hotel Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/cantalagua.jpg"
+  },
+  {
+    id: 18,
+    name: "Estanza Hotel & Suites",
+    zona: "Las Américas / zona financiera",
+    tarifas: "1 persona $1,349 | 2 pax $1,739 | 3 pax $2,129 | 4 pax $2,519 (con desayuno)",
+    detalles: "Incluye (según plan): desayuno incluido en algunas tarifas, Wi-Fi, estacionamiento gratuito. Check-in/out: 16:00 / 12:30",
+    contacto: "44 34 68 36 21",
+    pdfUrl: "https://drive.google.com/file/d/1Ph1zaeDncereUkIX5_AYpehIMzhc8skq/view?usp=sharing",
+    mapQuery: "Estanza Hotel & Suites Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/estanza.jpg"
+  },
+  {
+    id: 19,
+    name: "Hotel & Suites Villa del Sol",
+    zona: "Norte (frente a Pabellón Don Vasco)",
+    tarifas: "1 pax $1,175 | 2 pax $1,375 | 3 pax $1,675 | 4 pax $1,975 | Villa hasta 5 pax $2,575",
+    detalles: "Incluye: Wi-Fi gratis, estacionamiento interior sin costo, desayuno americano. Ideal para grupos grandes.",
+    contacto: "(443) 312 7418 / 312 4034 | reservasvilladelsol@hotmail.com",
+    pdfUrl: "https://drive.google.com/file/d/1gPeJtXnQ72U8izAMu8zlNWtXfnwgBbMM/view?usp=sharing",
+    mapQuery: "Hotel & Suites Villa del Sol Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/villa-del-sol.jpg"
+  },
+  {
+    id: 20,
+    name: "Hotel Diana del Bosque Morelia",
+    zona: "Cerca del Centro (~5 minutos del Centro de Convenciones)",
+    tarifas: "SGL $960 | DBL (2 pax) $1,260 | DBL (3 pax) $1,460 | DBL (4 pax) $1,660 | TPL (6 pax) $1,860 | CPL (7-8 pax) $2,060",
+    detalles: "Incluye: Wi-Fi, estacionamiento cubierto. Políticas: 1 cortesía por cada 11 habs; persona extra $100.",
+    contacto: "Recepción 443 317 20 81",
+    pdfUrl: "https://drive.google.com/file/d/1fcY6CHiMsrZuEHYY07yJT2lYS3utjwSc/view?usp=sharing",
+    mapQuery: "Hotel Diana del Bosque Morelia, Morelia, Michoacan",
+    imagenUrl: "/hoteles/diana-del-bosque.jpg"
+  },
+  {
+    id: 21,
+    name: "Hotel Plaza Morelos",
+    zona: "Centro (literalmente en Plaza Morelos)",
+    tarifas: "Sencilla (máx 2) $750 | Doble (máx 4) $800 | Triple (máx 6) $950",
+    detalles: "Servicios: TV por cable, restaurante, alberca (sin calefa), 3 salones para eventos.",
+    contacto: "Tel. 443 312 8173 | WhatsApp 443 181 0811 | hotelplazamorelos_rva@outlook.es",
+    pdfUrl: "https://drive.google.com/file/d/1unDFkR8LeV46Ko_L_DrTh-PldmvvpEmq/view?usp=sharing",
+    mapQuery: "Hotel Plaza Morelos, Morelia, Michoacan",
+    imagenUrl: "/hoteles/plaza-morelos.jpg"
+  }
+];

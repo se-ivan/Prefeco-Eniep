@@ -116,6 +116,7 @@ export default function ListaPersonalApoyoPage() {
   const [editingItem, setEditingItem] = useState<PersonalApoyo | null>(null);
   const [editForm, setEditForm] = useState<EditForm>(initialEditForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [autoEditHandled, setAutoEditHandled] = useState(false);
   const [searchDocQuery, setSearchDocQuery] = useState("");
   const [uploadingDocuments, setUploadingDocuments] = useState<Record<PersonalApoyoDocumentField, boolean>>({
     docCurpUrl: false,
