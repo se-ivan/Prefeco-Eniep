@@ -50,8 +50,6 @@ export default async function Home() {
     <div className="min-h-screen">
       <Navigation />
       <Hero />
-      <Historia />
-      <ModeloEducativo />
       <Galeria />
       <Planteles instituciones={planteles} />
       <Contacto />

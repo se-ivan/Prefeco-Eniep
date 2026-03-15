@@ -33,7 +33,7 @@ export function Planteles({ instituciones = [] }: PlantelesProps) {
       { icon: BookOpen, text: 'Bachillerato general con capacitaciones diversas' },
     ],
     contact: {
-      address: 'Calzada Juárez #159, Col. Centro, C.P. 58000',
+      address: 'Juan Benito Diaz de Gamarra s/n, Fracc. Lazaro Cardenas, 58229 Morelia, Mich.',
       email: 'contacto@prefecomelchorocampo.edu.mx',
       phone: '(443) 312 2144 / (443) 317 7771',
       website: 'prefecomelchorocampo.edu.mx',

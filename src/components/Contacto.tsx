@@ -12,7 +12,7 @@ export function Contacto() {
     {
       icon: MapPin,
       title: 'Ubicación',
-      details: ['Calzada Juárez #159, Col. Centro', 'C.P. 58000, Morelia, Michoacán'],
+      details: ['Juan Benito Diaz de Gamarra s/n, Fracc. Lazaro Cardenas', '58229 Morelia, Mich.'],
       color: 'from-[#0b697d] to-[#0d5868]',
     },
     {
