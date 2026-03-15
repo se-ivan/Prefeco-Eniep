@@ -63,10 +63,18 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setIsLoading(true);
 
     try {
-      const { error } = await authClient.signIn.username({
-        username: username.trim().toLowerCase(),
+      const isEmail = username.includes("@");
+      const normalizedInput = username.trim().toLowerCase();
+
+      const { error } = isEmail
+        ? await authClient.signIn.email({
+            email: normalizedInput,
             password,
-        });
+          })
+        : await authClient.signIn.username({
+            username: normalizedInput,
+            password,
+          });
 
         if (error) {
             setError(error.message || 'Error al iniciar sesión');
@@ -294,7 +302,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       {/* Username Input */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-2">
-                          Usuario
+                          Usuario o Correo
                         </label>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -302,7 +310,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="usuario_prefeco"
+                            placeholder="usuario_prefeco o correo@ejemplo.com"
                             disabled={isAnyLoading}
                             className="w-full pl-12 pr-4 py-3.5 bg-input-background dark:bg-input border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-foreground"
                             required
