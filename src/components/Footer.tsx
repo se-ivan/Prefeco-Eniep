@@ -6,8 +6,6 @@ import { MapPin, Phone, Mail } from 'lucide-react';
 export function Footer() {
   const navLinks = [
     'INICIO',
-    'SOBRE NOSOTROS',
-    'MODELO EDUCATIVO',
     'GALERÍA',
     'PLANTELES',
     'CONTACTO',
@@ -16,8 +14,6 @@ export function Footer() {
   const scrollToSection = (label: string) => {
     const sectionMap: { [key: string]: string } = {
       'INICIO': '#inicio',
-      'SOBRE NOSOTROS': '#historia',
-      'MODELO EDUCATIVO': '#modelo',
       'GALERÍA': '#galeria',
       'PLANTELES': '#planteles',
       'CONTACTO': '#contacto',
@@ -33,8 +29,8 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-gradient-to-br from-[#0b697d] to-[#0a4f5e] text-white">
-      <div className="h-2 bg-gradient-to-r from-[#0b697d] via-[#ffa52d] to-[#0b697d]"></div>
+    <footer className="bg-linear-to-br from-[#0b697d] to-[#0a4f5e] text-white">
+      <div className="h-2 bg-linear-to-r from-[#0b697d] via-[#ffa52d] to-[#0b697d]"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
           <motion.div
@@ -90,15 +86,15 @@ export function Footer() {
             <h3 className="font-bold text-xl mb-6">Contacto</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#ffa52d] flex-shrink-0 mt-1" />
-                <span className="text-white/80">Calzada Juárez #159, Morelia</span>
+                <MapPin className="w-5 h-5 text-[#ffa52d] shrink-0 mt-1" />
+                <span className="text-white/80">Juan Benito Diaz de Gamarra s/n, Fracc. Lazaro Cardenas, 58229 Morelia, Mich.</span>
               </li>
               <li className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-[#ffa52d] flex-shrink-0 mt-1" />
+                <Phone className="w-5 h-5 text-[#ffa52d] shrink-0 mt-1" />
                 <span className="text-white/80">(443) 312 2144</span>
               </li>
               <li className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-[#ffa52d] flex-shrink-0 mt-1" />
+                <Mail className="w-5 h-5 text-[#ffa52d] shrink-0 mt-1" />
                 <span className="text-white/80">contacto@prefecomelchorocampo.edu.mx</span>
               </li>
             </ul>

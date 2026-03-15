@@ -21,8 +21,6 @@ export function Navigation() {
 
   const navItems = [
     { label: 'INICIO', href: '#inicio' },
-    { label: 'SOBRE NOSOTROS', href: '#historia' },
-    { label: 'MODELO EDUCATIVO', href: '#modelo' },
     { label: 'GALERÍA', href: '#galeria' },
     { label: 'PLANTELES', href: '#planteles' },
     { label: 'CONTACTO', href: '#contacto' },
