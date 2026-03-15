@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadParticipantDocumentToFirebase } from "@/lib/document-upload";
 
 // Definición de los pasos del Stepper
@@ -68,6 +69,7 @@ export default function RegistrarAlumnoPage() {
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [uploadingDocuments, setUploadingDocuments] = useState<Record<ParticipantDocumentField, boolean>>({
     docCredencialUrl: false,
     docCartaResponsivaTutorUrl: false,
@@ -193,15 +195,23 @@ export default function RegistrarAlumnoPage() {
     }
   };
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
+    
+    // Set file to state so PhotoCropperModal opens
+    setPhotoToCrop(selectedFile);
+    // Reset input so the same file can be selected again if needed
+    e.target.value = "";
+  };
 
+  const handlePhotoCropped = async (croppedFile: File) => {
+    setPhotoToCrop(null);
     setUploadingPhoto(true);
     setStepError(null);
 
     try {
-      const { url } = await uploadImageToFirebase(selectedFile, "participante");
+      const { url } = await uploadImageToFirebase(croppedFile, "participante");
       setPhotoPreview(url);
       setFormData((prev) => ({ ...prev, fotoUrl: url }));
       toast.success("Fotografia subida correctamente");
@@ -211,7 +221,6 @@ export default function RegistrarAlumnoPage() {
       setStepError(message);
     } finally {
       setUploadingPhoto(false);
-      e.target.value = "";
     }
   };
 
@@ -365,7 +374,16 @@ export default function RegistrarAlumnoPage() {
   const progressPercentage = ((currentStep - 1) / (STEPS.length - 1)) * 100;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <>
+      {photoToCrop && (
+        <PhotoCropperModal
+          file={photoToCrop}
+          onClose={() => setPhotoToCrop(null)}
+          onCropComplete={handlePhotoCropped}
+          aspect={3 / 4}
+        />
+      )}
+      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
       
       {/* Tarjeta Principal del Formulario */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -841,5 +859,6 @@ export default function RegistrarAlumnoPage() {
 
       </div>
     </div>
+    </>
   );
 }

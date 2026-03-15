@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 type Institucion = {
@@ -151,6 +152,7 @@ export default function ListaParticipantesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Participante | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [autoEditHandled, setAutoEditHandled] = useState(false);
 
   useEffect(() => {
@@ -263,19 +265,24 @@ export default function ListaParticipantesPage() {
     setEditForm((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const handleEditPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
+    setPhotoToCrop(selectedFile);
+    e.target.value = "";
+  };
+
+  const handlePhotoCropped = async (croppedFile: File) => {
+    setPhotoToCrop(null);
     setUploadingPhoto(true);
     try {
-      const { url } = await uploadImageToFirebase(selectedFile, "participante");
+      const { url } = await uploadImageToFirebase(croppedFile, "participante");
       setEditForm((prev) => ({ ...prev, fotoUrl: url }));
       toast.success("Fotografia actualizada");
     } catch (error: any) {
       toast.error(error?.message || "No se pudo subir la fotografia");
     } finally {
       setUploadingPhoto(false);
-      e.target.value = "";
     }
   };
 
@@ -378,6 +385,14 @@ export default function ListaParticipantesPage() {
 
   return (
     <div className="min-h-screen">
+      {photoToCrop && (
+        <PhotoCropperModal
+          file={photoToCrop}
+          onClose={() => setPhotoToCrop(null)}
+          onCropComplete={handlePhotoCropped}
+          aspect={3 / 4}
+        />
+      )}
       <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
