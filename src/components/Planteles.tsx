@@ -90,16 +90,16 @@ export function Planteles({ instituciones = [] }: PlantelesProps) {
         >
           <div className="h-2 bg-linear-to-r from-[#0b697d] to-[#ffa52d]"></div>
           <div className="p-8 sm:p-12">
-            <div className="flex flex-col sm:flex-row items-start justify-between mb-8">
-              <div>
+            <div className="flex flex-row items-start justify-between gap-4 mb-8">
+              <div className="flex-1">
                 <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg mb-4">
                   <span className="text-white font-semibold text-sm">Plantel Principal</span>
                 </div>
                 <h3 className="text-3xl sm:text-4xl font-bold text-white mb-2">{mainCampus.name}</h3>
                 <p className="text-white/80 text-lg">{mainCampus.location}</p>
               </div>
-              <div className="mt-4 sm:mt-0 px-6 py-3 bg-[#ffa52d]/20 backdrop-blur-sm rounded-xl border border-[#ffa52d]/30">
-                <span className="text-white font-bold">{mainCampus.anniversary}</span>
+              <div className="shrink-0 bg-white/10 p-2 rounded-xl backdrop-blur-sm">
+                <img src="/aniversario.png" alt="68 Aniversario" className="h-16 sm:h-24 w-auto object-contain" />
               </div>
             </div>
 

@@ -47,7 +47,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-white/80 leading-relaxed mb-4">
-              68 años formando generaciones de michoacanos comprometidos con el conocimiento y el desarrollo de su comunidad.
+              70 años formando generaciones de michoacanos comprometidos con el conocimiento y el desarrollo de su comunidad.
             </p>
             <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
               <span className="font-bold">#YoSoyPREFECO</span>
