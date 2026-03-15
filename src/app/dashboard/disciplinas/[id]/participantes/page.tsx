@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ParticipantsTable from "@/components/ParticipantsTable";
 import TeamMembersModal from "@/components/TeamMembersModal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* ---------- Tipos locales (compatibles con tus componentes) ---------- */
 
@@ -385,17 +392,27 @@ export default function ParticipantesPage() {
                 {instituciones.find((ins) => ins.id === Number(selectedInstitucionId))?.nombre || "Cargando..."}
               </div>
             ) : (
-              <select
-                id="filtro-institucion"
-                value={selectedInstitucionId ?? ""}
-                onChange={(e) => setSelectedInstitucionId(e.target.value ? Number(e.target.value) : "")}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              <Select
+                value={selectedInstitucionId ? String(selectedInstitucionId) : "all"}
+                onValueChange={(value) => setSelectedInstitucionId(value === "all" ? "" : Number(value))}
               >
-                <option value="">(todas las instituciones)</option>
-                {instituciones.map((ins) => (
-                  <option key={ins.id} value={ins.id}>{ins.nombre}</option>
-                ))}
-              </select>
+                <SelectTrigger
+                  id="filtro-institucion"
+                  className="w-full border border-slate-300 bg-white text-sm font-normal text-slate-700 data-placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500"
+                >
+                  <SelectValue placeholder="(todas las instituciones)" />
+                </SelectTrigger>
+                <SelectContent className="max-h-56 w-[min(92vw,28rem)] bg-white text-slate-700">
+                  <SelectItem value="all" className="text-sm font-normal text-slate-700">
+                    (todas las instituciones)
+                  </SelectItem>
+                  {instituciones.map((ins) => (
+                    <SelectItem key={ins.id} value={String(ins.id)} className="text-sm font-normal text-slate-700">
+                      {ins.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
         </div>
