@@ -3,35 +3,41 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loader2, ArrowLeft, Mail, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, ShieldCheck, CheckCircle2, Lock, Upload, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { authClient } from "@/lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
+import { uploadImageToFirebase } from "@/lib/photo-upload";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function InstitucionOnboardingModal() {
   const router = useRouter();
   const { data: user, mutate } = useSWR("/api/me", fetcher);
-  
+
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  
+  // States for profile step
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [showPasswords, setShowPasswords] = useState(false);
+
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"email" | "verify" | "success">("email");
+  const [step, setStep] = useState<"email" | "verify" | "profile" | "success">("email");
 
   useEffect(() => {
     if (user && user.role === "RESPONSABLE_INSTITUCION") {
-      const isMissingEmail = user.email?.endsWith("@local.eniep") || user.email?.endsWith("@localhost") || !user.email;
-
-      if (isMissingEmail) {
-        setOpen(true);
-      } else {
-        setOpen(false);
+      if (step === "email") {
+        const isMissingEmail = user.email?.endsWith("@local.eniep") || user.email?.endsWith("@localhost") || !user.email;
+        setOpen(!!isMissingEmail);
       }
     }
-  }, [user]);
+  }, [user, step]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,15 +82,61 @@ export function InstitucionOnboardingModal() {
       }
 
       toast.success("Correo verificado correctamente");
+      setStep("profile");
+
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (newPassword || currentPassword) {
+        if (!currentPassword) throw new Error("Debes ingresar tu contraseña actual");
+        if (!newPassword) throw new Error("Debes ingresar tu nueva contraseña");
+        if (newPassword !== confirmPassword) throw new Error("Las contraseñas nuevas no coinciden");
+
+        const res = await authClient.changePassword({
+          newPassword,
+          currentPassword,
+          revokeOtherSessions: false
+        });
+        
+        if (res.error) throw new Error("La contraseña actual es incorrecta o la nueva contraseña no cumple con los requisitos (mínimo 8 caracteres)");
+      }
+
+      let urlLogo = undefined;
+      if (logoFile) {
+        toast.info("Subiendo logo...");
+        const uploadResult = await uploadImageToFirebase(logoFile, "institucion");
+        urlLogo = uploadResult.url;
+      }
+
+      if (urlLogo) {
+        const updateRes = await fetch("/api/cuenta", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urlLogo })
+        });
+        if (!updateRes.ok) {
+           const errData = await updateRes.json();
+           throw new Error(errData.error || "Error al actualizar logo en el servidor");
+        }
+      }
+
+      toast.success("Perfil actualizado correctamente");
       setStep("success");
-      
-      // Esperar un momento antes de cerrar y recargar
       setTimeout(() => {
         setOpen(false);
         mutate();
         router.refresh();
       }, 2000);
-      
+
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -213,6 +265,128 @@ export function InstitucionOnboardingModal() {
                     >
                       Volver e intentar con otro correo
                     </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {step === "profile" && (
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="w-full flex flex-col items-center"
+              >
+                <div className="w-16 h-16 bg-[#0b697d]/10 dark:bg-[#2eb4cc]/15 text-[#0b697d] dark:text-[#2eb4cc] rounded-full flex items-center justify-center mb-6">
+                  <Lock className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Seguridad y Logo</h2>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Opcionalmente, puedes cambiar tu contraseña y subir el logo de tu institución (min. 200x200).
+                </p>
+
+                <form onSubmit={handleProfileSubmit} className="w-full space-y-4">
+                  <div className="space-y-3 text-left">
+                     <p className="text-sm font-semibold ml-1 text-foreground/80">Cambiar contraseña (Opcional)</p>
+                     
+                     <div className="relative">
+                       <input
+                          type={showPasswords ? "text" : "password"}
+                          placeholder="Contraseña actual"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          disabled={loading}
+                          className="flex h-11 w-full rounded-xl border border-input bg-transparent px-4 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                     </div>
+
+                     <div className="relative">
+                        <input
+                          type={showPasswords ? "text" : "password"}
+                          placeholder="Nueva contraseña"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          disabled={loading}
+                          className="flex h-11 w-full rounded-xl border border-input bg-transparent px-4 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                     </div>
+                     <p className="text-xs text-muted-foreground ml-1">Mínimo 8 caracteres.</p>
+
+                     <div className="relative">
+                        <input
+                          type={showPasswords ? "text" : "password"}
+                          placeholder="Confirmar nueva contraseña"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          disabled={loading}
+                          className="flex h-11 w-full rounded-xl border border-input bg-transparent px-4 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                     </div>
+                  </div>
+
+                  <div className="space-y-3 text-left pt-2">
+                    <p className="text-sm font-semibold ml-1 text-foreground/80">Logo de la Institución (Opcional)</p>
+                    <label className="flex flex-col items-center justify-center w-full h-24 rounded-xl border border-dashed border-input bg-transparent hover:bg-accent/50 cursor-pointer transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground text-center px-4">
+                          {logoFile ? logoFile.name : "Sube una imagen (PNG, JPG, WEBP)"}
+                        </p>
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/png, image/jpeg, image/webp" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            setLogoFile(e.target.files[0]);
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="pt-4 flex flex-col gap-3">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-12 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#0b697d] to-[#0a5a6b] dark:from-[#2eb4cc] dark:to-[#2aa8b8] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Procesando...</>
+                      ) : (
+                        "Guardar y Finalizar"
+                      )}
+                    </button>
+                    
+                    {!newPassword && !currentPassword && !logoFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep("success");
+                          setTimeout(() => {
+                            setOpen(false);
+                            mutate();
+                            router.refresh();
+                          }, 2000);
+                        }}
+                        disabled={loading}
+                        className="w-full text-sm font-medium text-muted-foreground hover:underline"
+                      >
+                        Omitir y continuar
+                      </button>
+                    )}
                   </div>
                 </form>
               </motion.div>

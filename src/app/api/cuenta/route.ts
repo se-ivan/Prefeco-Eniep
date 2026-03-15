@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope } from "@/lib/rbac";
 
@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-
     return NextResponse.json({
       id: scope.id,
       name: scope.name,
@@ -26,23 +25,29 @@ export async function PATCH(req: NextRequest) {
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-
+    
     const body = await req.json();
-    const { name, email, telefono } = body ?? {};
+    const { name, email, telefono, urlLogo } = body ?? {};
 
     const dataToUpdate: any = {};
     if (name && String(name).trim()) dataToUpdate.name = String(name).trim();
     if (email && String(email).trim()) dataToUpdate.email = String(email).trim().toLowerCase();
 
-    if (Object.keys(dataToUpdate).length === 0 && !telefono) {
+    if (Object.keys(dataToUpdate).length === 0 && telefono === undefined && urlLogo === undefined) {
       return NextResponse.json({ error: "No hay datos para actualizar" }, { status: 400 });
     }
 
-    if (telefono && scope.institucionId) {
-      await prisma.institucion.update({
-        where: { id: scope.institucionId },
-        data: { telefono: String(telefono).trim() },
-      });
+    if ((telefono !== undefined || urlLogo !== undefined) && scope.institucionId) {
+      const instData: any = {};
+      if (telefono !== undefined) instData.telefono = telefono ? String(telefono).trim() : null;
+      if (urlLogo !== undefined) instData.urlLogo = urlLogo ? String(urlLogo).trim() : null;
+
+      if (Object.keys(instData).length > 0) {
+        await prisma.institucion.update({
+          where: { id: scope.institucionId },
+          data: instData,
+        });
+      }
     }
 
     let updated = null;
@@ -56,7 +61,7 @@ export async function PATCH(req: NextRequest) {
           email: true,
           role: true,
           institucionId: true,
-          institucion: { select: { id: true, nombre: true, cct: true, telefono: true } },
+          institucion: { select: { id: true, nombre: true, cct: true, telefono: true, urlLogo: true } },
         },
       });
     } else {
@@ -68,7 +73,7 @@ export async function PATCH(req: NextRequest) {
           email: true,
           role: true,
           institucionId: true,
-          institucion: { select: { id: true, nombre: true, cct: true, telefono: true } },
+          institucion: { select: { id: true, nombre: true, cct: true, telefono: true, urlLogo: true } },
         },
       });
     }
