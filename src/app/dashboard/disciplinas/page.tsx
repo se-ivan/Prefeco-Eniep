@@ -55,24 +55,11 @@ export default function DisciplinasPage() {
   const [filtroModalidad, setFiltroModalidad] = useState<string>("TODAS");
   const [busquedaNombre, setBusquedaNombre] = useState<string>("");
 
-  // Determinar qué ramas mostrar según la modalidad
-  const ramasDisponibles = (() => {
-    if (filtroModalidad === "INDIVIDUAL") {
-      return ["TODAS", "VARONIL", "FEMENIL", "UNICA", "MIXTO"];
-    } else if (filtroModalidad === "EQUIPO") {
-      return ["TODAS", "VARONIL", "FEMENIL"];
-    }
-    return ["TODAS", "VARONIL", "FEMENIL", "UNICA", "MIXTO"];
-  })();
+  const ramasDisponibles = ["TODAS", "VARONIL", "FEMENIL", "UNICA", "MIXTO"];
 
-  // Función para cambiar modalidad y ajustar rama si es necesario
+  // Mantener función para no tocar el onChange actual
   const handleModalidadChange = (nuevaModalidad: string) => {
     setFiltroModalidad(nuevaModalidad);
-    
-    // Ajustar rama si la actual no está disponible en la nueva modalidad
-    if (nuevaModalidad === "EQUIPO" && filtroRama !== "TODAS" && filtroRama !== "VARONIL" && filtroRama !== "FEMENIL") {
-      setFiltroRama("TODAS");
-    }
   };
 
   // Cargar disciplinas (simple GET)
@@ -202,8 +189,7 @@ export default function DisciplinasPage() {
           <div className="flex-1 min-w-50">
             <label htmlFor="filtro-rama" className="block text-sm font-medium text-slate-700 mb-1">
               Rama
-              {filtroModalidad === "INDIVIDUAL" && <span className="text-xs text-slate-500 ml-1">(Varonil/Femenil/Única/Mixto)</span>}
-              {filtroModalidad === "EQUIPO" && <span className="text-xs text-slate-500 ml-1">(Varonil/Femenil)</span>}
+              <span className="text-xs text-slate-500 ml-1">(Varonil/Femenil/Única/Mixto)</span>
             </label>
             <select
               id="filtro-rama"
