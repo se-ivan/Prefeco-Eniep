@@ -55,6 +55,7 @@ export default function ParticipantesPage() {
   
   // Filtro de categoría (default: todas)
   const [selectedCategoriaId, setSelectedCategoriaId] = useState<number | "">("");
+  const [selectedRama, setSelectedRama] = useState<"" | "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO">("");
   const [nameSearch, setNameSearch] = useState("");
 
   const [rowsTeams, setRowsTeams] = useState<Equipo[]>([]);
@@ -290,6 +291,11 @@ export default function ParticipantesPage() {
     });
   }, [rowsApoyo, normalizedNameSearch]);
 
+  const matchesRama = !selectedRama || disciplina?.rama === selectedRama;
+  const teamsForTable = matchesRama ? rowsTeams : [];
+  const individualsForTable = matchesRama ? rowsIndividualsFilteredByName : [];
+  const apoyosForTable = matchesRama ? rowsApoyoFilteredByName : [];
+
   return (
     <main className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -353,6 +359,24 @@ export default function ParticipantesPage() {
           </div>
 
           <div className="flex-1 min-w-50">
+            <label htmlFor="filtro-rama" className="block text-xs text-gray-500 mb-1">
+              Rama
+            </label>
+            <select
+              id="filtro-rama"
+              value={selectedRama}
+              onChange={(e) => setSelectedRama(e.target.value as "" | "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO")}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">(todas las ramas)</option>
+              <option value="VARONIL">Varonil</option>
+              <option value="FEMENIL">Femenil</option>
+              <option value="UNICA">Única</option>
+              <option value="MIXTO">Mixto</option>
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-50">
             <label htmlFor="filtro-institucion" className="block text-xs text-gray-500 mb-1">
               Institución
             </label>
@@ -397,9 +421,9 @@ export default function ParticipantesPage() {
           loading={loading}
           modalidad={disciplina?.modalidad ?? undefined}
           entityType={entityType}
-          teams={rowsTeams}
-          individuals={rowsIndividualsFilteredByName}
-          apoyos={rowsApoyoFilteredByName}
+          teams={teamsForTable}
+          individuals={individualsForTable}
+          apoyos={apoyosForTable}
           selectedCategoriaId={selectedCategoriaId}
           onViewTeam={handleOpenTeam}
           onDeleteTeam={(id) => handleDeleteTeamLocally(id)}

@@ -76,28 +76,20 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               credentials: 'include',
             });
 
+            let isAdminOrPrueba = false;
+
             if (meResponse.ok) {
               const me = await meResponse.json();
-
-              // Si deseas volver a activar el bloqueo descomenta este bloque:
-              // if (me?.role === 'RESPONSABLE_INSTITUCION') {
-              //   await authClient.signOut();
-              //   setError(registrosNoDisponiblesMessage);
-              //   toast.error(registrosNoDisponiblesMessage);
-              //   return;
-              // }
+              if (me?.role === 'ADMIN' || me?.username === 'prueba') {
+                isAdminOrPrueba = true;
+              }
             }
-
-            // En lugar de redirigir al dashboard, mostramos el contador
-            // toast.success('¡Inicio de sesión exitoso!');
-            // onClose();
-            // window.location.href = '/dashboard';
             
             // Calculamos si ya pasó la fecha
             const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
             const now = new Date().getTime();
             
-            if (now < targetDate) {
+            if (now < targetDate && !isAdminOrPrueba) {
               await authClient.signOut(); // Cerramos sesión para que no entren si recargan
               setShowCountdown(true);
             } else {
@@ -163,11 +155,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-100"
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 isolate">
+          <div className="fixed inset-0 z-101 flex items-center justify-center p-4 isolate">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -186,7 +178,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
               <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
                 {/* Lado Informativo (Oculto en móviles) */}
-                <div className="hidden lg:flex flex-col justify-center lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-gray-50 to-white dark:from-background dark:to-background overflow-y-auto border-r border-border">
+                <div className="hidden lg:flex flex-col justify-center lg:w-1/2 p-8 lg:p-12 bg-linear-to-br from-gray-50 to-white dark:from-background dark:to-background overflow-y-auto border-r border-border">
                   <div className="max-w-md mx-auto w-full">
                     {/* Titulo y Logo */}
                     <div className="mb-8">
@@ -214,7 +206,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           transition={{ delay: index * 0.1 }}
                           className="flex items-start gap-4"
                         >
-                          <div className={`w-12 h-12 ${feature.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                          <div className={`w-12 h-12 ${feature.bgColor} rounded-xl flex items-center justify-center shrink-0`}>
                             <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
                           </div>
                           <div>
@@ -263,17 +255,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                               <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.days.toString().padStart(2, '0')}</span>
                               <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Días</span>
                             </div>
-                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 -mt-1 md:-mt-2 text-foreground">:</span>
                             <div className="flex flex-col items-center">
                               <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.hours.toString().padStart(2, '0')}</span>
                               <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Hrs</span>
                             </div>
-                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 -mt-1 md:-mt-2 text-foreground">:</span>
                             <div className="flex flex-col items-center">
                               <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.minutes.toString().padStart(2, '0')}</span>
                               <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Min</span>
                             </div>
-                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 mt-[-4px] md:mt-[-8px] text-foreground">:</span>
+                            <span className="text-4xl md:text-5xl lg:text-6xl font-black opacity-30 -mt-1 md:-mt-2 text-foreground">:</span>
                             <div className="flex flex-col items-center">
                               <span className="text-4xl md:text-5xl lg:text-6xl font-black">{timeLeft.seconds.toString().padStart(2, '0')}</span>
                               <span className="text-[10px] md:text-xs uppercase mt-2 text-muted-foreground font-sans font-bold">Seg</span>
@@ -286,7 +278,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             setShowCountdown(false);
                             onClose();
                           }}
-                          className="w-full mt-4 py-4 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all"
+                          className="w-full mt-4 py-4 bg-linear-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all"
                         >
                           Entendido
                         </button>
@@ -377,7 +369,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       <button
                         type="submit"
                         disabled={isAnyLoading}
-                        className="w-full py-4 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-linear-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isLoading ? (
                           <>

@@ -128,6 +128,19 @@ export async function POST(req: Request) {
           throw { status: 409, message: `Algunos participantes no pertenecen a la institución ${institucionId}` };
         }
 
+        const esAtletismo = String(disciplina.nombre ?? "").trim().toUpperCase() === "ATLETISMO";
+        if (disciplina.rama === "MIXTO" && esAtletismo) {
+          const hombres = fetchedParts.filter((p: any) => p.genero === "MASCULINO").length;
+          const mujeres = fetchedParts.filter((p: any) => p.genero === "FEMENINO").length;
+
+          if (hombres !== 2 || mujeres !== 2) {
+            throw {
+              status: 409,
+              message: "Atletismo mixto en equipo requiere exactamente 2 hombres y 2 mujeres",
+            };
+          }
+        }
+
         for (const p of fetchedParts as any[]) {
           const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
           if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
