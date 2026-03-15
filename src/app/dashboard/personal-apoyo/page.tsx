@@ -2,15 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Phone, FileText, ChevronLeft, ChevronRight, ImagePlus, Loader2 } from "lucide-react";
+import { User, Phone, FileText, ChevronLeft, ChevronRight, ImagePlus, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { uploadPersonalApoyoDocumentToFirebase } from "@/lib/document-upload";
 
 const STEPS = [
   { id: 1, title: "Datos Personales", icon: User },
   { id: 2, title: "Contacto", icon: Phone },
   { id: 3, title: "Documentación", icon: FileText },
+];
+
+type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl" | "docComprobanteDomicilioUrl" | "docCartaAntecedentesUrl";
+
+const DOCUMENT_UPLOAD_CONFIG: { field: PersonalApoyoDocumentField; category: any; label: string }[] = [
+  { field: "docCurpUrl", category: "curp", label: "CURP" },
+  { field: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial" },
+  { field: "docComprobanteDomicilioUrl", category: "comprobante-domicilio", label: "Comprobante de Domicilio" },
+  { field: "docCartaAntecedentesUrl", category: "carta-antecedentes", label: "Carta de Antecedentes" },
 ];
 
 type Institucion = {
@@ -35,6 +45,12 @@ export default function RegistrarPersonalApoyoPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingDocuments, setUploadingDocuments] = useState<Record<PersonalApoyoDocumentField, boolean>>({
+    docCurpUrl: false,
+    docIdentificacionOficialUrl: false,
+    docComprobanteDomicilioUrl: false,
+    docCartaAntecedentesUrl: false,
+  });
 
   const [formData, setFormData] = useState({
     institucionId: "",
@@ -52,6 +68,10 @@ export default function RegistrarPersonalApoyoPage() {
     docIdentificacionOficial: false,
     docComprobanteDomicilio: false,
     docCartaAntecedentes: false,
+    docCurpUrl: "",
+    docIdentificacionOficialUrl: "",
+    docComprobanteDomicilioUrl: "",
+    docCartaAntecedentesUrl: "",
   });
 
   useEffect(() => {
@@ -109,6 +129,30 @@ export default function RegistrarPersonalApoyoPage() {
     const { name, checked } = e.target;
     setStepError(null);
     setFormData((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: PersonalApoyoDocumentField, category: any) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
+
+    try {
+      const { url } = await uploadPersonalApoyoDocumentToFirebase(selectedFile, category);
+      setFormData((prev) => ({ ...prev, [field]: url, [field.replace('Url', '')]: true }));
+      toast.success(`${selectedFile.name} subido correctamente`);
+    } catch (error: any) {
+      const message = error?.message || "No se pudo subir el documento";
+      setStepError(message);
+      toast.error(message);
+    } finally {
+      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
+      e.target.value = "";
+    }
+  };
+
+  const clearDocumentSelection = (field: PersonalApoyoDocumentField) => {
+    setFormData((prev) => ({ ...prev, [field]: "", [field.replace('Url', '')]: false }));
   };
 
   const clearPhotoSelection = () => {
@@ -206,6 +250,10 @@ export default function RegistrarPersonalApoyoPage() {
         docIdentificacionOficial: formData.docIdentificacionOficial,
         docComprobanteDomicilio: formData.docComprobanteDomicilio,
         docCartaAntecedentes: formData.docCartaAntecedentes,
+        docCurpUrl: formData.docCurpUrl || null,
+        docIdentificacionOficialUrl: formData.docIdentificacionOficialUrl || null,
+        docComprobanteDomicilioUrl: formData.docComprobanteDomicilioUrl || null,
+        docCartaAntecedentesUrl: formData.docCartaAntecedentesUrl || null,
         estatus: "ACTIVO",
       };
 
@@ -475,52 +523,61 @@ export default function RegistrarPersonalApoyoPage() {
           {currentStep === 3 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
               <h3 className="text-lg font-bold text-gray-800 mb-1">Documentación</h3>
-              <p className="text-xs text-gray-500 mb-8">Marca los documentos entregados</p>
+              <p className="text-xs text-gray-500 mb-8">Sube los archivos en PDF, JPG, PNG o WEBP (máximo 10MB)</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
-                <label className="flex items-center gap-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docCurp"
-                    checked={formData.docCurp}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  CURP
-                </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {DOCUMENT_UPLOAD_CONFIG.map((doc) => {
+                  const hasFile = !!formData[doc.field];
+                  const isUploading = uploadingDocuments[doc.field];
+                  return (
+                    <div key={doc.field} className="rounded-xl border border-gray-200 p-4 bg-white">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-800">{doc.label}</p>
+                        {hasFile ? (
+                          <span className="text-xs rounded-full bg-emerald-100 text-emerald-700 px-2 py-1">Subido</span>
+                        ) : (
+                          <span className="text-xs rounded-full bg-slate-100 text-slate-600 px-2 py-1">Pendiente</span>
+                        )}
+                      </div>
 
-                <label className="flex items-center gap-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docIdentificacionOficial"
-                    checked={formData.docIdentificacionOficial}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  Identificación oficial
-                </label>
+                      <div className="mt-3 flex items-center gap-2">
+                        <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#08677a] text-white text-xs font-semibold cursor-pointer hover:bg-teal-800 transition-colors">
+                          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          {isUploading ? "Subiendo..." : "Seleccionar archivo"}
+                          <input
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => handleDocumentUpload(e, doc.field, doc.category)}
+                            disabled={isUploading}
+                          />
+                        </label>
 
-                <label className="flex items-center gap-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docComprobanteDomicilio"
-                    checked={formData.docComprobanteDomicilio}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  Comprobante de domicilio
-                </label>
+                        {hasFile && (
+                          <button
+                            type="button"
+                            onClick={() => clearDocumentSelection(doc.field)}
+                            className="text-xs text-red-600 hover:underline"
+                          >
+                            Quitar
+                          </button>
+                        )}
+                      </div>
 
-                <label className="flex items-center gap-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="docCartaAntecedentes"
-                    checked={formData.docCartaAntecedentes}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  Carta de antecedentes no penales
-                </label>
+                      {/* Checkbox manual en caso de entrega física (opcional, pero se marca auto) */}
+                      <label className="flex items-center gap-2 mt-4 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          name={doc.field.replace('Url', '')}
+                          checked={formData[doc.field.replace('Url', '') as keyof typeof formData] as boolean}
+                          onChange={handleCheckboxChange}
+                          className="rounded border-gray-300 h-3.5 w-3.5 text-[#08677a] focus:ring-[#08677a]"
+                        />
+                        Marcar como entregado físicamente (sin subir archivo)
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -16,6 +16,12 @@ type ParticipantDocumentCategory =
   | "historial-medico"
   | "acta-nacimiento";
 
+type PersonalApoyoDocumentCategory =
+  | "curp"
+  | "identificacion-oficial"
+  | "comprobante-domicilio"
+  | "carta-antecedentes";
+
 type UploadDocumentResult = {
   url: string;
   storagePath: string;
@@ -64,6 +70,35 @@ export async function uploadParticipantDocumentToFirebase(
   const extension = getExtension(file, safeName);
   const fileName = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
   const storagePath = `participante-documentos/${category}/${fileName}`;
+
+  const storageRef = ref(storage, storagePath);
+  await uploadBytes(storageRef, file, {
+    contentType: file.type,
+    cacheControl: "public,max-age=31536000,immutable",
+    customMetadata: {
+      originalName: safeName,
+      source: "prefeco-dashboard",
+      documentCategory: category,
+    },
+  });
+
+  const url = await getDownloadURL(storageRef);
+  return { url, storagePath };
+}
+
+export async function uploadPersonalApoyoDocumentToFirebase(
+  file: File,
+  category: PersonalApoyoDocumentCategory
+): Promise<UploadDocumentResult> {
+  validateDocument(file);
+
+  await ensureFirebaseUploadSession();
+  const storage = getFirebaseStorage();
+
+  const safeName = sanitizeFileName(file.name || "documento");
+  const extension = getExtension(file, safeName);
+  const fileName = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const storagePath = `personal-apoyo-documentos/${category}/${fileName}`;
 
   const storageRef = ref(storage, storagePath);
   await uploadBytes(storageRef, file, {

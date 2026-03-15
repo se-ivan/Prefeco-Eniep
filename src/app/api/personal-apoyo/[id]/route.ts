@@ -31,6 +31,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       docIdentificacionOficial,
       docComprobanteDomicilio,
       docCartaAntecedentes,
+      docCurpUrl,
+      docIdentificacionOficialUrl,
+      docComprobanteDomicilioUrl,
+      docCartaAntecedentesUrl,
       estatus,
     } = body ?? {};
 
@@ -92,6 +96,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         docIdentificacionOficial: !!docIdentificacionOficial,
         docComprobanteDomicilio: !!docComprobanteDomicilio,
         docCartaAntecedentes: !!docCartaAntecedentes,
+        docCurpUrl: docCurpUrl !== undefined ? (docCurpUrl ? String(docCurpUrl) : null) : undefined,
+        docIdentificacionOficialUrl: docIdentificacionOficialUrl !== undefined ? (docIdentificacionOficialUrl ? String(docIdentificacionOficialUrl) : null) : undefined,
+        docComprobanteDomicilioUrl: docComprobanteDomicilioUrl !== undefined ? (docComprobanteDomicilioUrl ? String(docComprobanteDomicilioUrl) : null) : undefined,
+        docCartaAntecedentesUrl: docCartaAntecedentesUrl !== undefined ? (docCartaAntecedentesUrl ? String(docCartaAntecedentesUrl) : null) : undefined,
         estatus,
       },
       include: {
