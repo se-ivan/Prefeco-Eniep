@@ -32,7 +32,7 @@ export function Hero() {
             className="mb-8 flex justify-center px-4"
           >
             <img 
-              src="/logo-escuela-hero.png" 
+              src="/logo-escuela-hero-claro.png" 
               alt="PREFECO Melchor Ocampo" 
               className="w-full max-w-2xl lg:max-w-4xl h-auto drop-shadow-2xl" 
             />
