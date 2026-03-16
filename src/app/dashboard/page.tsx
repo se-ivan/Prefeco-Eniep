@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const router = useRouter();
   
   const { data: dashboardData } = useSWR("/api/dashboard", {
-    refreshInterval: 60000, // Refrescar cada minuto
+    refreshInterval: 60000,
   });
 
   useEffect(() => {

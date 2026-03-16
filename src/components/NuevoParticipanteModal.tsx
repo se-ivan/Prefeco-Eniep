@@ -77,36 +77,6 @@ export default function NuevoParticipanteModal({
   maxIntegrantes,
   existingParticipants = [],
 }: Props) {
-  function buildInstitutionTeamName(nombreInstitucion: string, municipio?: string | null) {
-    const quotedMatch = nombreInstitucion.match(/"([^"]+)"/);
-    const quotedText = quotedMatch?.[1]?.trim() || "";
-    const prioritizedText = quotedText || nombreInstitucion;
-
-    const normalizedWords = prioritizedText
-      .replace(/["'“”‘’.,;:()\[\]{}]/g, " ")
-      .split(/\s+/)
-      .map((word) => word.trim())
-      .filter(Boolean);
-
-    const safeMunicipio = (municipio ?? "").trim();
-
-    if (quotedText) {
-      return safeMunicipio ? `${quotedText} - ${safeMunicipio}` : quotedText;
-    }
-
-    const importantWords = normalizedWords.filter((word) => word.length >= 4);
-    const sourceWords = importantWords.length > 0 ? importantWords : normalizedWords;
-
-    const acronym = sourceWords
-      .slice(0, 3)
-      .map((word) => word.charAt(0).toUpperCase())
-      .join("");
-
-    const fallbackAcronym = prioritizedText.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g, "").slice(0, 3).toUpperCase() || "EQP";
-
-    return safeMunicipio ? `${acronym || fallbackAcronym} - ${safeMunicipio}` : acronym || fallbackAcronym;
-  }
-
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<ParticipanteApi[] | PersonalApi[]>([]);
   const [seleccionados, setSeleccionados] = useState<SeleccionParticipante[]>([]);
@@ -119,6 +89,7 @@ export default function NuevoParticipanteModal({
   const [institucionId, setInstitucionId] = useState<number | "">("");
   const [tipo, setTipo] = useState<"ALUMNO" | "APOYO" | "">("");
   const [categoriaId, setCategoriaId] = useState<number | "">("");
+  const [nombreEquipo, setNombreEquipo] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [isResponsable, setIsResponsable] = useState(false);
@@ -132,6 +103,7 @@ export default function NuevoParticipanteModal({
       setSearchError(null);
       setCategoriaId("");
       setTipo("");
+      setNombreEquipo("");
       if (!isResponsable) {
         setInstitucionId("");
       }
@@ -294,15 +266,14 @@ export default function NuevoParticipanteModal({
       return;
     }
 
+    if (tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO" && !nombreEquipo.trim()) {
+      setSearchError("Escribe el nombre del equipo.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (tipo === "ALUMNO") {
-        const institucionSeleccionada = instituciones.find(
-          (ins) => ins.id === Number(institucionId)
-        );
-        const nombreInstitucion = institucionSeleccionada?.nombre?.trim() || String(institucionId);
-        const municipioInstitucion = institucionSeleccionada?.municipio?.trim() || "";
-
         const payload: any = {
           disciplinaId: Number(disciplina.id),
           modalidad: disciplina.modalidad,
@@ -312,7 +283,7 @@ export default function NuevoParticipanteModal({
           participantes: seleccionados.map((s) => ({ participanteId: s.participanteId })),
         };
         if (disciplina.modalidad === "EQUIPO") {
-          payload.nombreEquipo = buildInstitutionTeamName(nombreInstitucion, municipioInstitucion);
+          payload.nombreEquipo = nombreEquipo.trim();
         }
         const res = await fetch("/api/inscripciones", {
           method: "POST",
@@ -384,7 +355,7 @@ export default function NuevoParticipanteModal({
             <div className={`text-xs px-3 py-1 rounded-full font-bold ${isMaxReached ? "bg-red-500 text-white" : "bg-white/20 text-white"}`}>
               {totalIntegrantes} {maxIntegrantes ? `/ ${maxIntegrantes}` : ''} Integrantes
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer">
               <X size={20} />
             </button>
           </div>
@@ -434,7 +405,7 @@ export default function NuevoParticipanteModal({
                       <button
                         key={t}
                         onClick={() => setTipo(t)}
-                        className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${tipo === t ? "bg-[#08677a] text-white border-[#08677a]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"}`}
+                        className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all cursor-pointer ${tipo === t ? "bg-[#08677a] text-white border-[#08677a] hover:bg-[#075867]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
                       >
                         {t === "ALUMNO" ? "Alumno" : "Apoyo"}
                       </button>
@@ -444,6 +415,17 @@ export default function NuevoParticipanteModal({
               </div>
 
               <div className="grid grid-cols-1 gap-4">
+                {disciplina.modalidad === "EQUIPO" && tipo === "ALUMNO" && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Nombre del equipo</label>
+                    <input
+                      className="w-full border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-[#08677a]/20"
+                      value={nombreEquipo}
+                      onChange={(e) => setNombreEquipo(e.target.value)}
+                      placeholder="Ejemplo: Lobos"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Categoría</label>
                   <Select
@@ -498,7 +480,7 @@ export default function NuevoParticipanteModal({
                       key={p.id}
                       onClick={() => !enExisting && toggleSeleccionFromApiResult(p)}
                       disabled={enExisting}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group
+                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer
                         ${enExisting ? "bg-gray-100 opacity-50 cursor-not-allowed" : seleccionado ? "bg-[#08677a]/5 border-[#08677a] shadow-sm" : "bg-white border-gray-100 hover:border-gray-300"}`}
                     >
                       <div className="flex items-center gap-3">
@@ -556,7 +538,7 @@ export default function NuevoParticipanteModal({
                           <div className="font-bold text-xs text-gray-800 truncate">{s.nombreCompleto}</div>
                           <div className="text-[10px] text-gray-400">{s.matricula}</div>
                         </div>
-                        <button onClick={(e) => removerSeleccion(s.participanteId, e)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                        <button onClick={(e) => removerSeleccion(s.participanteId, e)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -574,11 +556,11 @@ export default function NuevoParticipanteModal({
                 </div>
               )}
               <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors">Cancelar</button>
+                <button onClick={onClose} className="flex-1 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">Cancelar</button>
                 <button
                   onClick={confirmarAltas}
                   disabled={submitting}
-                  className="flex-[2] py-2.5 bg-[#ffb041] hover:bg-[#f0a030] text-[#08677a] rounded-xl text-sm font-black transition-all disabled:opacity-50 shadow-lg shadow-orange-200"
+                  className="flex-[2] py-2.5 bg-[#ffb041] hover:bg-[#f0a030] text-[#08677a] rounded-xl text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-200 cursor-pointer"
                 >
                   {submitting ? "Guardando..." : `Confirmar Selección`}
                 </button>

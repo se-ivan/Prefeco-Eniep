@@ -138,9 +138,9 @@ export default function DisciplinasPage() {
         {isAdmin && (
           <button
             onClick={() => setCrearDisciplinaOpen(true)}
-            className="px-4 py-2 bg-emerald-600 text-white rounded shadow-sm text-sm"
+            className="px-4 py-2 bg-amber-500 text-white rounded shadow-sm text-sm cursor-pointer transition-colors hover:bg-amber-600"
           >
-            + Registrar disciplina
+            + Crear disciplina
           </button>
         )}
       </div>
