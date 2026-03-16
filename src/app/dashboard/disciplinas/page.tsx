@@ -165,6 +165,7 @@ export default function DisciplinasPage() {
               <option value="CIVICA">Cívica</option>
               <option value="ACADEMICA">Académica</option>
               <option value="EXHIBICION">Exhibición</option>
+              <option value="EMBAJADORA_NACIONAL">Embajadora Nacional</option>
             </select>
           </div>
 

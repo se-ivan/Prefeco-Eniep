@@ -108,6 +108,7 @@ enum TipoDisciplina {
   CIVICA
   ACADEMICA
   EXHIBICION
+  EMBAJADORA_NACIONAL @map("EMBAJADORA NACIONAL")
 }
 
 enum Modalidad {
