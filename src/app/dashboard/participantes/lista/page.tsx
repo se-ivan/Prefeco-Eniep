@@ -235,7 +235,7 @@ export default function ListaParticipantesPage() {
     }
 
     const editId = Number(editIdParam);
-          <p className="mt-1 text-sm text-gray-800 wrap-break-word">{value || "-"}</p>
+    if (isNaN(editId)) {
       setAutoEditHandled(true);
       return;
     }
