@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
         tutorId = createdTutor.id;
       }
 
-      return tx.participante.create({
+      const newParticipante = await tx.participante.create({
         data: {
           institucionId: Number(institucionId),
           tutorId,
@@ -214,6 +214,16 @@ export async function POST(req: NextRequest) {
           },
         },
       });
+
+      await tx.bitacora.create({
+        data: {
+          accion: "ALUMNO_REGISTRADO",
+          descripcion: `Se registró al alumno: ${String(nombres).trim()} ${String(apellidoPaterno).trim()} ${String(apellidoMaterno).trim()} (${String(curp).trim().toUpperCase()})`,
+          institucionId: Number(institucionId),
+        }
+      });
+
+      return newParticipante;
     });
 
     return NextResponse.json(created, { status: 201 });

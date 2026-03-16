@@ -12,20 +12,34 @@ export async function GET(request: NextRequest) {
         const whereClause = isResponsable(scope) ? { institucionId: scope.institucionId ?? -1 } : {};
         const totalStudents = await prisma.participante.count({ where: whereClause });
         
-        
-        let pendingTemp = 0;
-        let pendingDocuments = 0; // Default to keep previous mock behaviour if needed, but better dynamic
+        const maleStudents = await prisma.participante.count({ where: { ...whereClause, genero: "MASCULINO" } });
+        const femaleStudents = await prisma.participante.count({ where: { ...whereClause, genero: "FEMENINO" } });
+        const supportStaff = await prisma.personalApoyo.count({ where: whereClause });
 
         const activeDisciplines = await prisma.disciplina.count();
 
-        // Si prefieres usar los datos reales, puedes quitar el pendingDocuments quemado
-        // y calcularlo en base a mapParticipantes
+        // Obtener la actividad reciente (últimos 4 participantes registrados)
+        const recentParticipants = await prisma.participante.findMany({
+            where: whereClause,
+            orderBy: { id: "desc" },
+            take: 4,
+            select: {
+                id: true,
+                nombres: true,
+                apellidoPaterno: true,
+                apellidoMaterno: true,
+                estatus: true,
+            }
+        });
 
         const dashboardData = {
             totalStudents: totalStudents,
-            pendingDocuments: pendingDocuments,
+            maleStudents,
+            femaleStudents,
+            supportStaff,
             upcomingEvents: 0,
             activeDisciplines: activeDisciplines,
+            recentActivity: recentParticipants,
         };
 
         return NextResponse.json(dashboardData);

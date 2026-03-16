@@ -139,6 +139,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await prisma.bitacora.create({
+      data: {
+        accion: "PERSONAL_APOYO_REGISTRADO",
+        descripcion: `Personal de apoyo registrado: ${String(nombres).trim()} ${String(apellidoPaterno).trim()} ${String(apellidoMaterno).trim()} (${String(puesto).trim()})`,
+        institucionId: Number(institucionId),
+      },
+    });
+
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {
     console.error("Error al crear personal de apoyo:", error);

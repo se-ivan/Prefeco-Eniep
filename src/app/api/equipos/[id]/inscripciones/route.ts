@@ -92,6 +92,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // createMany is faster; createMany returns count only
       await tx.inscripcion.createMany({ data });
 
+      for (const pid of participantIds) {
+        const p = await tx.participante.findUnique({ where: { id: pid } });
+        if (p) {
+          await tx.bitacora.create({
+            data: {
+              accion: "PARTICIPANTE_DISCIPLINA",
+              descripcion: `Participante inscrito: ${p.nombres} a la disciplina ${equipo.disciplina.nombre}`,
+              institucionId: p.institucionId,
+            },
+          });
+        }
+      }
+
       return { createdCount: data.length };
     });
 

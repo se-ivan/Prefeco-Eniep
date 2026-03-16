@@ -194,6 +194,14 @@ export async function POST(req: Request) {
 
         await tx.inscripcion.createMany({ data: insData });
 
+        await tx.bitacora.create({
+          data: {
+            accion: "EQUIPO_DISCIPLINA",
+            descripcion: `Equipo registrado: ${equipo.nombreEquipo} en la disciplina ${disciplina.nombre}`,
+            institucionId: Number(institucionId),
+          },
+        });
+
         if (personalIds && personalIds.length > 0) {
           for (const pid of personalIds) {
             await tx.asignacionApoyo.create({
@@ -297,6 +305,16 @@ export async function POST(req: Request) {
         }));
 
         await tx.inscripcion.createMany({ data: insData });
+
+        for (const p of fetchedParts) {
+          await tx.bitacora.create({
+            data: {
+              accion: "PARTICIPANTE_DISCIPLINA",
+              descripcion: `Participante inscrito: ${p.nombres} a la disciplina ${disciplina.nombre}`,
+              institucionId: Number(institucionId),
+            },
+          });
+        }
 
         if (personalIds && personalIds.length > 0) {
           for (const pid of personalIds) {
