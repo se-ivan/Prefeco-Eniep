@@ -23,8 +23,8 @@ export function Hero() {
         }}></div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-        <div className="text-center mb-16">
+      <div className="max-w-7xl justify-center flex items-center flex-col mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+        <div className="text-center max-w-xl mb-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -32,22 +32,12 @@ export function Hero() {
             className="mb-8 flex justify-center px-4"
           >
             <img 
-              src="/logo-escuela-hero-claro.webp" 
+              src="/logo-escuela-hero-claro2.webp" 
               alt="PREFECO Melchor Ocampo" 
               className="w-full max-w-2xl lg:max-w-4xl h-auto drop-shadow-2xl" 
             />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-12 inline-block"
-          >
-            <div className="px-6 py-3 bg-white/10 rounded-full border-2 border-white/20 backdrop-blur-sm">
-              <span className="text-white font-bold text-sm sm:text-base">#YoSoyPREFECO</span>
-            </div>
-          </motion.div>
         </div>
 
         {/* CTA */}
@@ -55,14 +45,14 @@ export function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-16 bg-gradient-to-r from-[#0b697d]/90 to-[#0d5868]/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 sm:p-12 text-center border border-white/10"
+          className="mt-2 bg-gradient-to-r from-[#0b697d]/90 to-[#0d5868]/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 sm:p-12 text-center border border-white/10"
         >
           <div className="h-2 w-full bg-gradient-to-r from-[#0b697d] to-[#ffa52d] rounded-full mb-8"></div>
           <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             Acceder al Sistema ENIEP 2026
           </h3>
           <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-            Inicia tu proceso de admisión y gestión formando parte de nuestra comunidad educativa
+            Inicia el registro de tus estudiantes y personal de apoyo entre el 16 y el 27 de marzo del 2026
           </p>
           <motion.button
             onClick={() => window.dispatchEvent(new Event('openLoginModal'))}

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
 
 type Categoria = { id: number; nombre: string; deletedAt?: Date | null };
 
@@ -92,7 +93,7 @@ export default function DisciplinaCard({
   );
 
   return (
-    <article className="bg-white rounded-xl shadow border p-5 flex flex-col justify-between">
+    <article className="bg-white rounded-xl shadow border p-5 flex flex-col justify-between transition-shadow hover:shadow-md">
       {/* HEADER */}
       <div>
         {isAdmin && (
@@ -100,18 +101,18 @@ export default function DisciplinaCard({
             <button
               type="button"
               onClick={() => onEditDisciplina?.(disciplina)}
-              className="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center justify-center text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-400"
               aria-label={`Editar disciplina ${disciplina.nombre}`}
             >
-              Editar
+              <Pencil size={12} />
             </button>
             <button
               type="button"
               onClick={() => onDeleteDisciplina?.(disciplina)}
-              className="text-xs px-2 py-1 rounded border border-red-200 text-red-700 hover:bg-red-50"
+              className="inline-flex items-center justify-center text-xs px-2 py-1 rounded border border-red-200 text-red-700 cursor-pointer transition-colors hover:bg-red-50 hover:border-red-300"
               aria-label={`Borrar disciplina ${disciplina.nombre}`}
             >
-              Borrar
+              <Trash2 size={12} />
             </button>
           </div>
         )}
@@ -164,7 +165,7 @@ export default function DisciplinaCard({
       <div className="mt-4 flex gap-2">
         <button
           onClick={handleView}
-          className="flex-1 border rounded py-2 text-sm"
+          className="flex-1 border border-slate-300 rounded py-2 text-sm cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-400"
           aria-label={`Ver participantes de ${disciplina.nombre}`}
         >
           Ver Participantes
@@ -172,7 +173,7 @@ export default function DisciplinaCard({
 
         <button
           onClick={handleCreate}
-          className="bg-amber-500 text-white px-4 py-2 rounded text-sm"
+          className="bg-amber-500 text-white px-4 py-2 rounded text-sm cursor-pointer transition-colors hover:bg-amber-600"
           aria-label={`Registrar nuevo participante en ${disciplina.nombre}`}
         >
           + Nuevo
