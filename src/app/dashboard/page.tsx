@@ -28,7 +28,7 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50/50">
         <p className="text-lg font-semibold animate-pulse text-gray-600">
-          Cargando tu informaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n...
+          Cargando tu información...
         </p>
       </div>
     );
@@ -133,68 +133,12 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-center gap-2">
             <Calendar className="w-5 h-5 text-slate-500" />
             <div>
-              <CardTitle className="text-lg">Proximos Encuentros</CardTitle>
+              <CardTitle className="text-lg">Próximos Encuentros</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 border rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-slate-900 text-sm">Torneo de Futbol - Fase de Grupos</h4>
-                <div className="flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-1 rounded text-xs">
-                  <Users className="w-3 h-3" />
-                  <span>8</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  15 Feb 2026 09:00 AM
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
-                <MapPin className="w-3 h-3 text-red-400" />
-                Cancha Principal
-              </div>
-            </div>
-
-            <div className="p-4 border rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-slate-900 text-sm">Concurso de Ajedrez</h4>
-                <div className="flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-1 rounded text-xs">
-                  <Users className="w-3 h-3" />
-                  <span>16</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  18 Feb 2026 10:00 AM
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
-                <MapPin className="w-3 h-3 text-red-400" />
-                Aula Magna
-              </div>
-            </div>
-
-            <div className="p-4 border rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-slate-900 text-sm">Presentación Danza Regional</h4>
-                <div className="flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-1 rounded text-xs">
-                  <Users className="w-3 h-3" />
-                  <span>4</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  22 Feb 2026 16:00 PM
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
-                <MapPin className="w-3 h-3 text-red-400" />
-                Teatro Auditorio
-              </div>
+            <div className="text-sm text-slate-500 text-center py-4">
+              No hay próximos encuentros programados.
             </div>
           </CardContent>
         </Card>
