@@ -37,7 +37,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (!showCountdown) return;
 
     // 16 de marzo del 2026 a las 18:00 (Hora México/Centro aproximada)
-    const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+    const targetDate = new Date('2026-03-16T08:58:00-06:00').getTime();
 
     const interval = setInterval(() => {
       const distance = targetDate - new Date().getTime();
@@ -122,7 +122,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             }
             
             // Calculamos si ya pasó la fecha
-            const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+            const targetDate = new Date('2026-03-16T08:58:00-06:00').getTime();
             const now = new Date().getTime();
             
             if (now < targetDate && !isAdminOrPrueba) {
