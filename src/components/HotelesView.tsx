@@ -224,7 +224,7 @@ export default function HotelesView() {
         {/* Left Side: Hotel List */}
         <div className="w-full md:w-1/2 lg:w-[45%] flex flex-col border-r border-border md:h-full bg-card/50 order-last md:order-first">
           <div className="p-4 md:p-6 border-b border-border bg-background z-10 shrink-0 space-y-4 shadow-sm relative">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#0b697d] dark:text-[#2eb4cc]">Hoteles Sede</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#0b697d] dark:text-[#2eb4cc]">Hoteles y Sedes</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Explora las opciones de alojamiento con tarifas preferenciales para el ENIEP 2026.
             </p>

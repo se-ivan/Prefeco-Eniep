@@ -190,6 +190,7 @@ export default function RegistrarPersonalApoyoPage() {
   const validateStep1 = () => {
     const resolvedInstitucionId = Number(formData.institucionId || scope?.institucionId || 0);
     if (!resolvedInstitucionId) return "No se encontró una institución válida para el registro.";
+    if (!formData.fotoUrl) return "La fotografía es obligatoria.";
     if (!formData.nombres.trim()) return "El nombre es obligatorio.";
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
     if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
