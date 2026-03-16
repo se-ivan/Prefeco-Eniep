@@ -101,7 +101,7 @@ export function Galeria() {
             <span className="text-[#0b697d] font-semibold text-sm">GALERÍA</span>
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-[#0b697d] mb-6">
-            Vida Estudiantil
+            PREFECO “Melchor Ocampo” de Morelia
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Conoce nuestras instalaciones y la gran variedad de actividades que ofrecemos.
