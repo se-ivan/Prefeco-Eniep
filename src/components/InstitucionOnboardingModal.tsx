@@ -31,6 +31,15 @@ export function InstitucionOnboardingModal() {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"email" | "verify" | "profile" | "success">("email");
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
 
   useEffect(() => {
     if (user && user.role === "RESPONSABLE_INSTITUCION") {
@@ -59,7 +68,33 @@ export function InstitucionOnboardingModal() {
 
       toast.success("Código de verificación enviado");
       console.log("Nota para desarrollo: Revisa la terminal del servidor para ver el código.");
+      setResendCountdown(300);
       setStep("verify");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCountdown > 0) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/cuenta/enviar-codigo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Error al reenviar el código");
+      }
+
+      toast.success("Nuevo código de verificación enviado");
+      setResendCountdown(300);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -270,6 +305,15 @@ export function InstitucionOnboardingModal() {
                       className="w-full h-12 inline-flex items-center justify-center rounded-xl hover:bg-accent text-sm font-medium transition-colors text-muted-foreground"
                     >
                       Volver e intentar con otro correo
+                    </button>
+                    
+                    <button 
+                      type="button" 
+                      disabled={loading || resendCountdown > 0}
+                      onClick={handleResendCode}
+                      className="w-full h-12 inline-flex items-center justify-center rounded-xl hover:bg-accent text-sm font-medium transition-colors text-muted-foreground disabled:opacity-50"
+                    >
+                      {resendCountdown > 0 ? `Reenviar código en ${Math.floor(resendCountdown / 60)}:${(resendCountdown % 60).toString().padStart(2, '0')}` : "Reenviar código"}
                     </button>
                   </div>
                 </form>
