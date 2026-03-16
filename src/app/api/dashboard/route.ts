@@ -1,25 +1,31 @@
-import { authClient } from "@/lib/auth-client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-// Importa Prisma o las funciones que usen tus otras APIs
-// import prisma from "@/lib/prisma"; 
-
+import { getUserScope, isResponsable } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
-    const session = await authClient.getSession();
-    if (!session) {
+    const scope = await getUserScope(request.headers);
+    if (!scope) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
-        const estudiantes = await prisma.participante.findMany();
-        const disciplinas = await prisma.disciplina.findMany();
+        const whereClause = isResponsable(scope) ? { institucionId: scope.institucionId ?? -1 } : {};
+        const totalStudents = await prisma.participante.count({ where: whereClause });
+        
+        
+        let pendingTemp = 0;
+        let pendingDocuments = 0; // Default to keep previous mock behaviour if needed, but better dynamic
+
+        const activeDisciplines = await prisma.disciplina.count();
+
+        // Si prefieres usar los datos reales, puedes quitar el pendingDocuments quemado
+        // y calcularlo en base a mapParticipantes
 
         const dashboardData = {
-            totalStudents: estudiantes.length,
-            pendingDocuments: 18,
-            upcomingEvents: 5,
-            activeDisciplines: disciplinas.length,
+            totalStudents: totalStudents,
+            pendingDocuments: pendingDocuments,
+            upcomingEvents: 0,
+            activeDisciplines: activeDisciplines,
         };
 
         return NextResponse.json(dashboardData);
