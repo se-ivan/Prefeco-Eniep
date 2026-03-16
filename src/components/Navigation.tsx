@@ -17,11 +17,28 @@ export function Navigation() {
     // Check initial scroll position immediately
     setIsScrolled(window.scrollY > 20);
 
+    // Open logic from URL search params without breaking static export
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('login') === 'true') {
+        setIsLoginModalOpen(true);
+        // Clean up the URL string
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+
+    const handleOpenLogin = () => setIsLoginModalOpen(true);
+    window.addEventListener('openLoginModal', handleOpenLogin);
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('openLoginModal', handleOpenLogin);
+    };
   }, []);
 
   const isTransparent = pathname === '/' && !isScrolled;
