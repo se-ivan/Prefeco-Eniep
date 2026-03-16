@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isResponsable } from "@/lib/rbac";
+import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
     const scope = await getUserScope(request.headers);
@@ -18,18 +18,21 @@ export async function GET(request: NextRequest) {
 
         const activeDisciplines = await prisma.disciplina.count();
 
-        // Obtener la actividad reciente (últimos 4 participantes registrados)
-        const recentParticipants = await prisma.participante.findMany({
-            where: whereClause,
-            orderBy: { id: "desc" },
-            take: 4,
+        const recentActivity = await prisma.bitacora.findMany({
+            where: isResponsable(scope) ? { institucionId: scope.institucionId ?? -1 } : {},
+            orderBy: { createdAt: "desc" },
+            take: 6,
             select: {
                 id: true,
-                nombres: true,
-                apellidoPaterno: true,
-                apellidoMaterno: true,
-                estatus: true,
-            }
+                accion: true,
+                descripcion: true,
+                createdAt: true,
+                institucion: {
+                    select: {
+                        nombre: true,
+                    },
+                },
+            },
         });
 
         const dashboardData = {
@@ -39,7 +42,8 @@ export async function GET(request: NextRequest) {
             supportStaff,
             upcomingEvents: 0,
             activeDisciplines: activeDisciplines,
-            recentActivity: recentParticipants,
+            recentActivity,
+            isAdmin: isAdmin(scope),
         };
 
         return NextResponse.json(dashboardData);
