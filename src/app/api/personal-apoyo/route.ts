@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await prisma.bitacora.create({
+    await (prisma as any).bitacora.create({
       data: {
         accion: "PERSONAL_APOYO_REGISTRADO",
         descripcion: `Personal de apoyo registrado: ${String(nombres).trim()} ${String(apellidoPaterno).trim()} ${String(apellidoMaterno).trim()} (${String(puesto).trim()})`,
