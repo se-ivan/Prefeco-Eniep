@@ -62,6 +62,7 @@ type Participante = {
   apellidoMaterno: string;
   curp: string;
   matricula: string;
+  semestre?: number | null;
   fechaNacimiento: string;
   genero: "MASCULINO" | "FEMENINO" | "OTRO";
   fotoUrl?: string | null;
@@ -88,6 +89,7 @@ type EditForm = {
   apellidoMaterno: string;
   curp: string;
   matricula: string;
+  semestre: string;
   fechaNacimiento: string;
   genero: "MASCULINO" | "FEMENINO" | "OTRO";
   estatus: "ACTIVO" | "INACTIVO";
@@ -117,6 +119,7 @@ const INITIAL_EDIT_FORM: EditForm = {
   apellidoMaterno: "",
   curp: "",
   matricula: "",
+  semestre: "",
   fechaNacimiento: "",
   genero: "MASCULINO",
   estatus: "ACTIVO",
@@ -195,6 +198,7 @@ export default function ListaParticipantesPage() {
       apellidoMaterno: part.apellidoMaterno,
       curp: part.curp,
       matricula: part.matricula,
+      semestre: part.semestre != null ? String(part.semestre) : "",
       fechaNacimiento: part.fechaNacimiento?.slice(0, 10) ?? "",
       genero: part.genero,
       estatus: part.estatus,
@@ -231,7 +235,7 @@ export default function ListaParticipantesPage() {
     }
 
     const editId = Number(editIdParam);
-    if (!Number.isInteger(editId)) {
+          <p className="mt-1 text-sm text-gray-800 wrap-break-word">{value || "-"}</p>
       setAutoEditHandled(true);
       return;
     }
@@ -295,6 +299,10 @@ export default function ListaParticipantesPage() {
     if (!editForm.apellidoMaterno.trim()) nextErrors.apellidoMaterno = "El apellido materno es obligatorio";
     if (!editForm.curp.trim()) nextErrors.curp = "La CURP es obligatoria";
     if (!editForm.matricula.trim()) nextErrors.matricula = "La matrícula es obligatoria";
+    if (!editForm.semestre.trim()) nextErrors.semestre = "El semestre es obligatorio";
+    if (editForm.semestre.trim() && (!Number.isInteger(Number(editForm.semestre)) || Number(editForm.semestre) < 1 || Number(editForm.semestre) > 20)) {
+      nextErrors.semestre = "El semestre debe ser un número entre 1 y 20";
+    }
     if (!editForm.fechaNacimiento) nextErrors.fechaNacimiento = "La fecha de nacimiento es obligatoria";
 
     if (Object.keys(nextErrors).length > 0) {
@@ -322,6 +330,7 @@ export default function ListaParticipantesPage() {
         institucionId: resolvedInstitucionId,
         curp: editForm.curp,
         matricula: editForm.matricula,
+        semestre: Number(editForm.semestre),
         nombres: editForm.nombres,
         apellidoPaterno: editForm.apellidoPaterno,
         apellidoMaterno: editForm.apellidoMaterno,
@@ -577,6 +586,7 @@ export default function ListaParticipantesPage() {
                     <PreviewField label="Institución" value={previewItem.institucion?.nombre || "-"} />
                     <PreviewField label="CURP" value={previewItem.curp} />
                     <PreviewField label="Matrícula" value={previewItem.matricula} />
+                    <PreviewField label="Semestre" value={previewItem.semestre != null ? String(previewItem.semestre) : "-"} />
                     <PreviewField label="Fecha de nacimiento" value={previewItem.fechaNacimiento?.slice(0, 10) || "-"} />
                     <PreviewField label="Género" value={previewItem.genero} />
                     <PreviewField label="Estatus" value={previewItem.estatus} />
@@ -692,6 +702,7 @@ export default function ListaParticipantesPage() {
               <Field label="Apellido materno *" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
               <Field label="CURP *" name="curp" value={editForm.curp} onChange={handleEditInputChange} error={formErrors.curp} />
               <Field label="Matrícula *" name="matricula" value={editForm.matricula} onChange={handleEditInputChange} error={formErrors.matricula} />
+              <Field label="Semestre *" name="semestre" value={editForm.semestre} onChange={handleEditInputChange} type="number" error={formErrors.semestre} />
               <Field label="Fecha nacimiento *" name="fechaNacimiento" value={editForm.fechaNacimiento} onChange={handleEditInputChange} type="date" error={formErrors.fechaNacimiento} />
 
               <div>
@@ -753,6 +764,7 @@ export default function ListaParticipantesPage() {
                     </p>
                     <p>CURP: {editForm.curp || "-"}</p>
                     <p>Matrícula: {editForm.matricula || "-"}</p>
+                    <p>Semestre: {editForm.semestre || "-"}</p>
                     <p>Institución: {editingItem?.institucion?.nombre || "-"}</p>
                     <p>Estatus: {editForm.estatus}</p>
                   </div>
@@ -808,7 +820,7 @@ function PreviewField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500">{label}</p>
-      <p className="mt-1 text-sm text-gray-800 break-words">{value || "-"}</p>
+      <p className="mt-1 text-sm text-gray-800 wrap-break-word">{value || "-"}</p>
     </div>
   );
 }

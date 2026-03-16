@@ -139,6 +139,7 @@ model Participante {
   tutorId          Int?
   curp             String
   matricula        String
+  semestre         Int?
   nombres          String
   apellidoPaterno  String
   apellidoMaterno  String
