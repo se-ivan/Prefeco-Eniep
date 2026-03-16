@@ -10,6 +10,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useSWR from "swr";
 import { DemographicsChart } from "@/components/DemographicsChart";
 
+function getActivityLabel(action: string) {
+  if (action === "ALUMNO_REGISTRADO") return "Registro de participante";
+  if (action === "EQUIPO_DISCIPLINA") return "Registro de equipo";
+  if (action === "PARTICIPANTE_DISCIPLINA") return "Inscripción a disciplina";
+  if (action === "PERSONAL_APOYO_REGISTRADO") return "Registro de personal de apoyo";
+  return "Actividad";
+}
+
 export default function DashboardPage() {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
@@ -95,25 +103,30 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
-              dashboardData.recentActivity.map((participant: any) => (
-                <div key={participant.id} className="flex items-center justify-between p-4 border rounded-lg">
+              dashboardData.recentActivity.map((activity: any) => (
+                <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                        {participant.nombres[0]}{participant.apellidoPaterno[0]}
+                        {String(activity.accion ?? "A").slice(0, 1)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-sm font-medium text-slate-900">
-                        {participant.nombres} {participant.apellidoPaterno} {participant.apellidoMaterno}
+                        {activity.descripcion}
                       </p>
                       <div className="flex items-center text-xs text-slate-500 mt-1">
-                        <span>Participante Registrado</span>
+                        <span>{getActivityLabel(activity.accion)}</span>
                       </div>
+                      {dashboardData?.isAdmin && activity?.institucion?.nombre ? (
+                        <div className="text-xs text-slate-500 mt-1">
+                          Institución: {activity.institucion.nombre}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
-                  <Badge variant="outline" className={participant.estatus === "ACTIVO" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-700 border-slate-200"}>
-                    {participant.estatus}
+                  <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                    {getActivityLabel(activity.accion)}
                   </Badge>
                 </div>
               ))
