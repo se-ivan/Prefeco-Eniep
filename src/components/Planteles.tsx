@@ -27,13 +27,13 @@ export function Planteles({ instituciones = [] }: PlantelesProps) {
     anniversary: '70° aniversario',
     description: 'La institución más emblemática del sistema en Michoacán. Se distingue por su alto nivel académico y su estructura de gestión ciudadana.',
     achievements: [
-      { icon: Award, text: 'Ganadores en olimpiadas Academicas' },
+      { icon: Award, text: 'Ganadores en olimpiadas Académicas' },
       { icon: Users, text: 'Principal cantera del Tec de Morelia y la UMSNH' },
       { icon: Star, text: 'Departamento Internacional único' },
-      { icon: BookOpen, text: 'Bachillerato general con formacion para el trabajo' },
+      { icon: BookOpen, text: 'Bachillerato general con formación para el trabajo' },
     ],
     contact: {
-      address: 'Juan Benito Diaz de Gamarra s/n, Fracc. Lazaro Cardenas, 58229 Morelia, Mich.',
+      address: 'Juan Benito Díaz de Gamarra s/n, Fracc. Lázaro Cárdenas, 58229 Morelia, Mich.',
       email: 'contacto@prefecomelchorocampo.edu.mx',
       phone: '(443) 323 1273',
       website: 'prefecomelchorocampo.edu.mx',
