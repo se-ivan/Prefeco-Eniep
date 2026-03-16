@@ -69,7 +69,7 @@ export async function GET(req: Request) {
             telefono: true,
           },
         },
-        disciplina: { select: { id: true, nombre: true } },
+        disciplina: { select: { id: true, nombre: true, rama: true, modalidad: true } },
         categoria: { select: { id: true, nombre: true } },
       },
       orderBy: { id: "desc" },
@@ -99,3 +99,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+

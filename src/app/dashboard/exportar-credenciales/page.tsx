@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import useSWR from 'swr';
 import { pdf } from '@react-pdf/renderer';
 import { 
@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 type Institucion = {
@@ -43,6 +45,18 @@ export default function ExportarPage() {
   const [tipoCredencial, setTipoCredencial] = useState<TipoCredencial>('ALUMNO');
   const [generandoCredenciales, setGenerandoCredenciales] = useState(false);
   const [generandoCedula, setGenerandoCedula] = useState(false);
+
+  const [selectedRamas, setSelectedRamas] = useState<string[]>([]);
+  const [selectedModalidades, setSelectedModalidades] = useState<string[]>([]);
+
+  const registrosFiltradosPorCheckboxes = useMemo(() => {
+    return registros.filter((reg) => {
+      const d = reg.disciplina;
+      const matchRama = selectedRamas.length === 0 || (d && selectedRamas.includes(d.rama));
+      const matchModalidad = selectedModalidades.length === 0 || (d && selectedModalidades.includes(d.modalidad));
+      return matchRama && matchModalidad;
+    });
+  }, [registros, selectedRamas, selectedModalidades]);
 
   useEffect(() => {
     setIsClient(true);
@@ -110,11 +124,11 @@ export default function ExportarPage() {
   };
 
   const handleDescargarCredenciales = useCallback(async () => {
-    if (!institucionSeleccionada || registros.length === 0) return;
+    if (!institucionSeleccionada || registrosFiltradosPorCheckboxes.length === 0) return;
     setGenerandoCredenciales(true);
     try {
       const blob = await pdf(
-        <CredencialesPDF usuarios={registros} tipo={tipoCredencial} />
+        <CredencialesPDF usuarios={registrosFiltradosPorCheckboxes} tipo={tipoCredencial} />
       ).toBlob();
       const fileName = `credenciales_${tipoCredencial.toLowerCase()}_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadBlob(blob, fileName);
@@ -125,14 +139,14 @@ export default function ExportarPage() {
     } finally {
       setGenerandoCredenciales(false);
     }
-  }, [institucionSeleccionada, registros, tipoCredencial]);
+  }, [institucionSeleccionada, registrosFiltradosPorCheckboxes, tipoCredencial]);
 
   const handleDescargarCedula = useCallback(async () => {
-    if (!institucionSeleccionada || registros.length === 0) return;
+    if (!institucionSeleccionada || registrosFiltradosPorCheckboxes.length === 0) return;
     setGenerandoCedula(true);
     try {
       const blob = await pdf(
-        <CedulaRegistroPDF participantes={registros} />
+        <CedulaRegistroPDF participantes={registrosFiltradosPorCheckboxes} />
       ).toBlob();
       const fileName = `cedula_registro_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadBlob(blob, fileName);
@@ -143,7 +157,7 @@ export default function ExportarPage() {
     } finally {
       setGenerandoCedula(false);
     }
-  }, [institucionSeleccionada, registros]);
+  }, [institucionSeleccionada, registrosFiltradosPorCheckboxes]);
 
   return (
     <div className="min-h-screen">
@@ -197,7 +211,7 @@ export default function ExportarPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{registros.length}</div>
+                  <div className="text-3xl font-bold">{registrosFiltradosPorCheckboxes.length}</div>
                   <p className="text-xs text-slate-500 mt-1">Listos para exportar</p>
                 </CardContent>
               </Card>
@@ -237,7 +251,7 @@ export default function ExportarPage() {
           </div>
           
           <div className="flex gap-3 w-full sm:w-auto">
-            {institucionSeleccionada && registros.length > 0 && isClient && (
+            {institucionSeleccionada && registrosFiltradosPorCheckboxes.length > 0 && isClient && (
               <>
                 <Button 
                   className="w-full sm:w-auto h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
@@ -280,6 +294,51 @@ export default function ExportarPage() {
             )}
           </div>
         </div>
+
+        {/* Filtros de Disciplina */}
+        {institucionSeleccionada && registros.length > 0 && isClient && (
+          <div className="mb-8 p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <h3 className="font-semibold text-sm text-slate-700 mb-4">Filtrar por Disciplina</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Rama</span>
+                <div className="flex flex-wrap gap-5">
+                  {['VARONIL', 'FEMENIL', 'UNICA', 'MIXTO'].map((rama) => (
+                    <div key={rama} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`rama-${rama}`}
+                        checked={selectedRamas.includes(rama)}
+                        onCheckedChange={(checked) => {
+                          if (checked) setSelectedRamas([...selectedRamas, rama]);
+                          else setSelectedRamas(selectedRamas.filter(r => r !== rama));
+                        }}
+                      />
+                      <Label htmlFor={`rama-${rama}`} className="text-sm cursor-pointer select-none">{rama}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Modalidad</span>
+                <div className="flex flex-wrap gap-5">
+                  {['INDIVIDUAL', 'EQUIPO'].map((mod) => (
+                    <div key={mod} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`mod-${mod}`}
+                        checked={selectedModalidades.includes(mod)}
+                        onCheckedChange={(checked) => {
+                          if (checked) setSelectedModalidades([...selectedModalidades, mod]);
+                          else setSelectedModalidades(selectedModalidades.filter(m => m !== mod));
+                        }}
+                      />
+                      <Label htmlFor={`mod-${mod}`} className="text-sm cursor-pointer select-none">{mod}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contenido principal */}
         {isLoading ? (
