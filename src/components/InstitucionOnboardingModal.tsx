@@ -9,6 +9,7 @@ import useSWR from "swr";
 import { authClient } from "@/lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { PhotoCropperModal } from "./PhotoCropperModal";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -25,6 +26,7 @@ export function InstitucionOnboardingModal() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [tempLogoFile, setTempLogoFile] = useState<File | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -108,6 +110,10 @@ export function InstitucionOnboardingModal() {
         });
         
         if (res.error) throw new Error("La contraseña actual es incorrecta o la nueva contraseña no cumple con los requisitos (mínimo 8 caracteres)");
+      }
+
+      if (!logoFile) {
+        throw new Error("El logo de la institución es obligatorio");
       }
 
       let urlLogo = undefined;
@@ -335,13 +341,24 @@ export function InstitucionOnboardingModal() {
                   </div>
 
                   <div className="space-y-3 text-left pt-2">
-                    <p className="text-sm font-semibold ml-1 text-foreground/80">Logo de la Institución (Opcional)</p>
-                    <label className="flex flex-col items-center justify-center w-full h-24 rounded-xl border border-dashed border-input bg-transparent hover:bg-accent/50 cursor-pointer transition-colors">
+                    <p className="text-sm font-semibold ml-1 text-foreground/80">Logo de la Institución <span className="text-destructive">*</span></p>
+                    <label className={"flex flex-col items-center justify-center w-full h-24 rounded-xl border border-dashed border-input bg-transparent hover:bg-accent/50 cursor-pointer transition-colors" + (logoFile ? " border-[#0b697d] dark:border-[#2eb4cc] bg-[#0b697d]/5 dark:bg-[#2eb4cc]/5" : "")}>
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-                        <p className="text-xs text-muted-foreground text-center px-4">
-                          {logoFile ? logoFile.name : "Sube una imagen (PNG, JPG, WEBP)"}
-                        </p>
+                        {logoFile ? (
+                          <div className="flex items-center text-[#0b697d] dark:text-[#2eb4cc]">
+                            <CheckCircle2 className="w-6 h-6 mb-2 mr-2" />
+                            <p className="text-sm font-medium text-center px-4">
+                              {logoFile.name} (Lista para subir)
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                            <p className="text-xs text-muted-foreground text-center px-4">
+                              Sube una imagen (PNG, JPG, WEBP). Se recortará en forma 1:1.
+                            </p>
+                          </>
+                        )}
                       </div>
                       <input 
                         type="file" 
@@ -349,7 +366,8 @@ export function InstitucionOnboardingModal() {
                         className="hidden" 
                         onChange={(e) => {
                           if (e.target.files && e.target.files.length > 0) {
-                            setLogoFile(e.target.files[0]);
+                            setTempLogoFile(e.target.files[0]);
+                            e.target.value = ''; // Reset input so same file triggers change again
                           }
                         }}
                         disabled={loading}
@@ -360,7 +378,7 @@ export function InstitucionOnboardingModal() {
                   <div className="pt-4 flex flex-col gap-3">
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || !logoFile}
                       className="w-full h-12 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#0b697d] to-[#0a5a6b] dark:from-[#2eb4cc] dark:to-[#2aa8b8] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                     >
                       {loading ? (
@@ -374,15 +392,10 @@ export function InstitucionOnboardingModal() {
                       <button
                         type="button"
                         onClick={() => {
-                          setStep("success");
-                          setTimeout(() => {
-                            setOpen(false);
-                            mutate();
-                            router.refresh();
-                          }, 2000);
+                          toast.error("El logo es obligatorio para poder continuar.");
                         }}
                         disabled={loading}
-                        className="w-full text-sm font-medium text-muted-foreground hover:underline"
+                        className="w-full text-sm font-medium text-muted-foreground hover:underline opacity-50"
                       >
                         Omitir y continuar
                       </button>
@@ -411,6 +424,21 @@ export function InstitucionOnboardingModal() {
           </AnimatePresence>
         </div>
       </DialogContent>
+      
+      {/* Cropper Modal explicitly outside AnimatePresence so it overlays or isn't unmounted immediately */}
+      {tempLogoFile && (
+        <PhotoCropperModal
+          file={tempLogoFile}
+          onClose={() => setTempLogoFile(null)}
+          onCropComplete={(croppedFile) => {
+            setLogoFile(croppedFile);
+            setTempLogoFile(null);
+            toast.success("Logo recortado correctamente");
+          }}
+          aspect={1}
+          title="Ajustar Logo de Institución (1:1)"
+        />
+      )}
     </Dialog>
   );
 }
