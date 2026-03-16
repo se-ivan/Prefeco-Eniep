@@ -37,7 +37,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const body = await req.json();
-    const { participantes: participantesRaw, categoriaId } = body ?? {};
+    const { nombreEquipo, participantes: participantesRaw, categoriaId } = body ?? {};
+
+    if (!nombreEquipo || !String(nombreEquipo).trim()) {
+      return NextResponse.json({ error: "nombreEquipo is required" }, { status: 400 });
+    }
 
     if (!Array.isArray(participantesRaw)) {
       return NextResponse.json({ error: "participantes array is required" }, { status: 400 });
@@ -94,6 +98,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         throw { status: 404, message: "Categoría no encontrada o inactiva" };
       }
 
+      const duplicateName = await tx.equipo.findFirst({
+        where: {
+          id: { not: equipoId },
+          disciplinaId: Number(equipo.disciplinaId),
+          nombreEquipo: { equals: String(nombreEquipo).trim(), mode: "insensitive" },
+        },
+        select: { id: true },
+      });
+      if (duplicateName) {
+        throw { status: 409, message: "Ya existe otro equipo con ese nombre en la disciplina" };
+      }
+
       // Deduplicar participantesIds
       const newParticipantIds = uniqueParticipantIds;
 
@@ -141,6 +157,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           status: 409,
           message: `Algunos participantes no pertenecen a la institución ${equipo.institucionId}`,
         };
+      }
+
+      const esAtletismo = String(equipo.disciplina.nombre ?? "").trim().toUpperCase() === "ATLETISMO";
+      if (equipo.disciplina.rama === "MIXTO" && esAtletismo) {
+        const hombres = participantesValidos.filter((p: any) => p.genero === "MASCULINO").length;
+        const mujeres = participantesValidos.filter((p: any) => p.genero === "FEMENINO").length;
+
+        if (hombres !== 2 || mujeres !== 2) {
+          throw {
+            status: 409,
+            message: "Atletismo mixto en equipo requiere exactamente 2 hombres y 2 mujeres",
+          };
+        }
       }
 
       for (const p of participantesValidos) {
@@ -238,6 +267,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       if (toCreate.length > 0) {
         await tx.inscripcion.createMany({ data: toCreate });
       }
+
+      await tx.equipo.update({
+        where: { id: equipoId },
+        data: { nombreEquipo: String(nombreEquipo).trim() },
+      });
 
       return {
         message: "Equipo actualizado",

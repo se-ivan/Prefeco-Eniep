@@ -52,6 +52,7 @@ export default function TeamMembersModal({
   const [disponibles, setDisponibles] = useState<ParticipanteApi[]>([]);
   const [miembrosPrevios, setMiembrosPrevios] = useState<Miembro[]>([]);
   const [seleccionados, setSeleccionados] = useState<Miembro[]>([]);
+  const [nombreEquipo, setNombreEquipo] = useState("");
 
   const [loadingMiembros, setLoadingMiembros] = useState(false);
   const [loadingDisponibles, setLoadingDisponibles] = useState(false);
@@ -61,6 +62,8 @@ export default function TeamMembersModal({
   // Cargar miembros actuales del equipo
   useEffect(() => {
     if (!open || !equipo) return;
+
+    setNombreEquipo(equipo.nombreEquipo ?? "");
 
     setLoadingMiembros(true);
     fetch(`/api/equipos/${equipo.id}/participantes`)
@@ -145,12 +148,18 @@ export default function TeamMembersModal({
       return;
     }
 
+    if (!nombreEquipo.trim()) {
+      setError("Escribe el nombre del equipo.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(`/api/equipos/${equipo?.id}/editar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          nombreEquipo: nombreEquipo.trim(),
           participantes: seleccionados.map((m) => ({ participanteId: m.participanteId })),
           categoriaId,
         }),
@@ -199,7 +208,7 @@ export default function TeamMembersModal({
             <div className={`text-xs px-3 py-1 rounded-full font-bold ${isMaxReached ? "bg-red-500 text-white" : "bg-white/20 text-white"}`}>
               {seleccionados.length} {maxIntegrantes !== Infinity ? `/ ${maxIntegrantes}` : ""} Integrantes
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button onClick={onClose} className="p-2 cursor-pointer hover:bg-white/10 rounded-full transition-colors">
               <X size={20} />
             </button>
           </div>
@@ -238,7 +247,7 @@ export default function TeamMembersModal({
                       key={p.id}
                       onClick={() => toggleParticipante(p)}
                       disabled={isMaxReached && !seleccionado}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group
+                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer
                         ${isMaxReached && !seleccionado ? "opacity-50 cursor-not-allowed" : seleccionado ? "bg-[#08677a]/5 border-[#08677a] shadow-sm" : "bg-white border-gray-100 hover:border-gray-300"}`}
                     >
                       <div className="flex items-center gap-3">
@@ -263,6 +272,15 @@ export default function TeamMembersModal({
           {/* COLUMNA DERECHA: Resumen */}
           <div className="flex-1 flex flex-col min-h-0 bg-white">
             <div className="p-6 pb-2 flex-shrink-0">
+              <div className="mb-4">
+                <label className="block text-[11px] font-bold uppercase text-gray-500 mb-1">Nombre del equipo</label>
+                <input
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-[#08677a] outline-none transition-all shadow-sm"
+                  value={nombreEquipo}
+                  onChange={(e) => setNombreEquipo(e.target.value)}
+                  placeholder="Ejemplo: Lobos"
+                />
+              </div>
               <h4 className="font-black text-xs uppercase tracking-widest text-gray-400 mb-4">Miembros del Equipo</h4>
             </div>
 
@@ -281,7 +299,7 @@ export default function TeamMembersModal({
                     </div>
                     <button
                       onClick={() => setSeleccionados((prev) => prev.filter((x) => x.participanteId !== m.participanteId))}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -303,13 +321,13 @@ export default function TeamMembersModal({
                 </div>
               )}
               <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors">
+                <button onClick={onClose} className="flex-1 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
                   Cancelar
                 </button>
                 <button
                   onClick={handleGuardar}
                   disabled={submitting || isMinNotMet}
-                  className="flex-[2] py-2.5 bg-[#ffb041] hover:bg-[#f0a030] disabled:opacity-50 text-[#08677a] rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-200"
+                  className="flex-[2] py-2.5 bg-[#ffb041] hover:bg-[#f0a030] disabled:opacity-50 disabled:cursor-not-allowed text-[#08677a] rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-200 cursor-pointer"
                 >
                   {submitting ? "Guardando..." : "Guardar Cambios"}
                 </button>
