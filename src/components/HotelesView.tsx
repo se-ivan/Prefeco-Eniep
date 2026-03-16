@@ -69,11 +69,13 @@ function GoogleMarkersMap({
   selectedHotel,
   mapMode,
   onMarkerClick,
+  onSedeClick,
 }: {
   hotels: Hotel[];
   selectedHotel: Hotel;
   mapMode: 'selected' | 'all';
   onMarkerClick?: (hotel: Hotel) => void;
+  onSedeClick?: (sede: Sede) => void;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const geocodeCacheRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
@@ -126,10 +128,10 @@ function GoogleMarkersMap({
 
         const svgMarker = isSedeItem ? {
           path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-          fillColor: "#ffa52d",
+          fillColor: "#0b697d",
           fillOpacity: 1,
           strokeWeight: 1,
-          strokeColor: "#a8600d",
+          strokeColor: "#084b59",
           scale: 1.5,
           anchor: new google.maps.Point(12, 24),
         } : undefined;
@@ -147,13 +149,58 @@ function GoogleMarkersMap({
 
         marker.addListener('click', () => {
           infoWindow.open(map, marker);
-          if (onMarkerClick && !isSedeItem) onMarkerClick(item as Hotel);
+          if (isSedeItem) {
+            if (onSedeClick) onSedeClick(item as Sede);
+          } else {
+            if (onMarkerClick) onMarkerClick(item as Hotel);
+          }
         });
         bounds.extend(location);
       }
 
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, 60);
+      }
+
+      // Tracing approximated route from selected hotel to sedes
+      if (selectedHotel && sedesData.length > 0) {
+        const hotelLoc = geocodeCacheRef.current.get(selectedHotel.mapQuery ?? selectedHotel.name);
+        
+        // We only draw routes if we have cached coordinates for the hotel
+        if (hotelLoc) {
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+                map,
+                suppressMarkers: true,
+                preserveViewport: true,
+                polylineOptions: {
+                    strokeColor: "#0b697d",
+                    strokeOpacity: 0.6,
+                    strokeWeight: 4,
+                    strokeDasharray: "5, 5" // "ruta aproximada" feel
+                }
+            });
+
+            const waypoints = sedesData.map((s) => ({
+                location: geocodeCacheRef.current.get(s.mapQuery ?? s.name) || s.mapQuery || (s.name + ' Morelia'),
+                stopover: true
+            }));
+
+            if (waypoints.length > 0) {
+                const destination = waypoints.pop()!.location;
+                directionsService.route({
+                    origin: hotelLoc,
+                    destination: destination,
+                    waypoints: waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING
+                }, (response: any, status: any) => {
+                    if (status === 'OK') {
+                        directionsRenderer.setDirections(response);
+                    }
+                }).catch(() => null); // ignore any routing errors
+            }
+        }
       }
     };
 
@@ -173,7 +220,10 @@ function GoogleMarkersMap({
 
 export default function HotelesView() {
   const [selectedHotel, setSelectedHotel] = useState<Hotel>(hotelesData[0]);
-  const [mapMode, setMapMode] = useState<'selected' | 'all'>('selected');
+  const [selectedSede, setSelectedSede] = useState<Sede>(sedesData[0]);
+  const [activeItemType, setActiveItemType] = useState<'hotel' | 'sede'>('hotel');
+
+  const [mapMode, setMapMode] = useState<'selected' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'hoteles' | 'sedes'>('hoteles');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZone, setSelectedZone] = useState('all');
@@ -291,7 +341,18 @@ export default function HotelesView() {
               <motion.div
                 key={'sede-' + sede.id}
                 whileHover={{ y: -2 }}
-                className="rounded-xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer"
+                onClick={() => {
+                  setSelectedSede(sede);
+                  setActiveItemType('sede');
+                  if (window.innerWidth < 768) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                className={`rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                  activeItemType === 'sede' && selectedSede.id === sede.id
+                    ? 'border-[#0b697d] bg-[#0b697d]/5 dark:bg-[#0b697d]/10 ring-1 ring-[#0b697d]'
+                    : 'border-border bg-card'
+                }`}
               >
                 <div className="p-4 md:p-5 flex flex-col justify-between">
                   <div className="flex items-start justify-between gap-4">
@@ -322,14 +383,15 @@ export default function HotelesView() {
                 whileHover={{ y: -2 }}
                 onClick={() => {
                   setSelectedHotel(hotel);
+                  setActiveItemType('hotel');
                   // On mobile when clicking a hotel, scroll to top where the map is
                   if (window.innerWidth < 768) {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }
                 }}
                 className={`cursor-pointer group flex flex-row items-stretch rounded-xl overflow-hidden border transition-all duration-200 shadow-sm ${
-                  selectedHotel.id === hotel.id 
-                    ? 'border-[#0b697d] bg-[#0b697d]/5 dark:bg-[#0b697d]/10 ring-1 ring-[#0b697d]' 
+                  activeItemType === 'hotel' && selectedHotel.id === hotel.id
+                    ? 'border-[#0b697d] bg-[#0b697d]/5 dark:bg-[#0b697d]/10 ring-1 ring-[#0b697d]'
                     : 'border-border bg-card hover:border-[#0b697d]/50 hover:shadow-md'
                 }`}
               >
@@ -446,41 +508,62 @@ export default function HotelesView() {
             )}
 
             <div className="border-t border-border/50 pt-3 mt-1">
-              <h2 className="text-xl md:text-2xl font-bold text-[#0b697d] dark:text-[#2eb4cc] mb-2 leading-tight">
-                {selectedHotel.name}
-              </h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <span className="text-foreground line-clamp-2">{selectedHotel.zona}</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <DollarSign className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <span className="text-foreground font-medium line-clamp-2">{selectedHotel.tarifas}</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <span className="text-foreground line-clamp-1">{selectedHotel.contacto}</span>
-                </div>
-                {selectedHotel.pdfUrl ? (
-                  <div className="flex items-start gap-2 mt-1 sm:mt-0">
-                    <a
-                      href={selectedHotel.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-lg bg-[#0b697d] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#095566] w-full sm:w-auto"
-                    >
-                      Mas informacion detallada (PDF)
-                    </a>
+              {activeItemType === 'hotel' ? (
+                <>
+                  <h2 className="text-xl md:text-2xl font-bold text-[#0b697d] dark:text-[#2eb4cc] mb-2 leading-tight">
+                    {selectedHotel.name}
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="text-foreground line-clamp-2">{selectedHotel.zona}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <DollarSign className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="text-foreground font-medium line-clamp-2">{selectedHotel.tarifas}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Phone className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="text-foreground line-clamp-1">{selectedHotel.contacto}</span>
+                    </div>
+                    {selectedHotel.pdfUrl ? (
+                      <div className="flex items-start gap-2 mt-1 sm:mt-0">
+                        <a
+                          href={selectedHotel.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-lg bg-[#0b697d] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#095566] w-full sm:w-auto"
+                        >
+                          Mas informacion detallada (PDF)
+                        </a>
+                      </div>
+                    ) : (
+                       <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground text-xs italic">Sin cotizacion en PDF adicional.</span>
+                       </div>
+                    )}
                   </div>
-                ) : (
-                   <div className="flex items-start gap-2">
-                    <Info className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground text-xs italic">Sin cotizacion en PDF adicional.</span>
-                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl md:text-2xl font-bold text-[#0b697d] dark:text-[#2eb4cc] mb-2 leading-tight">
+                    {selectedSede.name}
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <div className="flex items-start gap-2 sm:col-span-2">
+                      <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="text-foreground line-clamp-2">{selectedSede.direccion}</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:col-span-2">
+                      <Info className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="text-foreground font-medium line-clamp-2">Actividades: {selectedSede.notas}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -493,12 +576,22 @@ export default function HotelesView() {
                 mapMode={mapMode} 
                 onMarkerClick={(hotel) => {
                   setSelectedHotel(hotel);
+                  setActiveItemType('hotel');
                   setTimeout(() => {
                     const el = document.getElementById(`hotel-card-${hotel.id}`);
                     if (el) {
                       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                   }, 100);
+
+                }}
+
+                onSedeClick={(sede) => {
+
+                  setSelectedSede(sede);
+
+                  setActiveItemType('sede');
+
                 }}
               />
             ) : (
@@ -521,3 +614,4 @@ export default function HotelesView() {
     </div>
   );
 }
+

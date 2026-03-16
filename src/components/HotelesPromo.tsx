@@ -47,7 +47,7 @@ export function HotelesPromo() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-[#0b697d] dark:text-gray-100">
-              Hoteles Sede
+              Hoteles | Sedes
             </h2>
 
             <p className="text-muted-foreground text-lg mb-8 leading-relaxed">

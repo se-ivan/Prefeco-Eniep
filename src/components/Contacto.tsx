@@ -92,10 +92,10 @@ ckdrop-blur-md rounded-2xl shadow-2xl p-8 sm:p-12 text-center border border-whit
         >
           <div className="h-2 w-full max-w-sm mx-auto bg-gradient-to-r from-[#0b697d] to-[#ffa52d] rounded-full mb-8"></div>
           <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            Gestión del Sistema ENIEP 2026
+            Acceder al Sistema ENIEP 2026
           </h3>
           <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-            Ingresa al portal de administración y control de la Escuela Nacional para acceder a todas las funciones.
+            Inicia el registro de tus estudiantes y personal de apoyo entre el 16 y el 27 de marzo del 2026
           </p>
           <motion.button
             onClick={() => window.dispatchEvent(new Event('openLoginModal'))}
@@ -103,7 +103,7 @@ ckdrop-blur-md rounded-2xl shadow-2xl p-8 sm:p-12 text-center border border-whit
             whileTap={{ scale: 0.95 }}
             className="inline-block px-8 py-4 bg-gradient-to-r from-[#ffa52d] to-[rgba(255,165,45,0.8)] text-white rounded-xl hover:shadow-xl transition-all font-semibold text-lg"
           >
-            Acceder al Dashboard
+            Acceder Ahora
           </motion.button>
         </motion.div>
       </div>
