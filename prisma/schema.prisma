@@ -108,6 +108,7 @@ enum TipoDisciplina {
   CIVICA
   ACADEMICA
   EXHIBICION
+  EMBAJADORA_NACIONAL @map("EMBAJADORA NACIONAL")
 }
 
 enum Modalidad {
@@ -139,6 +140,7 @@ model Participante {
   tutorId          Int?
   curp             String
   matricula        String
+  semestre         Int?
   nombres          String
   apellidoPaterno  String
   apellidoMaterno  String

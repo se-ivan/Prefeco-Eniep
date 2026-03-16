@@ -81,29 +81,6 @@ export function Contacto() {
             </motion.div>
           ))}
         </div>
-
-        {/* ENIEP CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-gradient-to-r from-[#0b697d] to-[#0d5868] rounded-2xl shadow-2xl p-8 sm:p-12 text-center"
-        >
-          <div className="h-2 bg-gradient-to-r from-[#0b697d] to-[#ffa52d] rounded-full mb-8"></div>
-          <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            Acceder al Sistema ENIEP 2026
-          </h3>
-          <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-            Inicia tu proceso de admisión y forma parte de nuestra comunidad educativa
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-gradient-to-r from-[#ffa52d] to-[rgba(255,165,45,0.8)] text-white rounded-xl hover:shadow-xl transition-all font-semibold text-lg"
-          >
-            Acceder Ahora
-          </motion.button>
-        </motion.div>
       </div>
     </section>
   );

@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isAdmin } from "@/lib/rbac";
 
+function normalizeTipoDisciplina(tipo: unknown) {
+  if (typeof tipo !== "string") return "";
+  const trimmed = tipo.trim().toUpperCase();
+  return trimmed === "EMBAJADORA NACIONAL" ? "EMBAJADORA_NACIONAL" : trimmed;
+}
+
 // GET: lista disciplinas 
 export async function GET() {
   try {
@@ -79,11 +85,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "nombre es requerido" }, { status: 400 });
     }
 
-    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION"];
+    const normalizedTipo = normalizeTipoDisciplina(tipo);
+    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION", "EMBAJADORA_NACIONAL"];
     const allowedRamas = ["VARONIL", "FEMENIL", "UNICA", "MIXTO"];
     const allowedModalidades = ["INDIVIDUAL", "EQUIPO"];
 
-    if (!allowedTipos.includes(String(tipo))) {
+    if (!allowedTipos.includes(normalizedTipo)) {
       return NextResponse.json({ error: "tipo inválido" }, { status: 400 });
     }
     if (!allowedRamas.includes(String(rama))) {
@@ -139,7 +146,7 @@ export async function POST(req: Request) {
       const disciplina = await tx.disciplina.create({
         data: {
           nombre: nombre.trim(),
-          tipo: tipo as any,
+          tipo: normalizedTipo as any,
           rama: rama as any,
           modalidad: modalidad as any,
           deletedAt: null,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePathname } from 'next/navigation';
 import { LoginModal } from './LoginModal';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -10,8 +11,12 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Check initial scroll position immediately
+    setIsScrolled(window.scrollY > 20);
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -53,7 +58,7 @@ export function Navigation() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-background/95 backdrop-blur-sm shadow-lg border-b border-border' : 'bg-background/50 backdrop-blur-sm'
+        isScrolled ? 'bg-background/95 backdrop-blur-md shadow-lg border-b border-border' : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,8 +73,8 @@ export function Navigation() {
           >
             <img src="/logo.png" alt="PREFECO Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
             <div className="flex flex-col">
-              <span className="font-bold text-[#0b697d] dark:text-[#2eb4cc] text-sm sm:text-base">PREFECO</span>
-              <span className="text-xs text-muted-foreground hidden sm:block">Melchor Ocampo</span>
+              <span className={`font-bold transition-colors text-sm sm:text-base ${isScrolled ? 'text-[#0b697d] dark:text-[#2eb4cc]' : 'text-white'}`}>PREFECO</span>
+              <span className={`text-xs hidden sm:block transition-colors ${isScrolled ? 'text-muted-foreground' : 'text-white/80'}`}>Melchor Ocampo</span>
             </div>
           </motion.a>
 
@@ -83,12 +88,12 @@ export function Navigation() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className="text-sm font-medium text-foreground/80 hover:text-[#0b697d] transition-colors"
+                className={`text-sm font-medium transition-colors hover:text-[#ffa52d] ${isScrolled ? 'text-foreground/80 hover:text-[#0b697d]' : 'text-white/90 hover:text-white'}`}
               >
                 {item.label}
               </motion.a>
             ))}
-            <div className="h-6 w-[1px] bg-border mx-2" />
+            <div className={`h-6 w-[1px] mx-2 transition-colors ${isScrolled ? 'bg-border' : 'bg-white/30'}`} />
             <ThemeToggle />
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
@@ -103,10 +108,12 @@ export function Navigation() {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-4 lg:hidden">
-            <ThemeToggle />
+            <div className={!isScrolled ? "text-white" : ""}>
+              <ThemeToggle />
+            </div>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-foreground hover:text-[#0b697d]"
+              className={`p-2 transition-colors ${isScrolled ? 'text-foreground hover:text-[#0b697d]' : 'text-white hover:text-white/80'}`}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

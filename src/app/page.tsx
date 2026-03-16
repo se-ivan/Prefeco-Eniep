@@ -2,6 +2,7 @@ import { Navigation } from '../components/Navigation';
 import { Hero } from '../components/Hero';
 import { Historia } from '../components/Historia';
 import { ModeloEducativo } from '../components/ModeloEducativo';
+import { CafeteriaMenu } from '../components/CafeteriaMenu';
 import { Galeria } from '../components/Galeria';
 import { Planteles } from '../components/Planteles';
 import { Contacto } from '../components/Contacto';
@@ -50,6 +51,7 @@ export default async function Home() {
     <div className="min-h-screen">
       <Navigation />
       <Hero />
+      <CafeteriaMenu />
       <Galeria />
       <Planteles instituciones={planteles} />
       <Contacto />

@@ -85,6 +85,7 @@ export default function RegistrarAlumnoPage() {
     apellidoPaterno: "",
     apellidoMaterno: "",
     matricula: "",
+    semestre: "",
     curp: "",
     fechaNacimiento: "",
     genero: "" as Genero | "",
@@ -231,6 +232,10 @@ export default function RegistrarAlumnoPage() {
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
     if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
     if (!formData.matricula.trim()) return "La matrícula es obligatoria.";
+    if (!formData.semestre.trim()) return "El semestre es obligatorio.";
+    if (!Number.isInteger(Number(formData.semestre)) || Number(formData.semestre) < 1 || Number(formData.semestre) > 20) {
+      return "El semestre debe ser un número entre 1 y 20.";
+    }
     if (!formData.curp.trim()) return "La CURP es obligatoria.";
     if (!formData.fechaNacimiento) return "La fecha de nacimiento es obligatoria.";
     if (!formData.genero) return "Selecciona el género.";
@@ -315,6 +320,7 @@ export default function RegistrarAlumnoPage() {
         institucionId: Number(formData.institucionId || scope?.institucionId || 0),
         curp: formData.curp,
         matricula: formData.matricula,
+        semestre: Number(formData.semestre),
         nombres: formData.nombres,
         apellidoPaterno: formData.apellidoPaterno,
         apellidoMaterno: formData.apellidoMaterno,
@@ -586,10 +592,24 @@ export default function RegistrarAlumnoPage() {
                     className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none uppercase"
                   />
                 </div>
-                
-                {/* Div vacío para mantener el grid alineado como en la imagen */}
-                <div className="hidden md:block"></div>
 
+                {/* Input: Semestre */}
+                <div className="group">
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    Semestre <span className="text-[#08677a]">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    name="semestre"
+                    value={formData.semestre}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 4"
+                    className="w-full mt-2 bg-transparent border-0 border-b-2 border-gray-100 pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:border-[#08677a] transition-colors outline-none"
+                  />
+                </div>
+                
                 {/* Input: Fecha de Nacimiento */}
                 <div className="group">
                   <label className="text-sm font-semibold text-gray-800">

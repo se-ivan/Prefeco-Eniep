@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       institucionId: bodyInstitucionId,
       curp,
       matricula,
+      semestre,
       nombres,
       apellidoPaterno,
       apellidoMaterno,
@@ -120,6 +121,14 @@ export async function POST(req: NextRequest) {
     }
 
     const institucionId = isResponsable(scope) ? scope.institucionId : Number(bodyInstitucionId);
+    const parsedSemestre =
+      semestre === null || semestre === undefined || String(semestre).trim() === ""
+        ? null
+        : Number(semestre);
+
+    if (parsedSemestre !== null && (!Number.isInteger(parsedSemestre) || parsedSemestre < 1 || parsedSemestre > 20)) {
+      return NextResponse.json({ error: "Semestre inválido" }, { status: 400 });
+    }
 
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
     if (!institucion) {
@@ -165,6 +174,7 @@ export async function POST(req: NextRequest) {
           tutorId,
           curp: String(curp).trim().toUpperCase(),
           matricula: String(matricula).trim().toUpperCase(),
+          semestre: parsedSemestre,
           nombres: String(nombres).trim(),
           apellidoPaterno: String(apellidoPaterno).trim(),
           apellidoMaterno: String(apellidoMaterno).trim(),
