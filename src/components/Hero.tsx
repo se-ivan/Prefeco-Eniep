@@ -23,7 +23,7 @@ export function Hero() {
         }}></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -32,7 +32,7 @@ export function Hero() {
             className="mb-8 flex justify-center px-4"
           >
             <img 
-              src="/logo-escuela-hero.png" 
+              src="/logo-escuela-hero-claro.webp" 
               alt="PREFECO Melchor Ocampo" 
               className="w-full max-w-2xl lg:max-w-4xl h-auto drop-shadow-2xl" 
             />
@@ -64,14 +64,14 @@ export function Hero() {
           <p className="text-white/90 mb-8 max-w-2xl mx-auto">
             Inicia tu proceso de admisión y gestión formando parte de nuestra comunidad educativa
           </p>
-          <motion.a
-            href="/dashboard"
+          <motion.button
+            onClick={() => window.dispatchEvent(new Event('openLoginModal'))}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="inline-block px-8 py-4 bg-gradient-to-r from-[#ffa52d] to-[rgba(255,165,45,0.8)] text-white rounded-xl hover:shadow-xl transition-all font-semibold text-lg"
           >
             Acceder Ahora
-          </motion.a>
+          </motion.button>
         </motion.div>
 
         {/* Scroll Indicator */}

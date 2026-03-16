@@ -66,10 +66,12 @@ function GoogleMarkersMap({
   hotels,
   selectedHotel,
   mapMode,
+  onMarkerClick,
 }: {
   hotels: Hotel[];
   selectedHotel: Hotel;
   mapMode: 'selected' | 'all';
+  onMarkerClick?: (hotel: Hotel) => void;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const geocodeCacheRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
@@ -121,7 +123,10 @@ function GoogleMarkersMap({
           content: `<div style="font-family: Arial, sans-serif; font-size: 13px;"><strong>${hotel.name}</strong><br/>${hotel.zona}</div>`,
         });
 
-        marker.addListener('click', () => infoWindow.open(map, marker));
+        marker.addListener('click', () => {
+          infoWindow.open(map, marker);
+          if (onMarkerClick) onMarkerClick(hotel);
+        });
         bounds.extend(location);
       }
 
@@ -245,6 +250,7 @@ export default function HotelesView() {
             {filteredHotels.map((hotel) => (
               <motion.div
                 key={hotel.id}
+                id={`hotel-card-${hotel.id}`}
                 whileHover={{ y: -2 }}
                 onClick={() => {
                   setSelectedHotel(hotel);
@@ -413,7 +419,20 @@ export default function HotelesView() {
           {/* Google Maps iFrame */}
           <div className="flex-1 w-full bg-muted">
             {hasGoogleMapsKey && mapMode === 'all' ? (
-              <GoogleMarkersMap hotels={filteredHotels} selectedHotel={selectedHotel} mapMode={mapMode} />
+              <GoogleMarkersMap 
+                hotels={filteredHotels} 
+                selectedHotel={selectedHotel} 
+                mapMode={mapMode} 
+                onMarkerClick={(hotel) => {
+                  setSelectedHotel(hotel);
+                  setTimeout(() => {
+                    const el = document.getElementById(`hotel-card-${hotel.id}`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }, 100);
+                }}
+              />
             ) : (
               <iframe 
                 width="100%" 

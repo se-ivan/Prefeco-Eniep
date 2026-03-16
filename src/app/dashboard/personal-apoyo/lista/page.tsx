@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus } from "lucide-react";
+import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus, FileImage, FileText, Check, X, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
@@ -16,11 +16,11 @@ type Institucion = {
 
 type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl" | "docComprobanteDomicilioUrl" | "docCartaAntecedentesUrl";
 
-const DOCUMENT_UPLOAD_CONFIG: { field: PersonalApoyoDocumentField; category: any; label: string }[] = [
-  { field: "docCurpUrl", category: "curp", label: "CURP" },
-  { field: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial" },
-  { field: "docComprobanteDomicilioUrl", category: "comprobante-domicilio", label: "Comprobante de Domicilio" },
-  { field: "docCartaAntecedentesUrl", category: "carta-antecedentes", label: "Carta de Antecedentes" },
+const DOCUMENT_UPLOAD_CONFIG: { id: string; dbField: PersonalApoyoDocumentField; category: any; label: string; accept: string }[] = [
+  { id: "curp", dbField: "docCurpUrl", category: "curp", label: "CURP", accept: ".pdf" },
+  { id: "identificacion", dbField: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial", accept: ".pdf,image/*" },
+  { id: "comprobante", dbField: "docComprobanteDomicilioUrl", category: "comprobante-domicilio", label: "Comprobante de Domicilio", accept: ".pdf,image/*" },
+  { id: "antecedentes", dbField: "docCartaAntecedentesUrl", category: "carta-antecedentes", label: "Carta de Antecedentes", accept: ".pdf" },
 ];
 
 type PersonalApoyo = {
@@ -629,9 +629,9 @@ export default function ListaPersonalApoyoPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700">Documentos Requeridos</label>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {DOCUMENT_UPLOAD_CONFIG.map((config) => {
-                    const urlKey = `${config.dbField}Url` as keyof typeof editForm;
-                    const statusKey = config.dbField as keyof typeof editForm;
-                    const isUploading = uploadingDocuments[config.id];
+                    const urlKey = `${config.dbField}` as keyof typeof editForm;
+                    const statusKey = config.dbField.replace('Url', '') as keyof typeof editForm;
+                    const isUploading = uploadingDocuments[config.dbField];
                     
                     return (
                       <div key={config.id} className="rounded-xl border border-gray-200 bg-white p-3">
@@ -666,7 +666,7 @@ export default function ListaPersonalApoyoPage() {
                                   className="hidden"
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleDocumentUpload(config.id, config.dbField, file);
+                                    if (file) handleDocumentUpload(e, config.dbField, config.category);
                                   }}
                                   disabled={isUploading}
                                 />
@@ -692,7 +692,7 @@ export default function ListaPersonalApoyoPage() {
                                 className="hidden"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
-                                  if (file) handleDocumentUpload(config.id, config.dbField, file);
+                                  if (file) handleDocumentUpload(e, config.dbField, config.category);
                                 }}
                                 disabled={isUploading}
                               />

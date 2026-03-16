@@ -287,7 +287,7 @@ export default function ListaInstitucionesPage() {
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-800 mb-1 leading-tight line-clamp-2">
-                  {inst.nombre}
+                    {inst.nombre} - {inst.cct}
                 </h3>
 
                 <div className="mt-4 space-y-3 flex-1">
@@ -316,7 +316,10 @@ export default function ListaInstitucionesPage() {
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                       </svg>
-                      <span className="truncate">Dir. {inst.nombreDirector}</span>
+                        <span className="truncate">
+                          {inst.nombreDirector.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().includes("RUBEN LOYA") ? "M. de D. " : "Dir. "}
+                          {inst.nombreDirector}
+                        </span>
                     </div>
                   )}
                 </div>

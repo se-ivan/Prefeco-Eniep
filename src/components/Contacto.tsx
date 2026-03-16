@@ -18,7 +18,7 @@ export function Contacto() {
     {
       icon: Phone,
       title: 'Teléfonos',
-      details: ['(443) 312 2144', '(443) 317 7771'],
+      details: ['(443) 323 1273'],
       color: 'from-[#0b697d] to-[#0d5868]',
     },
     {
@@ -73,7 +73,7 @@ export function Contacto() {
               <h3 className="font-bold text-[#0b697d] dark:text-primary mb-3 text-lg group-hover:text-[#ffa52d] transition-colors">{info.title}</h3>
               <div className="space-y-2">
                 {info.details.map((detail, i) => (
-                  <p key={i} className="text-muted-foreground text-sm leading-relaxed group-hover:text-foreground/90 transition-colors">
+                  <p key={i} className="text-muted-foreground text-sm leading-relaxed wrap-break-word group-hover:text-foreground/90 transition-colors">
                     {detail}
                   </p>
                 ))}
@@ -81,6 +81,31 @@ export function Contacto() {
             </motion.div>
           ))}
         </div>
+
+        {/* Global CTA */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-16 bg-gradient-to-r from-[#0b697d]/90 to-[#0d5868]/90 ba
+ckdrop-blur-md rounded-2xl shadow-2xl p-8 sm:p-12 text-center border border-white/10"
+        >
+          <div className="h-2 w-full max-w-sm mx-auto bg-gradient-to-r from-[#0b697d] to-[#ffa52d] rounded-full mb-8"></div>
+          <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+            Gestión del Sistema ENIEP 2026
+          </h3>
+          <p className="text-white/90 mb-8 max-w-2xl mx-auto">
+            Ingresa al portal de administración y control de la Escuela Nacional para acceder a todas las funciones.
+          </p>
+          <motion.button
+            onClick={() => window.dispatchEvent(new Event('openLoginModal'))}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block px-8 py-4 bg-gradient-to-r from-[#ffa52d] to-[rgba(255,165,45,0.8)] text-white rounded-xl hover:shadow-xl transition-all font-semibold text-lg"
+          >
+            Acceder al Dashboard
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );
