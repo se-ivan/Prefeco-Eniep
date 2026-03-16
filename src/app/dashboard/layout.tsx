@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getUserScope } from "@/lib/rbac";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardAnimationWrapper from "@/components/DashboardAnimationWrapper";
@@ -12,6 +13,11 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const scope = await getUserScope(await headers());
+  
+  if (!scope) {
+    redirect("/?login=true");
+  }
+
   const isAdmin = scope?.role === "ADMIN";
 
   const userName = scope?.name || "Usuario";
