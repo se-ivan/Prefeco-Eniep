@@ -24,18 +24,18 @@ export function Planteles({ instituciones = [] }: PlantelesProps) {
   const mainCampus = {
     name: 'PREFECO "Melchor Ocampo"',
     location: 'Morelia, Michoacán',
-    anniversary: '68° aniversario',
+    anniversary: '70° aniversario',
     description: 'La institución más emblemática del sistema en Michoacán. Se distingue por su alto nivel académico y su estructura de gestión ciudadana.',
     achievements: [
-      { icon: Award, text: 'Ganadores en olimpiadas de Biología y Química' },
-      { icon: Users, text: 'Principal cantera para la UMSNH' },
-      { icon: Star, text: 'Departamento de Interculturalidad único' },
-      { icon: BookOpen, text: 'Bachillerato general con capacitaciones diversas' },
+      { icon: Award, text: 'Ganadores en olimpiadas Academicas' },
+      { icon: Users, text: 'Principal cantera del Tec de Morelia y la UMSNH' },
+      { icon: Star, text: 'Departamento Internacional único' },
+      { icon: BookOpen, text: 'Bachillerato general con formacion para el trabajo' },
     ],
     contact: {
       address: 'Juan Benito Diaz de Gamarra s/n, Fracc. Lazaro Cardenas, 58229 Morelia, Mich.',
       email: 'contacto@prefecomelchorocampo.edu.mx',
-      phone: '(443) 312 2144 / (443) 317 7771',
+      phone: '(443) 323 1273',
       website: 'prefecomelchorocampo.edu.mx',
     },
   };
@@ -93,7 +93,7 @@ export function Planteles({ instituciones = [] }: PlantelesProps) {
             <div className="flex flex-row items-start justify-between gap-4 mb-8">
               <div className="flex-1">
                 <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg mb-4">
-                  <span className="text-white font-semibold text-sm">Plantel Principal</span>
+                  <span className="text-white font-semibold text-sm">Plantel</span>
                 </div>
                 <h3 className="text-3xl sm:text-4xl font-bold text-white mb-2">{mainCampus.name}</h3>
                 <p className="text-white/80 text-lg">{mainCampus.location}</p>

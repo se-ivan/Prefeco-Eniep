@@ -18,7 +18,7 @@ export function Contacto() {
     {
       icon: Phone,
       title: 'Teléfonos',
-      details: ['(443) 312 2144', '(443) 317 7771'],
+      details: ['(443) 323 1273'],
       color: 'from-[#0b697d] to-[#0d5868]',
     },
     {
@@ -73,7 +73,7 @@ export function Contacto() {
               <h3 className="font-bold text-[#0b697d] dark:text-primary mb-3 text-lg group-hover:text-[#ffa52d] transition-colors">{info.title}</h3>
               <div className="space-y-2">
                 {info.details.map((detail, i) => (
-                  <p key={i} className="text-muted-foreground text-sm leading-relaxed group-hover:text-foreground/90 transition-colors">
+                  <p key={i} className="text-muted-foreground text-sm leading-relaxed wrap-break-word group-hover:text-foreground/90 transition-colors">
                     {detail}
                   </p>
                 ))}
