@@ -199,7 +199,11 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 
 					<div>
 						<label className="block text-sm mb-1">Tipo</label>
-						<select value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)} className="w-full border rounded p-2">
+						<select
+							value={tipo}
+							onChange={(e) => setTipo(e.target.value as Tipo)}
+							className="w-full border rounded p-2"
+						>
 							<option value="DEPORTIVA">Deportiva</option>
 							<option value="CULTURAL">Cultural</option>
 							<option value="CIVICA">Cívica</option>

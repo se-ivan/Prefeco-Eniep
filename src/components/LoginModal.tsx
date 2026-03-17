@@ -22,6 +22,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
+  const [view, setView] = useState<'login' | 'forgot_password'>('login');
+  const [resetEmail, setResetEmail] = useState('');
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const registrosNoDisponiblesMessage = 'Todavia no es el momento de los registros para instituciones';
 
@@ -35,7 +37,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (!showCountdown) return;
 
     // 16 de marzo del 2026 a las 18:00 (Hora México/Centro aproximada)
-    const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+    const targetDate = new Date('2026-03-16T08:58:00-06:00').getTime();
 
     const interval = setInterval(() => {
       const distance = targetDate - new Date().getTime();
@@ -56,6 +58,32 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     return () => clearInterval(interval);
   }, [showCountdown]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error('Por favor ingresa tu correo electrónico');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
+    try {
+      const { data, error } = await authClient.requestPasswordReset({
+        email: resetEmail,
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message || 'Error al solicitar el restablecimiento');
+      } else {
+        toast.success('Se ha enviado un correo con las instrucciones para restablecer tu contraseña');
+        setView('login');
+      }
+    } catch (err: any) {
+      toast.error('Ocurrió un error inesperado');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +122,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             }
             
             // Calculamos si ya pasó la fecha
-            const targetDate = new Date('2026-03-16T18:00:00-06:00').getTime();
+            const targetDate = new Date('2026-03-16T08:58:00-06:00').getTime();
             const now = new Date().getTime();
             
             if (now < targetDate && !isAdminOrPrueba) {
@@ -291,8 +319,68 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           Entendido
                         </button>
                       </motion.div>
+                    ) : view === 'forgot_password' ? (
+                      <motion.div
+                        key="forgot_password"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="w-full"
+                      >
+                        <div className="mb-8 text-center lg:text-left">
+                          <button
+                            onClick={() => setView('login')}
+                            className="mb-4 text-sm text-[#0b697d] dark:text-[#2eb4cc] hover:underline flex items-center justify-center lg:justify-start gap-1"
+                          >
+                            &larr; Volver al inicio de sesión
+                          </button>
+                          <h2 className="text-3xl font-bold text-foreground mb-2">Restablecer Contraseña</h2>
+                          <p className="text-muted-foreground">Ingresa tu correo electrónico asociado y te enviaremos instrucciones de recuperación.</p>
+                        </div>
+
+                        <form onSubmit={handleForgotPassword} className="space-y-5 lg:space-y-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-foreground mb-2">
+                              Correo Electrónico
+                            </label>
+                            <div className="relative">
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                              <input
+                                type="email"
+                                value={resetEmail}
+                                onChange={(e) => setResetEmail(e.target.value)}
+                                placeholder="correo@ejemplo.com"
+                                disabled={isLoading}
+                                className="w-full pl-12 pr-4 py-3.5 bg-input-background dark:bg-input border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-foreground"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-4 bg-linear-to-r from-[#0b697d] to-[#ffa52d] hover:from-[#0a5a6b] hover:to-[#e69427] dark:from-[#2eb4cc] dark:to-[#ffb54d] text-white dark:text-[#020f12] rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Enviando...
+                              </>
+                            ) : (
+                              'Enviar Enlace'
+                            )}
+                          </button>
+                        </form>
+                      </motion.div>
                     ) : (
-                      <>
+                      <motion.div
+                        key="login"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="w-full"
+                      >
                         <div className="mb-8 text-center lg:text-left">
                           <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
                           <p className="text-muted-foreground">Inicia sesión para acceder a la plataforma</p>
@@ -357,7 +445,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           />
                           <span className="text-sm text-muted-foreground">Mantener sesión iniciada</span>
                         </label>
-                        <button type="button" className="text-sm text-[#0b697d] dark:text-[#2eb4cc] hover:underline font-medium">
+                        <button 
+                          type="button" 
+                          onClick={() => setView('forgot_password')}
+                          className="text-sm text-[#0b697d] dark:text-[#2eb4cc] hover:underline font-medium"
+                        >
                           Restablecer Contraseña
                         </button>
                       </div>
@@ -403,7 +495,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         </button>
                       </p>
                     </form>
-                    </>
+                      </motion.div>
                     )}
                   </div>
                 </div>

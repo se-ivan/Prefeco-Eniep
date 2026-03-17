@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "ENIEP - PREFECO",
   description: "Eniep Prefecos Landing Page",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo-eniep.png",
   },
 };
 

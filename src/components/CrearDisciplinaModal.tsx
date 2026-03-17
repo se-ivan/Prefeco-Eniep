@@ -143,7 +143,11 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
           {/* tipo */}
           <div>
             <label className="block text-sm mb-1">Tipo</label>
-            <select className="w-full border rounded p-2" value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)}>
+            <select
+              className="w-full border rounded p-2"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as Tipo)}
+            >
               <option value="DEPORTIVA">Deportiva</option>
               <option value="CULTURAL">Cultural</option>
               <option value="CIVICA">Cívica</option>
