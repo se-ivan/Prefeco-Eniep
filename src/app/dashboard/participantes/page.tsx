@@ -56,7 +56,7 @@ const DOCUMENT_UPLOAD_CONFIG: Array<{
     label: "Carta responsiva del tutor",
     category: "carta-responsiva-tutor",
   },
-  { field: "docHistorialMedicoUrl", label: "Historial médico", category: "historial-medico" },
+  { field: "docHistorialMedicoUrl", label: "Historial académico", category: "historial-medico" },
   { field: "docActaNacimientoUrl", label: "Acta de nacimiento", category: "acta-nacimiento" },
 ];
 

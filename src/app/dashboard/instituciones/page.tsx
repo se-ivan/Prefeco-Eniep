@@ -13,6 +13,8 @@ import {
   Trash2,
   Pencil,
   Image as ImageIcon,
+  ExternalLink,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -54,6 +56,8 @@ type Institucion = {
   estado: string;
   municipio: string;
   urlLogo: string | null;
+  avalPresidenciaUrl: string | null;
+  liberacionAdeudosUrl: string | null;
   nombreDirector: string | null;
 };
 
@@ -341,6 +345,39 @@ export default function ListaInstitucionesPage() {
                     Sin logotipo
                   </div>
                 )}
+
+                <div className="mt-4 border-t border-slate-100 pt-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentos institucionales</p>
+                  {inst.avalPresidenciaUrl ? (
+                    <a
+                      href={inst.avalPresidenciaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-[#0b697d] hover:underline"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Aval de la presidencia nacional
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-slate-400">Sin aval de la presidencia nacional</p>
+                  )}
+
+                  {inst.liberacionAdeudosUrl ? (
+                    <a
+                      href={inst.liberacionAdeudosUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-[#0b697d] hover:underline"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Liberación de adeudos (recibo 2026)
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-slate-400">Sin liberación de adeudos (recibo 2026)</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>

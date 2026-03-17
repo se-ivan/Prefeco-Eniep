@@ -9,6 +9,7 @@ import useSWR from "swr";
 import { authClient } from "@/lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { uploadInstitucionDocumentToFirebase } from "@/lib/document-upload";
 import { PhotoCropperModal } from "./PhotoCropperModal";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -27,10 +28,12 @@ export function InstitucionOnboardingModal() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [tempLogoFile, setTempLogoFile] = useState<File | null>(null);
+  const [avalPresidenciaFile, setAvalPresidenciaFile] = useState<File | null>(null);
+  const [liberacionAdeudosFile, setLiberacionAdeudosFile] = useState<File | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"email" | "verify" | "profile" | "success">("email");
+  const [step, setStep] = useState<"email" | "verify" | "profile" | "documents" | "success">("email");
 
   useEffect(() => {
     if (user && user.role === "RESPONSABLE_INSTITUCION") {
@@ -127,24 +130,64 @@ export function InstitucionOnboardingModal() {
         const updateRes = await fetch("/api/cuenta", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ urlLogo })
+          body: JSON.stringify({ urlLogo }),
         });
         if (!updateRes.ok) {
-           const errData = await updateRes.json();
-           throw new Error(errData.error || "Error al actualizar logo en el servidor");
+          const errData = await updateRes.json();
+          throw new Error(errData.error || "Error al actualizar logo en el servidor");
         }
       }
 
-      toast.success("Perfil actualizado correctamente");
+      toast.success("Logo guardado. Continúa con los documentos obligatorios.");
+      setStep("documents");
+
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDocumentsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!avalPresidenciaFile || !liberacionAdeudosFile) {
+      toast.error("Debes subir ambos documentos obligatorios");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      toast.info("Subiendo documentos de institución...");
+
+      const [avalUpload, adeudosUpload] = await Promise.all([
+        uploadInstitucionDocumentToFirebase(avalPresidenciaFile, "aval-presidencia"),
+        uploadInstitucionDocumentToFirebase(liberacionAdeudosFile, "liberacion-adeudos"),
+      ]);
+
+      const updateRes = await fetch("/api/cuenta", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          avalPresidenciaUrl: avalUpload.url,
+          liberacionAdeudosUrl: adeudosUpload.url,
+        }),
+      });
+
+      if (!updateRes.ok) {
+        const errData = await updateRes.json();
+        throw new Error(errData.error || "No se pudieron guardar los documentos en la base de datos");
+      }
+
+      toast.success("Documentos guardados correctamente");
       setStep("success");
       setTimeout(() => {
         setOpen(false);
         mutate();
         router.refresh();
       }, 2000);
-
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "No se pudieron guardar los documentos");
     } finally {
       setLoading(false);
     }
@@ -289,7 +332,7 @@ export function InstitucionOnboardingModal() {
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Seguridad y Logo</h2>
                 <p className="text-muted-foreground text-sm mb-6">
-                  Opcionalmente, puedes cambiar tu contraseña y subir el logo de tu institución (min. 200x200).
+                  Opcionalmente, puedes cambiar tu contraseña y debes subir el logo de tu institución (min. 200x200).
                 </p>
 
                 <form onSubmit={handleProfileSubmit} className="w-full space-y-4">
@@ -384,7 +427,7 @@ export function InstitucionOnboardingModal() {
                       {loading ? (
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Procesando...</>
                       ) : (
-                        "Guardar y Finalizar"
+                        "Guardar y Continuar"
                       )}
                     </button>
                     
@@ -400,6 +443,66 @@ export function InstitucionOnboardingModal() {
                         Omitir y continuar
                       </button>
                     )}
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {step === "documents" && (
+              <motion.div
+                key="documents"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="w-full flex flex-col items-center"
+              >
+                <div className="w-16 h-16 bg-[#ffa52d]/10 text-[#ffa52d] rounded-full flex items-center justify-center mb-6">
+                  <Upload className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Documentación Obligatoria</h2>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Para finalizar el primer acceso debes subir y guardar estos 2 documentos en el sistema.
+                </p>
+
+                <form onSubmit={handleDocumentsSubmit} className="w-full space-y-4">
+                  <div className="space-y-3 text-left">
+                    <p className="text-sm font-semibold ml-1 text-foreground/80">Aval de la presidencia nacional <span className="text-destructive">*</span></p>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/jpeg,image/png,image/webp"
+                      className="block w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm"
+                      onChange={(e) => setAvalPresidenciaFile(e.target.files?.[0] ?? null)}
+                      disabled={loading}
+                      required
+                    />
+                    {avalPresidenciaFile && <p className="text-xs text-[#0b697d]">Archivo seleccionado: {avalPresidenciaFile.name}</p>}
+                  </div>
+
+                  <div className="space-y-3 text-left">
+                    <p className="text-sm font-semibold ml-1 text-foreground/80">Liberación de adeudos (recibo 2026) <span className="text-destructive">*</span></p>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/jpeg,image/png,image/webp"
+                      className="block w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm"
+                      onChange={(e) => setLiberacionAdeudosFile(e.target.files?.[0] ?? null)}
+                      disabled={loading}
+                      required
+                    />
+                    {liberacionAdeudosFile && <p className="text-xs text-[#0b697d]">Archivo seleccionado: {liberacionAdeudosFile.name}</p>}
+                  </div>
+
+                  <div className="pt-2 flex flex-col gap-3">
+                    <button
+                      type="submit"
+                      disabled={loading || !avalPresidenciaFile || !liberacionAdeudosFile}
+                      className="w-full h-12 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#ffa52d] to-[#e69427] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Guardando...</>
+                      ) : (
+                        "Guardar y Finalizar"
+                      )}
+                    </button>
                   </div>
                 </form>
               </motion.div>

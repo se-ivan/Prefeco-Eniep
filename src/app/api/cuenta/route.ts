@@ -27,20 +27,34 @@ export async function PATCH(req: NextRequest) {
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     
     const body = await req.json();
-    const { name, email, telefono, urlLogo } = body ?? {};
+    const { name, email, telefono, urlLogo, avalPresidenciaUrl, liberacionAdeudosUrl } = body ?? {};
 
     const dataToUpdate: any = {};
     if (name && String(name).trim()) dataToUpdate.name = String(name).trim();
     if (email && String(email).trim()) dataToUpdate.email = String(email).trim().toLowerCase();
 
-    if (Object.keys(dataToUpdate).length === 0 && telefono === undefined && urlLogo === undefined) {
+    if (
+      Object.keys(dataToUpdate).length === 0 &&
+      telefono === undefined &&
+      urlLogo === undefined &&
+      avalPresidenciaUrl === undefined &&
+      liberacionAdeudosUrl === undefined
+    ) {
       return NextResponse.json({ error: "No hay datos para actualizar" }, { status: 400 });
     }
 
-    if ((telefono !== undefined || urlLogo !== undefined) && scope.institucionId) {
+    if (
+      (telefono !== undefined ||
+        urlLogo !== undefined ||
+        avalPresidenciaUrl !== undefined ||
+        liberacionAdeudosUrl !== undefined) &&
+      scope.institucionId
+    ) {
       const instData: any = {};
       if (telefono !== undefined) instData.telefono = telefono ? String(telefono).trim() : null;
       if (urlLogo !== undefined) instData.urlLogo = urlLogo ? String(urlLogo).trim() : null;
+      if (avalPresidenciaUrl !== undefined) instData.avalPresidenciaUrl = avalPresidenciaUrl ? String(avalPresidenciaUrl).trim() : null;
+      if (liberacionAdeudosUrl !== undefined) instData.liberacionAdeudosUrl = liberacionAdeudosUrl ? String(liberacionAdeudosUrl).trim() : null;
 
       if (Object.keys(instData).length > 0) {
         await prisma.institucion.update({
@@ -61,7 +75,17 @@ export async function PATCH(req: NextRequest) {
           email: true,
           role: true,
           institucionId: true,
-          institucion: { select: { id: true, nombre: true, cct: true, telefono: true, urlLogo: true } },
+          institucion: {
+            select: {
+              id: true,
+              nombre: true,
+              cct: true,
+              telefono: true,
+              urlLogo: true,
+              avalPresidenciaUrl: true,
+              liberacionAdeudosUrl: true,
+            },
+          },
         },
       });
     } else {
@@ -73,7 +97,17 @@ export async function PATCH(req: NextRequest) {
           email: true,
           role: true,
           institucionId: true,
-          institucion: { select: { id: true, nombre: true, cct: true, telefono: true, urlLogo: true } },
+          institucion: {
+            select: {
+              id: true,
+              nombre: true,
+              cct: true,
+              telefono: true,
+              urlLogo: true,
+              avalPresidenciaUrl: true,
+              liberacionAdeudosUrl: true,
+            },
+          },
         },
       });
     }
