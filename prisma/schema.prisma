@@ -77,11 +77,11 @@ model Institucion {
   nombre               String
   estado               String
   urlLogo              String?         @map("url_logo")
-  avalPresidenciaUrl   String?         @map("aval_presidencia_url")
-  liberacionAdeudosUrl String?         @map("liberacion_adeudos_url")
   nombreDirector       String?         @map("nombre_director")
   municipio            String
   telefono             String?
+  avalPresidenciaUrl   String?         @map("aval_presidencia_url")
+  liberacionAdeudosUrl String?         @map("liberacion_adeudos_url")
   Bitacora             Bitacora[]
   participantes        Participante[]
   equipos              Equipo[]
@@ -154,6 +154,15 @@ model Disciplina {
 
   @@index([deletedAt])
   @@map("disciplinas")
+}
+
+model DisciplinaBase {
+  id     Int            @id @default(autoincrement())
+  nombre String
+  tipo   TipoDisciplina
+
+  @@unique([nombre, tipo])
+  @@map("disciplina_bases")
 }
 
 model Categoria {
