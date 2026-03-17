@@ -109,10 +109,14 @@ const estadosMexico = [
 export default function ListaInstitucionesPage() {
   const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones");
   const [searchTerm, setSearchTerm] = useState("");
+  const [documentsFilter, setDocumentsFilter] = useState<"all" | "uploaded" | "pending">("all");
   const [deleteTarget, setDeleteTarget] = useState<Institucion | null>(null);
   const [editTarget, setEditTarget] = useState<InstitucionEditForm | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const hasInstitutionalDocuments = (inst: Institucion) =>
+    Boolean(inst.avalPresidenciaUrl && inst.liberacionAdeudosUrl);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -204,19 +208,36 @@ export default function ListaInstitucionesPage() {
     }
   };
 
-  const filteredInstituciones = instituciones.filter(
-    (inst) =>
-      inst.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inst.cct.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inst.estado.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInstituciones = instituciones
+    .filter(
+      (inst) =>
+        inst.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.cct.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.estado.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.municipio.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((inst) => {
+      if (documentsFilter === "uploaded") return hasInstitutionalDocuments(inst);
+      if (documentsFilter === "pending") return !hasInstitutionalDocuments(inst);
+      return true;
+    })
+    .sort((a, b) => {
+      const aPriority = hasInstitutionalDocuments(a) ? 0 : 1;
+      const bPriority = hasInstitutionalDocuments(b) ? 0 : 1;
+      if (aPriority !== bPriority) return aPriority - bPriority;
+      return a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
+    });
+
+  const uploadedDocumentsCount = instituciones.filter((inst) => hasInstitutionalDocuments(inst)).length;
+  const pendingDocumentsCount = instituciones.length - uploadedDocumentsCount;
 
   return (
     <div className="min-h-screen ">
       <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:max-w-md">
+          <div className="flex w-full flex-col gap-3 sm:max-w-2xl sm:flex-row">
+            <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Buscar por CCT, nombre o estado..."
@@ -224,10 +245,28 @@ export default function ListaInstitucionesPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
             />
+            </div>
+
+            <Select value={documentsFilter} onValueChange={(value: "all" | "uploaded" | "pending") => setDocumentsFilter(value)}>
+              <SelectTrigger className="h-11 w-full sm:w-70 rounded-xl border-slate-200 bg-white shadow-sm">
+                <SelectValue placeholder="Filtrar por documentos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="uploaded">Con documentos institucionales</SelectItem>
+                <SelectItem value="pending">Sin documentos institucionales</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="bg-[#0b697d]/5 px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] text-center flex-1 sm:flex-none">
               Total Registrados: {instituciones.length}
+            </div>
+            <div className="bg-emerald-50 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 text-center flex-1 sm:flex-none">
+              Con documentos: {uploadedDocumentsCount}
+            </div>
+            <div className="bg-amber-50 px-4 py-2 rounded-xl text-sm font-semibold text-amber-700 text-center flex-1 sm:flex-none">
+              Sin documentos: {pendingDocumentsCount}
             </div>
             <Link href="/dashboard/instituciones/registro" className="flex-1 sm:flex-none">
               <Button className="w-full h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
@@ -265,9 +304,19 @@ export default function ListaInstitucionesPage() {
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#0b697d] to-[#ffa52d] opacity-80" />
 
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0b697d]/10 text-[#0b697d]">
-                    <Building2 className="h-6 w-6" />
-                  </div>
+                  {inst.urlLogo ? (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white p-1">
+                      <img
+                        src={inst.urlLogo}
+                        alt={`Logo de ${inst.nombre}`}
+                        className="h-10 w-10 rounded-lg object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0b697d]/10 text-[#0b697d]">
+                      <Building2 className="h-6 w-6" />
+                    </div>
+                  )}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
@@ -328,23 +377,11 @@ export default function ListaInstitucionesPage() {
                   )}
                 </div>
 
-                {inst.urlLogo ? (
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
-                    <img
-                      src={inst.urlLogo}
-                      alt={`Logo de ${inst.nombre}`}
-                      className="h-8 w-8 rounded-full object-cover border border-slate-200 bg-white"
-                    />
-                    <span className="text-xs text-slate-500 font-medium">Logo configurado</span>
-                  </div>
-                ) : (
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
-                    <div className="h-8 w-8 rounded-full border border-dashed border-slate-300 flex items-center justify-center">
-                      <Building2 className="h-3 w-3 opacity-50" />
-                    </div>
-                    Sin logotipo
-                  </div>
-                )}
+                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs">
+                  <span className={inst.urlLogo ? "text-slate-500 font-medium" : "text-slate-400"}>
+                    {inst.urlLogo ? "Logo configurado" : "Sin logotipo"}
+                  </span>
+                </div>
 
                 <div className="mt-4 border-t border-slate-100 pt-4 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentos institucionales</p>
