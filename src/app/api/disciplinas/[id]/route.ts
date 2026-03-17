@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isAdmin } from "@/lib/rbac";
+import { isValidDisciplinaBase, type TipoDisciplina } from "@/lib/disciplinas-base";
 
 function normalizeTipoDisciplina(tipo: unknown) {
   if (typeof tipo !== "string") return "";
@@ -56,6 +57,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const {
       nombre,
       tipo,
+      disciplinaBase,
       rama,
       modalidad,
       minIntegrantes,
@@ -81,6 +83,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
     if (!allowedModalidades.includes(String(modalidad))) {
       return NextResponse.json({ error: "modalidad inválida" }, { status: 400 });
+    }
+    const hasDisciplinaBase = typeof disciplinaBase === "string" && disciplinaBase.trim().length > 0;
+    if (hasDisciplinaBase && !isValidDisciplinaBase(disciplinaBase, normalizedTipo as TipoDisciplina)) {
+      return NextResponse.json({ error: "disciplinaBase inválida para el tipo" }, { status: 400 });
     }
 
     if (!Array.isArray(categorias) || categorias.length === 0) {
@@ -143,6 +149,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         where: { id: did },
         data: {
           nombre: nombre.trim(),
+          disciplinaBase: hasDisciplinaBase ? String(disciplinaBase).trim() : null,
           tipo: normalizedTipo as any,
           rama: rama as any,
           modalidad: modalidad as any,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getDisciplinasBaseByTipo, isValidDisciplinaBase, type TipoDisciplina } from "@/lib/disciplinas-base";
 
 type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION" | "EMBAJADORA_NACIONAL";
 type Modalidad = "EQUIPO" | "INDIVIDUAL";
@@ -15,6 +16,7 @@ type Categoria = {
 type DisciplinaEditable = {
 	id: number;
 	nombre: string;
+	disciplinaBase?: string | null;
 	tipo?: string | null;
 	rama?: string | null;
 	modalidad: "EQUIPO" | "INDIVIDUAL";
@@ -35,6 +37,7 @@ type Props = {
 export default function DisciplinaModalEditar({ open, disciplina, onClose, onSaved }: Props) {
 	const [nombre, setNombre] = useState("");
 	const [tipo, setTipo] = useState<Tipo>("DEPORTIVA");
+	const [disciplinaBase, setDisciplinaBase] = useState("");
 	const [rama, setRama] = useState<Rama>("UNICA");
 	const [modalidad, setModalidad] = useState<Modalidad>("EQUIPO");
 	const [minIntegrantes, setMinIntegrantes] = useState<number>(1);
@@ -47,11 +50,13 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 	const [saving, setSaving] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const disciplinasBaseDisponibles = getDisciplinasBaseByTipo(tipo as TipoDisciplina);
 
 	useEffect(() => {
 		if (!open || !disciplina) return;
 		setNombre(disciplina.nombre ?? "");
 		setTipo((disciplina.tipo as Tipo) ?? "DEPORTIVA");
+		setDisciplinaBase(disciplina.disciplinaBase ?? "");
 		setRama((disciplina.rama as Rama) ?? "UNICA");
 		setModalidad(disciplina.modalidad ?? "EQUIPO");
 		setMinIntegrantes(disciplina.minIntegrantes ?? 1);
@@ -84,6 +89,9 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 
 	function validaCliente() {
 		if (!nombre.trim()) return "El nombre es obligatorio";
+		if (disciplinaBase.trim() && !isValidDisciplinaBase(disciplinaBase, tipo as TipoDisciplina)) {
+			return "La disciplina base no pertenece al tipo seleccionado";
+		}
 		if (!categorias.length) return "Debes mantener al menos una categoría";
 
 		if (modalidad === "EQUIPO") {
@@ -121,6 +129,7 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 			const payload: any = {
 				nombre: nombre.trim(),
 				tipo,
+				disciplinaBase: disciplinaBase.trim() || undefined,
 				rama,
 				modalidad,
 				categorias,
@@ -199,13 +208,37 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 
 					<div>
 						<label className="block text-sm mb-1">Tipo</label>
-						<select value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)} className="w-full border rounded p-2">
+						<select
+							value={tipo}
+							onChange={(e) => {
+								setTipo(e.target.value as Tipo);
+								setDisciplinaBase("");
+							}}
+							className="w-full border rounded p-2"
+						>
 							<option value="DEPORTIVA">Deportiva</option>
 							<option value="CULTURAL">Cultural</option>
 							<option value="CIVICA">Cívica</option>
 							<option value="ACADEMICA">Académica</option>
 							<option value="EXHIBICION">Exhibición</option>
 							<option value="EMBAJADORA_NACIONAL">Embajadora Nacional</option>
+						</select>
+					</div>
+
+					<div>
+						<label className="block text-sm mb-1">Disciplina Base (opcional)</label>
+						<select
+							className="w-full border rounded p-2 disabled:bg-slate-100 disabled:text-slate-500"
+							value={disciplinaBase}
+							onChange={(e) => setDisciplinaBase(e.target.value)}
+							disabled={!tipo}
+						>
+							<option value="">{tipo ? "Sin disciplina base" : "Selecciona el tipo de disciplina primero"}</option>
+							{disciplinasBaseDisponibles.map((d) => (
+								<option key={d} value={d}>
+									{d}
+								</option>
+							))}
 						</select>
 					</div>
 

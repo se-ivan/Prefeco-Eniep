@@ -183,6 +183,7 @@ model Tutor {
 model Disciplina {
   id        Int            @id @default(autoincrement())
   nombre    String
+  disciplinaBase String? 
   tipo      TipoDisciplina
   rama      Rama
   modalidad Modalidad

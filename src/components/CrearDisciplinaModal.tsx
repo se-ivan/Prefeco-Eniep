@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import {
+  getDisciplinasBaseByTipo,
+  isValidDisciplinaBase,
+  type TipoDisciplina,
+} from "@/lib/disciplinas-base";
 
 /**
  * CrearDisciplinaModal (ajustado al schema.prisma)
@@ -9,6 +14,7 @@ import React, { useState } from "react";
  * - Categorías: entrada dinámica.
  * - Si modalidad === "EQUIPO" se muestran min/max integrantes.
  * - Si modalidad === "INDIVIDUAL" se muestra maxParticipantesPorEscuela.
+ * - disciplinaBase: selecciona según el tipo (bloqueado hasta seleccionar tipo).
  *
  * Nota: el backend espera `categorias: string[]`.
  */
@@ -29,6 +35,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
   const [tipo, setTipo] = useState<Tipo>("DEPORTIVA");
   const [rama, setRama] = useState<Rama>("VARONIL");
   const [modalidad, setModalidad] = useState<Modalidad>("EQUIPO");
+  const [disciplinaBase, setDisciplinaBase] = useState<string>("");
 
   // campos equipo
   const [minIntegrantes, setMinIntegrantes] = useState<number>(3);
@@ -44,6 +51,9 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
   // UI state
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Obtener disciplinas base válidas según el tipo seleccionado
+  const disciplinasDisponibles = getDisciplinasBaseByTipo(tipo as TipoDisciplina);
 
   if (!open) return null;
 
@@ -61,6 +71,9 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
   // validaciones cliente antes de enviar
   function validaCliente() {
     if (!nombre.trim()) return "El nombre es obligatorio";
+    if (disciplinaBase && !isValidDisciplinaBase(disciplinaBase, tipo as TipoDisciplina)) {
+      return "La disciplina base no es válida para este tipo";
+    }
     if (modalidad === "EQUIPO") {
       if (!Number.isInteger(minIntegrantes) || minIntegrantes < 1) return "Min integrantes inválido";
       if (!Number.isInteger(maxIntegrantes) || maxIntegrantes < minIntegrantes) return "Max debe ser >= Min";
@@ -85,6 +98,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
       const payload: any = {
         nombre: nombre.trim(),
         tipo,
+        disciplinaBase: disciplinaBase.trim() || undefined,
         rama,
         modalidad,
         // solo setear min/max si modalidad EQUIPO
@@ -143,13 +157,36 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
           {/* tipo */}
           <div>
             <label className="block text-sm mb-1">Tipo</label>
-            <select className="w-full border rounded p-2" value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)}>
+            <select
+              className="w-full border rounded p-2"
+              value={tipo}
+              onChange={(e) => {
+                setTipo(e.target.value as Tipo);
+                setDisciplinaBase("");
+              }}
+            >
               <option value="DEPORTIVA">Deportiva</option>
               <option value="CULTURAL">Cultural</option>
               <option value="CIVICA">Cívica</option>
               <option value="ACADEMICA">Académica</option>
               <option value="EXHIBICION">Exhibición</option>
               <option value="EMBAJADORA_NACIONAL">Embajadora Nacional</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Disciplina Base (opcional)</label>
+            <select
+              className="w-full border rounded p-2"
+              value={disciplinaBase}
+              onChange={(e) => setDisciplinaBase(e.target.value)}
+            >
+              <option value="">Sin disciplina base</option>
+              {disciplinasDisponibles.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
             </select>
           </div>
 
