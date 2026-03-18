@@ -17,6 +17,12 @@ type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION" | "
 type Modalidad = "EQUIPO" | "INDIVIDUAL";
 type Rama = "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
 
+type DisciplinaBase = {
+  id: number;
+  nombre: string;
+  tipo: Tipo;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -29,6 +35,8 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
   const [tipo, setTipo] = useState<Tipo>("DEPORTIVA");
   const [rama, setRama] = useState<Rama>("VARONIL");
   const [modalidad, setModalidad] = useState<Modalidad>("EQUIPO");
+  const [disciplinaBaseId, setDisciplinaBaseId] = useState<number | "">("");
+  const [bases, setBases] = useState<DisciplinaBase[]>([]);
 
   // campos equipo
   const [minIntegrantes, setMinIntegrantes] = useState<number>(3);
@@ -44,6 +52,28 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
   // UI state
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  React.useEffect(() => {
+    fetch("/api/disciplina-bases")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setBases(data);
+      })
+      .catch((err) => console.error("Error cargando disciplina bases", err));
+  }, []);
+
+  // Filter bases appropriately based on selected Tipo
+  const typeBases = bases.filter((b) => b.tipo === tipo);
+
+  // If the Type changes to something else, reset base if it no longer matches
+  React.useEffect(() => {
+    if (disciplinaBaseId !== "") {
+      const selected = bases.find((b) => b.id === disciplinaBaseId);
+      if (selected && selected.tipo !== tipo) {
+        setDisciplinaBaseId(""); // Reset if out of scope
+      }
+    }
+  }, [tipo, bases, disciplinaBaseId]);
 
   if (!open) return null;
 
@@ -87,6 +117,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
         tipo,
         rama,
         modalidad,
+        disciplinaBaseId: disciplinaBaseId !== "" ? Number(disciplinaBaseId) : undefined,
         // solo setear min/max si modalidad EQUIPO
         minIntegrantes: modalidad === "EQUIPO" ? minIntegrantes : undefined,
         maxIntegrantes: modalidad === "EQUIPO" ? maxIntegrantes : undefined,
@@ -111,6 +142,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
       // limpiar (opcional)
       setNombre("");
       setCategorias([]);
+      setDisciplinaBaseId("");
     } catch (err: any) {
       console.error("CrearDisciplinaModal:", err);
       setError(err?.message || "Error al crear disciplina");
@@ -139,6 +171,23 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
             <label className="block text-sm mb-1">Nombre</label>
             <input className="w-full border rounded p-2" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
+
+          {/* disciplina base opcional */}
+          {typeBases.length > 0 && (
+            <div className="md:col-span-2">
+              <label className="block text-sm mb-1">Base Asociada</label>
+              <select
+                className="w-full border rounded p-2"
+                value={disciplinaBaseId}
+                onChange={(e) => setDisciplinaBaseId(e.target.value === "" ? "" : Number(e.target.value))}
+              >
+                <option value="">-- Ninguna --</option>
+                {typeBases.map((b) => (
+                  <option key={b.id} value={b.id}>{b.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* tipo */}
           <div>
@@ -176,6 +225,7 @@ export default function CrearDisciplinaModal({ open, onClose, onCreated }: Props
               <option value="INDIVIDUAL">Individual</option>
             </select>
           </div>
+
 
           {/* campos condicionales */}
           {modalidad === "EQUIPO" && (

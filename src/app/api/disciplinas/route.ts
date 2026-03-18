@@ -24,6 +24,7 @@ export async function GET() {
         minIntegrantes: true,
         maxIntegrantes: true,
         maxParticipantesPorEscuela: true,
+        disciplinaBaseId: true,
         categorias: {
           where: { deletedAt: null },
           select: { id: true, nombre: true },
@@ -49,6 +50,7 @@ export async function GET() {
       minIntegrantes: d.minIntegrantes,
       maxIntegrantes: d.maxIntegrantes,
       maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
+      disciplinaBaseId: d.disciplinaBaseId,
       categorias: d.categorias ?? [],
       totalEquipos: d._count?.equipos ?? 0,
       totalParticipantes: d._count?.inscripciones ?? 0,
@@ -79,6 +81,7 @@ export async function POST(req: Request) {
       maxIntegrantes,
       maxParticipantesPorEscuela,
       categorias,
+      disciplinaBaseId,
     } = body ?? {};
 
     if (!nombre || typeof nombre !== "string" || !nombre.trim()) {
@@ -150,6 +153,7 @@ export async function POST(req: Request) {
           rama: rama as any,
           modalidad: modalidad as any,
           deletedAt: null,
+          disciplinaBaseId: disciplinaBaseId ? Number(disciplinaBaseId) : undefined,
           minIntegrantes: modalidad === "EQUIPO" ? Number(minIntegrantes) : undefined,
           maxIntegrantes: modalidad === "EQUIPO" ? Number(maxIntegrantes) : undefined,
           maxParticipantesPorEscuela: modalidad === "INDIVIDUAL" ? Number(maxParticipantesPorEscuela) : undefined,

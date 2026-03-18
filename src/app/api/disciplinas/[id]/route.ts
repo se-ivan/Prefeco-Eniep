@@ -23,6 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       where: { id: did, deletedAt: null },
       include: {
         categorias: { where: { deletedAt: null }, orderBy: { nombre: "asc" } },
+        disciplinaBase: true,
       },
     });
 
@@ -61,6 +62,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       minIntegrantes,
       maxIntegrantes,
       maxParticipantesPorEscuela,
+      disciplinaBaseId,
       categorias,
     } = body ?? {};
 
@@ -146,6 +148,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           tipo: normalizedTipo as any,
           rama: rama as any,
           modalidad: modalidad as any,
+          disciplinaBaseId: disciplinaBaseId ? Number(disciplinaBaseId) : null,
           minIntegrantes: modalidad === "EQUIPO" ? Number(minIntegrantes) : null,
           maxIntegrantes: modalidad === "EQUIPO" ? Number(maxIntegrantes) : null,
           maxParticipantesPorEscuela: modalidad === "INDIVIDUAL" ? Number(maxParticipantesPorEscuela) : null,

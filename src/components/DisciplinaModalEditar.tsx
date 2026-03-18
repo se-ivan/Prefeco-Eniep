@@ -6,6 +6,12 @@ type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION" | "
 type Modalidad = "EQUIPO" | "INDIVIDUAL";
 type Rama = "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
 
+type DisciplinaBase = {
+	id: number;
+	nombre: string;
+	tipo: Tipo;
+};
+
 type Categoria = {
 	id: number;
 	nombre: string;
@@ -21,6 +27,7 @@ type DisciplinaEditable = {
 	minIntegrantes?: number | null;
 	maxIntegrantes?: number | null;
 	maxParticipantesPorEscuela?: number | null;
+	disciplinaBaseId?: number | null;
 	categorias?: Categoria[];
 	deletedAt?: Date | null;
 };
@@ -40,9 +47,11 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 	const [minIntegrantes, setMinIntegrantes] = useState<number>(1);
 	const [maxIntegrantes, setMaxIntegrantes] = useState<number>(5);
 	const [maxParticipantesPorEscuela, setMaxParticipantesPorEscuela] = useState<number>(1);
+	const [disciplinaBaseId, setDisciplinaBaseId] = useState<number | "">("");
 
 	const [categoriaInput, setCategoriaInput] = useState("");
 	const [categorias, setCategorias] = useState<string[]>([]);
+	const [bases, setBases] = useState<DisciplinaBase[]>([]);
 
 	const [saving, setSaving] = useState(false);
 	const [deleting, setDeleting] = useState(false);
@@ -57,10 +66,33 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 		setMinIntegrantes(disciplina.minIntegrantes ?? 1);
 		setMaxIntegrantes(disciplina.maxIntegrantes ?? 5);
 		setMaxParticipantesPorEscuela(disciplina.maxParticipantesPorEscuela ?? 1);
+		setDisciplinaBaseId(disciplina.disciplinaBaseId ?? "");
 		setCategorias((disciplina.categorias ?? []).map((c) => c.nombre));
 		setCategoriaInput("");
 		setError(null);
 	}, [open, disciplina]);
+
+	useEffect(() => {
+		fetch("/api/disciplina-bases")
+			.then((res) => res.json())
+			.then((data) => {
+				if (Array.isArray(data)) setBases(data);
+			})
+			.catch((err) => console.error("Error cargando disciplina bases", err));
+	}, []);
+
+	// Filter bases appropriately based on selected Tipo
+	const typeBases = bases.filter((b) => b.tipo === tipo);
+
+	// If the Type changes to something else, reset base if it no longer matches
+	useEffect(() => {
+		if (disciplinaBaseId !== "") {
+			const selected = bases.find((b) => b.id === disciplinaBaseId);
+			if (selected && selected.tipo !== tipo) {
+				setDisciplinaBaseId(""); // Reset if out of scope
+			}
+		}
+	}, [tipo, bases, disciplinaBaseId]);
 
 	if (!open || !disciplina) return null;
 	const disciplinaId = disciplina.id;
@@ -120,6 +152,7 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 		try {
 			const payload: any = {
 				nombre: nombre.trim(),
+				disciplinaBaseId: disciplinaBaseId === "" ? null : Number(disciplinaBaseId),
 				tipo,
 				rama,
 				modalidad,
@@ -210,6 +243,23 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 							<option value="ACADEMICA">Académica</option>
 							<option value="EXHIBICION">Exhibición</option>
 							<option value="EMBAJADORA_NACIONAL">Embajadora Nacional</option>
+						</select>
+					</div>
+
+					{/* Base Selection Optional */}
+					<div>
+						<label className="block text-sm mb-1">Base Asociada</label>
+						<select
+							value={disciplinaBaseId}
+							onChange={(e) => setDisciplinaBaseId(e.target.value === "" ? "" : Number(e.target.value))}
+							className="w-full border rounded p-2 bg-slate-50"
+						>
+							<option value="">-- Sin Base --</option>
+							{typeBases.map((b) => (
+								<option key={b.id} value={b.id}>
+									{b.nombre}
+								</option>
+							))}
 						</select>
 					</div>
 
