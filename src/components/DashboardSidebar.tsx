@@ -11,6 +11,7 @@ import {
   Briefcase,
   ClipboardList,
   IdCard,
+  FileText,
   Volleyball,
   type LucideIcon,
 } from "lucide-react";
@@ -61,7 +62,10 @@ export default function DashboardSidebar({
   const sections: MenuSection[] = [
     {
       title: "General",
-      items: [{ name: "Inicio", icon: Home, href: "/dashboard" }],
+      items: [
+        { name: "Inicio", icon: Home, href: "/dashboard" },
+        { name: "Documentos Institucionales", icon: FileText, href: "/dashboard/institucion-documentos" },
+      ],
     },
     ...(isAdmin
       ? [
