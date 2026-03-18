@@ -46,12 +46,22 @@ export function InstitucionOnboardingModal() {
 
   useEffect(() => {
     if (user && user.role === "RESPONSABLE_INSTITUCION") {
-      if (step === "email") {
-        const isMissingEmail = user.email?.endsWith("@local.eniep") || user.email?.endsWith("@localhost") || !user.email;
-        setOpen(!!isMissingEmail);
+      const isMissingEmail = user.email?.endsWith("@local.eniep") || user.email?.endsWith("@localhost") || !user.email;
+      const isMissingLogo = !user.institucion?.urlLogo;
+      const isMissingDocs = !user.institucion?.avalPresidenciaUrl || !user.institucion?.liberacionAdeudosUrl;
+
+      if (isMissingEmail || isMissingLogo || isMissingDocs) {
+        if (!open) { // only set initial step if modal is closed
+          if (isMissingEmail) setStep("email");
+          else if (isMissingLogo) setStep("profile");
+          else if (isMissingDocs) setStep("documents");
+        }
+        setOpen(true);
+      } else {
+        setOpen(false);
       }
     }
-  }, [user, step]);
+  }, [user, open]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -474,6 +484,18 @@ export function InstitucionOnboardingModal() {
                         "Guardar y Continuar"
                       )}
                     </button>
+
+                    <button 
+                      type="button" 
+                      disabled={loading}
+                      onClick={async () => {
+                        await authClient.signOut();
+                        router.push("/");
+                      }}
+                      className="w-full h-12 inline-flex items-center justify-center rounded-xl border border-input bg-transparent hover:bg-accent text-sm font-medium transition-colors text-foreground"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Cerra Sesión y salir
+                    </button>
                     
                     {!newPassword && !currentPassword && !logoFile && (
                       <button
@@ -546,6 +568,18 @@ export function InstitucionOnboardingModal() {
                       ) : (
                         "Guardar y Finalizar"
                       )}
+                    </button>
+
+                    <button 
+                      type="button" 
+                      disabled={loading}
+                      onClick={async () => {
+                        await authClient.signOut();
+                        router.push("/");
+                      }}
+                      className="w-full h-12 inline-flex items-center justify-center rounded-xl border border-input bg-transparent hover:bg-accent text-sm font-medium transition-colors text-foreground"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Cerrar Sesión y salir
                     </button>
                   </div>
                 </form>

@@ -10,7 +10,7 @@ export type UserScope = {
   email: string;
   role: AppRole;
   institucionId: number | null;
-  institucion: { id: number; nombre: string; cct: string; telefono?: string | null } | null;
+  institucion: { id: number; nombre: string; cct: string; telefono?: string | null; urlLogo?: string | null; avalPresidenciaUrl?: string | null; liberacionAdeudosUrl?: string | null } | null;
 };
 
 export async function getUserScope(headersValue: Headers): Promise<UserScope | null> {
@@ -35,7 +35,7 @@ export async function getUserScope(headersValue: Headers): Promise<UserScope | n
         email: true,
         role: true,
         institucionId: true,
-        institucion: { select: { id: true, nombre: true, cct: true, telefono: true } },
+        institucion: { select: { id: true, nombre: true, cct: true, telefono: true, urlLogo: true, avalPresidenciaUrl: true, liberacionAdeudosUrl: true } },
       },
     });
   } catch (error) {

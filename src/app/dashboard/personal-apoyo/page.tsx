@@ -14,13 +14,11 @@ const STEPS = [
   { id: 3, title: "Documentación", icon: FileText },
 ];
 
-type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl" | "docComprobanteDomicilioUrl" | "docCartaAntecedentesUrl";
+type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl";
 
 const DOCUMENT_UPLOAD_CONFIG: { field: PersonalApoyoDocumentField; category: any; label: string }[] = [
   { field: "docCurpUrl", category: "curp", label: "CURP" },
   { field: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial" },
-  { field: "docComprobanteDomicilioUrl", category: "comprobante-domicilio", label: "Comprobante de Domicilio" },
-  { field: "docCartaAntecedentesUrl", category: "carta-antecedentes", label: "Carta de Antecedentes" },
 ];
 
 type Institucion = {
@@ -48,8 +46,6 @@ export default function RegistrarPersonalApoyoPage() {
   const [uploadingDocuments, setUploadingDocuments] = useState<Record<PersonalApoyoDocumentField, boolean>>({
     docCurpUrl: false,
     docIdentificacionOficialUrl: false,
-    docComprobanteDomicilioUrl: false,
-    docCartaAntecedentesUrl: false,
   });
 
   const [formData, setFormData] = useState({
@@ -66,12 +62,8 @@ export default function RegistrarPersonalApoyoPage() {
     contactoEmergenciaTelefono: "",
     docCurp: false,
     docIdentificacionOficial: false,
-    docComprobanteDomicilio: false,
-    docCartaAntecedentes: false,
     docCurpUrl: "",
     docIdentificacionOficialUrl: "",
-    docComprobanteDomicilioUrl: "",
-    docCartaAntecedentesUrl: "",
   });
 
   useEffect(() => {
@@ -249,12 +241,8 @@ export default function RegistrarPersonalApoyoPage() {
         contactoEmergenciaTelefono: formData.contactoEmergenciaTelefono || null,
         docCurp: formData.docCurp,
         docIdentificacionOficial: formData.docIdentificacionOficial,
-        docComprobanteDomicilio: formData.docComprobanteDomicilio,
-        docCartaAntecedentes: formData.docCartaAntecedentes,
         docCurpUrl: formData.docCurpUrl || null,
         docIdentificacionOficialUrl: formData.docIdentificacionOficialUrl || null,
-        docComprobanteDomicilioUrl: formData.docComprobanteDomicilioUrl || null,
-        docCartaAntecedentesUrl: formData.docCartaAntecedentesUrl || null,
         estatus: "ACTIVO",
       };
 

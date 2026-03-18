@@ -73,12 +73,8 @@ export async function POST(req: NextRequest) {
       contactoEmergenciaTelefono,
       docCurp,
       docIdentificacionOficial,
-      docComprobanteDomicilio,
-      docCartaAntecedentes,
       docCurpUrl,
       docIdentificacionOficialUrl,
-      docComprobanteDomicilioUrl,
-      docCartaAntecedentesUrl,
       estatus,
     } = body ?? {};
 
@@ -124,12 +120,8 @@ export async function POST(req: NextRequest) {
         contactoEmergenciaTelefono: contactoEmergenciaTelefono ? String(contactoEmergenciaTelefono).trim() : null,
         docCurp: !!docCurp,
         docIdentificacionOficial: !!docIdentificacionOficial,
-        docComprobanteDomicilio: !!docComprobanteDomicilio,
-        docCartaAntecedentes: !!docCartaAntecedentes,
         docCurpUrl: docCurpUrl ? String(docCurpUrl) : null,
         docIdentificacionOficialUrl: docIdentificacionOficialUrl ? String(docIdentificacionOficialUrl) : null,
-        docComprobanteDomicilioUrl: docComprobanteDomicilioUrl ? String(docComprobanteDomicilioUrl) : null,
-        docCartaAntecedentesUrl: docCartaAntecedentesUrl ? String(docCartaAntecedentesUrl) : null,
         estatus,
       },
       include: {

@@ -14,13 +14,11 @@ type Institucion = {
   nombre: string;
 };
 
-type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl" | "docComprobanteDomicilioUrl" | "docCartaAntecedentesUrl";
+type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl";
 
 const DOCUMENT_UPLOAD_CONFIG: { id: string; dbField: PersonalApoyoDocumentField; category: any; label: string; accept: string }[] = [
   { id: "curp", dbField: "docCurpUrl", category: "curp", label: "CURP", accept: ".pdf" },
   { id: "identificacion", dbField: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial", accept: ".pdf,image/*" },
-  { id: "comprobante", dbField: "docComprobanteDomicilioUrl", category: "comprobante-domicilio", label: "Comprobante de Domicilio", accept: ".pdf,image/*" },
-  { id: "antecedentes", dbField: "docCartaAntecedentesUrl", category: "carta-antecedentes", label: "Carta de Antecedentes", accept: ".pdf" },
 ];
 
 type PersonalApoyo = {
@@ -38,12 +36,8 @@ type PersonalApoyo = {
   contactoEmergenciaTelefono: string | null;
   docCurp: boolean;
   docIdentificacionOficial: boolean;
-  docComprobanteDomicilio: boolean;
-  docCartaAntecedentes: boolean;
   docCurpUrl: string | null;
   docIdentificacionOficialUrl: string | null;
-  docComprobanteDomicilioUrl: string | null;
-  docCartaAntecedentesUrl: string | null;
   estatus: "ACTIVO" | "INACTIVO";
   institucion: {
     id: number;
@@ -70,12 +64,8 @@ type EditForm = {
   contactoEmergenciaTelefono: string;
   docCurp: boolean;
   docIdentificacionOficial: boolean;
-  docComprobanteDomicilio: boolean;
-  docCartaAntecedentes: boolean;
   docCurpUrl: string;
   docIdentificacionOficialUrl: string;
-  docComprobanteDomicilioUrl: string;
-  docCartaAntecedentesUrl: string;
   estatus: "ACTIVO" | "INACTIVO";
 };
 
@@ -93,12 +83,8 @@ const initialEditForm: EditForm = {
   contactoEmergenciaTelefono: "",
   docCurp: false,
   docIdentificacionOficial: false,
-  docComprobanteDomicilio: false,
-  docCartaAntecedentes: false,
   docCurpUrl: "",
   docIdentificacionOficialUrl: "",
-  docComprobanteDomicilioUrl: "",
-  docCartaAntecedentesUrl: "",
   estatus: "ACTIVO",
 };
 
@@ -121,8 +107,6 @@ export default function ListaPersonalApoyoPage() {
   const [uploadingDocuments, setUploadingDocuments] = useState<Record<PersonalApoyoDocumentField, boolean>>({
     docCurpUrl: false,
     docIdentificacionOficialUrl: false,
-    docComprobanteDomicilioUrl: false,
-    docCartaAntecedentesUrl: false,
   });
 
   const loadData = useCallback(async () => {
@@ -205,12 +189,8 @@ export default function ListaPersonalApoyoPage() {
       contactoEmergenciaTelefono: item.contactoEmergenciaTelefono ?? "",
       docCurp: item.docCurp,
       docIdentificacionOficial: item.docIdentificacionOficial,
-      docComprobanteDomicilio: item.docComprobanteDomicilio,
-      docCartaAntecedentes: item.docCartaAntecedentes,
       docCurpUrl: item.docCurpUrl ?? "",
       docIdentificacionOficialUrl: item.docIdentificacionOficialUrl ?? "",
-      docComprobanteDomicilioUrl: item.docComprobanteDomicilioUrl ?? "",
-      docCartaAntecedentesUrl: item.docCartaAntecedentesUrl ?? "",
       estatus: item.estatus,
     });
   };
@@ -346,12 +326,8 @@ export default function ListaPersonalApoyoPage() {
         contactoEmergenciaTelefono: editForm.contactoEmergenciaTelefono || null,
         docCurp: editForm.docCurp,
         docIdentificacionOficial: editForm.docIdentificacionOficial,
-        docComprobanteDomicilio: editForm.docComprobanteDomicilio,
-        docCartaAntecedentes: editForm.docCartaAntecedentes,
         docCurpUrl: editForm.docCurpUrl || null,
         docIdentificacionOficialUrl: editForm.docIdentificacionOficialUrl || null,
-        docComprobanteDomicilioUrl: editForm.docComprobanteDomicilioUrl || null,
-        docCartaAntecedentesUrl: editForm.docCartaAntecedentesUrl || null,
         estatus: editForm.estatus,
       };
 
@@ -512,8 +488,6 @@ export default function ListaPersonalApoyoPage() {
                     <PreviewField label="Tel. emergencia" value={previewItem.contactoEmergenciaTelefono || "N/A"} />
                     <PreviewCheck label="CURP" checked={previewItem.docCurp} />
                     <PreviewCheck label="Identificación oficial" checked={previewItem.docIdentificacionOficial} />
-                    <PreviewCheck label="Comprobante domicilio" checked={previewItem.docComprobanteDomicilio} />
-                    <PreviewCheck label="Carta antecedentes" checked={previewItem.docCartaAntecedentes} />
                   </div>
                 </div>
               </div>
