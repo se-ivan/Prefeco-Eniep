@@ -77,6 +77,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           },
         });
         if (already) throw { status: 409, message: `${participante.nombres} ya esta inscrito en esta disciplina y categoria` };
+
+        // check max disciplines limit using disciplinaBaseId
+        const inscripcionesActuales = await tx.inscripcion.findMany({
+          where: { participanteId: pid },
+          select: { disciplina: { select: { id: true, disciplinaBaseId: true, nombre: true } } },
+        });
+
+        const disciplinasSet = new Set<string | number>(
+          inscripcionesActuales.map((i: any) => i.disciplina.disciplinaBaseId ?? i.disciplina.id)
+        );
+        disciplinasSet.add(equipo.disciplina.disciplinaBaseId ?? equipo.disciplina.id);
+        if (disciplinasSet.size > 2) {
+          throw { status: 409, message: `${participante.nombres} excede el maximo de 2 disciplinas distintas` };
+        }
       }
 
       // all validations passed -> create inscripciones

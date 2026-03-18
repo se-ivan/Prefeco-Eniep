@@ -146,9 +146,11 @@ model Disciplina {
   minIntegrantes             Int?              @map("min_integrantes")
   maxIntegrantes             Int?              @map("max_integrantes")
   maxParticipantesPorEscuela Int?              @map("max_participantes_por_escuela")
+  disciplinaBaseId           Int?              @map("disciplina_base_id")
   deletedAt                  DateTime?         @map("deleted_at")
   asignacionesApoyo          AsignacionApoyo[]
   categorias                 Categoria[]
+  disciplinaBase             DisciplinaBase?   @relation(fields: [disciplinaBaseId], references: [id])
   equipos                    Equipo[]
   inscripciones              Inscripcion[]
 
@@ -157,9 +159,10 @@ model Disciplina {
 }
 
 model DisciplinaBase {
-  id     Int            @id @default(autoincrement())
-  nombre String
-  tipo   TipoDisciplina
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  tipo        TipoDisciplina
+  disciplinas Disciplina[]
 
   @@unique([nombre, tipo])
   @@map("disciplina_bases")

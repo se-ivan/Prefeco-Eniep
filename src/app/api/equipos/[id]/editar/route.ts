@@ -66,6 +66,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             select: {
               id: true,
               nombre: true,
+              disciplinaBaseId: true,
               rama: true,
               deletedAt: true,
               minIntegrantes: true,
@@ -221,13 +222,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         const inscripcionesActuales = await tx.inscripcion.findMany({
           where: { participanteId: p.id },
-          select: { disciplina: { select: { nombre: true } } },
+          select: { disciplina: { select: { id: true, disciplinaBaseId: true, nombre: true } } },
         });
 
-        const disciplinasSet = new Set<string>(
-          inscripcionesActuales.map((i: any) => i.disciplina.nombre)
+        const disciplinasSet = new Set<string | number>(
+          inscripcionesActuales.map((i: any) => i.disciplina.disciplinaBaseId ?? i.disciplina.id)
         );
-        disciplinasSet.add(equipo.disciplina.nombre);
+        disciplinasSet.add(equipo.disciplina.disciplinaBaseId ?? equipo.disciplina.id);
         if (disciplinasSet.size > 2) {
           throw {
             status: 409,
