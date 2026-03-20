@@ -229,7 +229,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "No autorizado para eliminar este participante" }, { status: 403 });
     }
 
-    await prisma.participante.delete({ where: { id: participanteId } });
+    await prisma.$transaction([
+      prisma.inscripcion.deleteMany({ where: { participanteId } }),
+      prisma.participante.delete({ where: { id: participanteId } })
+    ]);
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error al eliminar participante:", error);

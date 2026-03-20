@@ -655,7 +655,7 @@ export default function RegistrarAlumnoPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Tipo de Sangre</label>
+                  <label className="text-sm font-semibold text-gray-800">Tipo de Sangre <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="tipoSangre"
@@ -667,7 +667,7 @@ export default function RegistrarAlumnoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Alergias</label>
+                  <label className="text-sm font-semibold text-gray-800">Alergias <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="alergias"
@@ -679,7 +679,7 @@ export default function RegistrarAlumnoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Padecimientos</label>
+                  <label className="text-sm font-semibold text-gray-800">Padecimientos <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="padecimientos"
@@ -691,7 +691,7 @@ export default function RegistrarAlumnoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Medicamentos</label>
+                  <label className="text-sm font-semibold text-gray-800">Medicamentos <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="medicamentos"
@@ -703,7 +703,7 @@ export default function RegistrarAlumnoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Nombre de contacto de emergencia</label>
+                  <label className="text-sm font-semibold text-gray-800">Nombre de contacto de emergencia <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="contactoEmergenciaNombre"
@@ -715,7 +715,7 @@ export default function RegistrarAlumnoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Teléfono de emergencia</label>
+                  <label className="text-sm font-semibold text-gray-800">Teléfono de emergencia <span className="text-gray-400 font-normal ml-1">(no obligatorio)</span></label>
                   <input
                     type="text"
                     name="contactoEmergenciaTelefono"

@@ -98,6 +98,7 @@ export default function DashboardSidebar({
       items: [
         { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
         { name: "Generar Credenciales", icon: IdCard, href: "/dashboard/exportar-credenciales" },
+        { name: "Reportes Excel", icon: FileText, href: "/dashboard/reportes" },
       ],
     },
   ];
