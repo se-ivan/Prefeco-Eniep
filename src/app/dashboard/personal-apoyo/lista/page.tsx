@@ -3,23 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus, FileImage, FileText, Check, X, Upload } from "lucide-react";
+import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
-import { uploadPersonalApoyoDocumentToFirebase } from "@/lib/document-upload";
 
 type Institucion = {
   id: number;
   nombre: string;
 };
-
-type PersonalApoyoDocumentField = "docCurpUrl" | "docIdentificacionOficialUrl";
-
-const DOCUMENT_UPLOAD_CONFIG: { id: string; dbField: PersonalApoyoDocumentField; category: any; label: string; accept: string }[] = [
-  { id: "curp", dbField: "docCurpUrl", category: "curp", label: "CURP", accept: ".pdf" },
-  { id: "identificacion", dbField: "docIdentificacionOficialUrl", category: "identificacion-oficial", label: "Identificación Oficial", accept: ".pdf,image/*" },
-];
 
 type PersonalApoyo = {
   id: number;
@@ -103,11 +95,6 @@ export default function ListaPersonalApoyoPage() {
   const [editForm, setEditForm] = useState<EditForm>(initialEditForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [autoEditHandled, setAutoEditHandled] = useState(false);
-  const [searchDocQuery, setSearchDocQuery] = useState("");
-  const [uploadingDocuments, setUploadingDocuments] = useState<Record<PersonalApoyoDocumentField, boolean>>({
-    docCurpUrl: false,
-    docIdentificacionOficialUrl: false,
-  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -241,28 +228,6 @@ export default function ListaPersonalApoyoPage() {
   const handleEditCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: checked }));
-  };
-
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: PersonalApoyoDocumentField, category: any) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
-
-    try {
-      const { url } = await uploadPersonalApoyoDocumentToFirebase(selectedFile, category);
-      setEditForm((prev) => ({ ...prev, [field]: url, [field.replace('Url', '')]: true }));
-      toast.success(`${selectedFile.name} subido correctamente`);
-    } catch (error: any) {
-      toast.error(error?.message || "No se pudo subir el documento");
-    } finally {
-      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
-      e.target.value = "";
-    }
-  };
-
-  const clearDocumentSelection = (field: PersonalApoyoDocumentField) => {
-    setEditForm((prev) => ({ ...prev, [field]: "", [field.replace('Url', '')]: false }));
   };
 
   const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -597,86 +562,6 @@ export default function ListaPersonalApoyoPage() {
                   <option value="ACTIVO">ACTIVO</option>
                   <option value="INACTIVO">INACTIVO</option>
                 </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-700">Documentos Requeridos</label>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {DOCUMENT_UPLOAD_CONFIG.map((config) => {
-                    const urlKey = `${config.dbField}` as keyof typeof editForm;
-                    const statusKey = config.dbField.replace('Url', '') as keyof typeof editForm;
-                    const isUploading = uploadingDocuments[config.dbField];
-                    
-                    return (
-                      <div key={config.id} className="rounded-xl border border-gray-200 bg-white p-3">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-xs font-medium text-gray-700 line-clamp-2">
-                            {config.label}
-                          </span>
-                          {editForm[statusKey] && editForm[urlKey] ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <X className="h-4 w-4 text-gray-300" />
-                          )}
-                        </div>
-                        
-                        <div className="mt-2 flex flex-col gap-2">
-                          {editForm[urlKey] ? (
-                            <div className="flex items-center gap-2">
-                              <a 
-                                href={editForm[urlKey] as string} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="flex-1 inline-flex items-center justify-center gap-1 rounded-md bg-green-50 px-2 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100"
-                              >
-                                {config.accept === 'image/*' ? <FileImage className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-                                Ver actual
-                              </a>
-                              <label className="cursor-pointer rounded-md bg-gray-100 p-1.5 text-gray-600 hover:bg-gray-200" title="Reemplazar documento">
-                                <Upload className="h-4 w-4" />
-                                <input
-                                  type="file"
-                                  accept={config.accept}
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleDocumentUpload(e, config.dbField, config.category);
-                                  }}
-                                  disabled={isUploading}
-                                />
-                              </label>
-                            </div>
-                          ) : (
-                            <label className={`relative flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed p-3 transition-colors ${
-                              isUploading 
-                                ? 'border-[#08677a]/30 bg-[#08677a]/5'
-                                : 'border-gray-200 hover:border-[#08677a]/30 hover:bg-gray-50'
-                            }`}>
-                              {isUploading ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-[#08677a]" />
-                              ) : (
-                                <Upload className="h-4 w-4 text-gray-400" />
-                              )}
-                              <span className="text-xs font-medium text-gray-600">
-                                {isUploading ? 'Subiendo...' : 'Subir archivo'}
-                              </span>
-                              <input
-                                type="file"
-                                accept={config.accept}
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleDocumentUpload(e, config.dbField, config.category);
-                                }}
-                                disabled={isUploading}
-                              />
-                            </label>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
 
               <div className="md:col-span-2 rounded-xl border border-[#08677a]/20 bg-[#08677a]/5 p-4">
