@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import * as XLSX from "xlsx";
+// Remove xlsx import, using exceljs
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { Download, Users, Briefcase, Loader2, Filter } from "lucide-react";
@@ -37,29 +39,83 @@ export default function ReportesPage() {
         return;
       }
 
-      // Insertar una fila vacía para separar entre grupos (disciplinas/instituciones)
-      const windowedData = [];
+      const keys = Object.keys(data[0] || {});
+      const colCount = Math.max(keys.length, 1);
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Participantes");
+
+      // Título principal
+      worksheet.mergeCells(1, 1, 1, colCount);
+      const titleCell = worksheet.getCell(1, 1);
+      titleCell.value = "REPORTE DE PARTICIPANTES";
+      titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF08677A' } };
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(1).height = 30;
+
+      // Subtítulo con filtros
+      worksheet.mergeCells(2, 1, 2, colCount);
+      const subTitleCell = worksheet.getCell(2, 1);
+      
+      let subtitleText = [];
+      if (selectedInstitucion) {
+        const instName = instituciones?.find((i) => String(i.id) === selectedInstitucion)?.nombre;
+        if (instName) subtitleText.push(`Institución: ${instName}`);
+      }
+      if (selectedDisciplina) {
+        const discName = disciplinas?.find((d) => String(d.id) === selectedDisciplina)?.nombre;
+        if (discName) subtitleText.push(`Disciplina: ${discName}`);
+      }
+      
+      subTitleCell.value = subtitleText.length > 0 ? subtitleText.join(" | ") : "Todos los registros (Múltiples Instituciones)";
+      subTitleCell.font = { bold: true, size: 12, color: { argb: 'FF333333' } };
+      subTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+      subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(2).height = 25;
+
+      // Fila vacía de separación visual
+      worksheet.addRow([]);
+
+      // Encabezados de tabla
+      const headerRow = worksheet.addRow(keys);
+      headerRow.eachCell((cell, colNumber) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064C5A' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        // Ajuste de ancho de columnas
+        const column = worksheet.getColumn(colNumber);
+        column.width = Math.max(keys[colNumber - 1].length + 5, 20);
+      });
+      worksheet.getRow(4).height = 25;
+
+      // Insertar datos con fila de separación cuando cambia disciplina o institución
       let lastDisc = null;
       let lastInst = null;
 
       for (const row of data) {
         if (lastDisc !== null && (lastDisc !== row["Disciplina"] || lastInst !== row["Institución"])) {
-          windowedData.push({}); // Fila de separación
+          worksheet.addRow([]); // Fila vacía para separación visual
         }
         lastDisc = row["Disciplina"];
         lastInst = row["Institución"];
-        windowedData.push(row);
+
+        const rowValues = keys.map(k => row[k]);
+        worksheet.addRow(rowValues);
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(windowedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Participantes");
+      // Generar descarga
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      saveAs(blob, `Reporte_Participantes_${new Date().toISOString().split("T")[0]}.xlsx`);
 
-      // Auto-size columns slightly
-      const columnWidths = Object.keys(data[0] || {}).map(() => ({ wch: 20 }));
-      if (columnWidths.length > 0) worksheet["!cols"] = columnWidths;
-
-      XLSX.writeFile(workbook, `Reporte_Participantes_${new Date().toISOString().split("T")[0]}.xlsx`);
       toast.success("Reporte de participantes generado correctamente");
     } catch (error) {
       console.error(error);
@@ -85,26 +141,75 @@ export default function ReportesPage() {
         return;
       }
 
-      // Insertar una fila vacía para separar entre instituciones
-      const windowedData = [];
+      const keys = Object.keys(data[0] || {});
+      const colCount = Math.max(keys.length, 1);
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("PersonalApoyo");
+
+      // Título principal
+      worksheet.mergeCells(1, 1, 1, colCount);
+      const titleCell = worksheet.getCell(1, 1);
+      titleCell.value = "REPORTE DE PERSONAL DE APOYO";
+      titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFA52D' } }; // Naranja en base al tema
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(1).height = 30;
+
+      // Subtítulo con filtros
+      worksheet.mergeCells(2, 1, 2, colCount);
+      const subTitleCell = worksheet.getCell(2, 1);
+      
+      let subtitleText = [];
+      if (selectedInstitucion) {
+        const instName = instituciones?.find((i) => String(i.id) === selectedInstitucion)?.nombre;
+        if (instName) subtitleText.push(`Institución: ${instName}`);
+      }
+      
+      subTitleCell.value = subtitleText.length > 0 ? subtitleText.join(" | ") : "Todos los registros (Múltiples Instituciones)";
+      subTitleCell.font = { bold: true, size: 12, color: { argb: 'FF333333' } };
+      subTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+      subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(2).height = 25;
+
+      // Fila vacía de separación visual
+      worksheet.addRow([]);
+
+      // Encabezados
+      const headerRow = worksheet.addRow(keys);
+      headerRow.eachCell((cell, colNumber) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8911C' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        const column = worksheet.getColumn(colNumber);
+        column.width = Math.max(keys[colNumber - 1].length + 5, 20);
+      });
+      worksheet.getRow(4).height = 25;
+
+      // Insertar datos con fila de separación cuando cambia la institución
       let lastInst = null;
 
       for (const row of data) {
         if (lastInst !== null && lastInst !== row["Institución"]) {
-          windowedData.push({}); // Fila de separación
+          worksheet.addRow([]); // Fila vacía para separación
         }
         lastInst = row["Institución"];
-        windowedData.push(row);
+
+        const rowValues = keys.map(k => row[k]);
+        worksheet.addRow(rowValues);
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(windowedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "PersonalApoyo");
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      saveAs(blob, `Reporte_PersonalApoyo_${new Date().toISOString().split("T")[0]}.xlsx`);
 
-      const columnWidths = Object.keys(data[0] || {}).map(() => ({ wch: 20 }));
-      if (columnWidths.length > 0) worksheet["!cols"] = columnWidths;
-
-      XLSX.writeFile(workbook, `Reporte_PersonalApoyo_${new Date().toISOString().split("T")[0]}.xlsx`);
       toast.success("Reporte de personal de apoyo generado correctamente");
     } catch (error) {
       console.error(error);
