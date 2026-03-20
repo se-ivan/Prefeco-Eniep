@@ -77,33 +77,43 @@ export default function ReportesPage() {
       // Fila vacía de separación visual
       worksheet.addRow([]);
 
-      // Encabezados de tabla
-      const headerRow = worksheet.addRow(keys);
-      headerRow.eachCell((cell, colNumber) => {
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064C5A' } };
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-        
-        // Ajuste de ancho de columnas
-        const column = worksheet.getColumn(colNumber);
-        column.width = Math.max(keys[colNumber - 1].length + 5, 20);
+      // Ajuste de ancho de columnas base
+      keys.forEach((key, idx) => {
+        const column = worksheet.getColumn(idx + 1);
+        column.width = Math.max(key.length + 5, 20);
       });
-      worksheet.getRow(4).height = 25;
 
       // Insertar datos con fila de separación cuando cambia disciplina o institución
       let lastDisc = null;
       let lastInst = null;
 
       for (const row of data) {
-        if (lastDisc !== null && (lastDisc !== row["Disciplina"] || lastInst !== row["Institución"])) {
-          worksheet.addRow([]); // Fila vacía para separación visual
+        if (lastDisc === null || lastDisc !== row["Disciplina"] || lastInst !== row["Institución"]) {
+          if (lastDisc !== null) {
+            worksheet.addRow([]); // Fila vacía para separación visual
+          }
+
+          // Título de la Institución y Disciplina para este bloque
+          const groupTitleRow = worksheet.addRow([`Institución: ${row["Institución"]} (CCT: ${row["CCT"]}) | Disciplina: ${row["Disciplina"]}`]);
+          worksheet.mergeCells(groupTitleRow.number, 1, groupTitleRow.number, colCount);
+          const titleCell = groupTitleRow.getCell(1);
+          titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0A849C' } }; // Azul medio
+          titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // Nuevos Encabezados para cada bloque
+          const headerRow = worksheet.addRow(keys);
+          headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064C5A' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = {
+              top: { style: 'thin' }, left: { style: 'thin' },
+              bottom: { style: 'thin' }, right: { style: 'thin' }
+            };
+          });
         }
+        
         lastDisc = row["Disciplina"];
         lastInst = row["Institución"];
 
@@ -175,31 +185,42 @@ export default function ReportesPage() {
       // Fila vacía de separación visual
       worksheet.addRow([]);
 
-      // Encabezados
-      const headerRow = worksheet.addRow(keys);
-      headerRow.eachCell((cell, colNumber) => {
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8911C' } };
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-        
-        const column = worksheet.getColumn(colNumber);
-        column.width = Math.max(keys[colNumber - 1].length + 5, 20);
+      // Ajuste de anchos de columna base
+      keys.forEach((key, idx) => {
+        const column = worksheet.getColumn(idx + 1);
+        column.width = Math.max(key.length + 5, 20);
       });
-      worksheet.getRow(4).height = 25;
 
       // Insertar datos con fila de separación cuando cambia la institución
       let lastInst = null;
 
       for (const row of data) {
-        if (lastInst !== null && lastInst !== row["Institución"]) {
-          worksheet.addRow([]); // Fila vacía para separación
+        if (lastInst === null || lastInst !== row["Institución"]) {
+          if (lastInst !== null) {
+            worksheet.addRow([]); // Fila vacía para separación
+          }
+
+          // Renglón especial del nombre de la Institución
+          const groupTitleRow = worksheet.addRow([`Institución: ${row["Institución"]} (CCT: ${row["CCT"]})`]);
+          worksheet.mergeCells(groupTitleRow.number, 1, groupTitleRow.number, colCount);
+          const titleCell = groupTitleRow.getCell(1);
+          titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD97706' } }; // Naranja medio
+          titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // Encabezados de tabla debajo de institucion
+          const headerRow = worksheet.addRow(keys);
+          headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8911C' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = {
+              top: { style: 'thin' }, left: { style: 'thin' },
+              bottom: { style: 'thin' }, right: { style: 'thin' }
+            };
+          });
         }
+        
         lastInst = row["Institución"];
 
         const rowValues = keys.map(k => row[k]);
