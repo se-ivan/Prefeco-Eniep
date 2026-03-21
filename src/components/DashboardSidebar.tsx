@@ -68,7 +68,9 @@ export default function DashboardSidebar({
       title: "General",
       items: [
         { name: "Inicio", icon: Home, href: "/dashboard" },
-        { name: "Documentos Institucionales", icon: FileText, href: "/dashboard/institucion-documentos" },
+        ...(!isDirectivo
+          ? [{ name: "Documentos Institucionales", icon: FileText, href: "/dashboard/institucion-documentos" }]
+          : []),
       ],
     },
     ...(showAdminViews
@@ -80,7 +82,7 @@ export default function DashboardSidebar({
               // Hide Registrar Institución for directivo, since they can't edit?
               // Or leave it but prevent backend access? Better remove to indicate not possible.
               ...(isAdmin ? [{ name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" }] : []),
-              { name: "Encargados", icon: ShieldCheck, href: "/dashboard/usuarios" },
+              ...(isAdmin ? [{ name: "Encargados", icon: ShieldCheck, href: "/dashboard/usuarios" }] : []),
             ],
           },
         ]

@@ -35,6 +35,7 @@ type Props = {
    */
   onViewParticipants?: (d: Disciplina) => void | Promise<void>;
   isAdmin?: boolean;
+  canCreate?: boolean;
   onEditDisciplina?: (d: Disciplina) => void | Promise<void>;
   onDeleteDisciplina?: (d: Disciplina) => void | Promise<void>;
 };
@@ -65,6 +66,7 @@ export default function DisciplinaCard({
   onCreateTeam,
   onViewParticipants,
   isAdmin = false,
+  canCreate = true,
   onEditDisciplina,
   onDeleteDisciplina,
 }: Props) {
@@ -171,13 +173,15 @@ export default function DisciplinaCard({
           Ver Participantes
         </button>
 
-        <button
-          onClick={handleCreate}
-          className="bg-amber-500 text-white px-4 py-2 rounded text-sm cursor-pointer transition-colors hover:bg-amber-600"
-          aria-label={`Registrar nuevo participante en ${disciplina.nombre}`}
-        >
-          + Nuevo
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCreate}
+            className="bg-amber-500 text-white px-4 py-2 rounded text-sm cursor-pointer transition-colors hover:bg-amber-600"
+            aria-label={`Registrar nuevo participante en ${disciplina.nombre}`}
+          >
+            + Nuevo
+          </button>
+        )}
       </div>
     </article>
   );

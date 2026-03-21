@@ -48,6 +48,7 @@ export default function DisciplinasPage() {
 
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
+  const [isDirectivo, setIsDirectivo] = useState(false);
 
   // Filtros - iniciados con valores por defecto
   const [filtroTipo, setFiltroTipo] = useState<string>("TODAS");
@@ -87,6 +88,7 @@ export default function DisciplinasPage() {
         if (!res.ok) return;
         const me = await res.json();
         setIsAdmin(me?.role === "ADMIN");
+        setIsDirectivo(me?.role === "DIRECTIVO");
       } catch {
         // ignore
       }
@@ -235,6 +237,7 @@ export default function DisciplinasPage() {
             key={d.id}
             disciplina={d as any}
             isAdmin={isAdmin}
+            canCreate={!isDirectivo}
             onEditDisciplina={(disc) => handleOpenEditDisciplina(disc as Disciplina)}
             onDeleteDisciplina={(disc) => handleDeleteDisciplina(disc as Disciplina)}
             onCreateTeam={(disc) => {
