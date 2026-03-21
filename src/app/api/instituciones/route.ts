@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
+import { getUserScope, isAdmin, isResponsable, hasAdminViewAccess } from "@/lib/rbac";
 
 // GET  /api/instituciones  → lista todas las instituciones
 export async function GET(req: NextRequest) {
@@ -8,11 +8,14 @@ export async function GET(req: NextRequest) {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    if (isResponsable(scope) && scope.institucionId) {
-      const institucion = await prisma.institucion.findUnique({
-        where: { id: scope.institucionId },
-      });
-      return NextResponse.json(institucion ? [institucion] : []);
+    if (!hasAdminViewAccess(scope)) {
+      if (isResponsable(scope) && scope.institucionId) {
+        const institucion = await prisma.institucion.findUnique({
+          where: { id: scope.institucionId },
+        });
+        return NextResponse.json(institucion ? [institucion] : []);
+      }
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const instituciones = await prisma.institucion.findMany({

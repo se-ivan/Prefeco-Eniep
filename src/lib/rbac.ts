@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export type AppRole = "ADMIN" | "RESPONSABLE_INSTITUCION";
+export type AppRole = "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
 
 export type UserScope = {
   id: string;
@@ -56,10 +56,16 @@ export async function getUserScope(headersValue: Headers): Promise<UserScope | n
   };
 }
 
-export function isAdmin(scope: UserScope | null): scope is UserScope {
+export function isAdmin(scope: UserScope | null): boolean {
   return !!scope && scope.role === "ADMIN";
 }
 
-export function isResponsable(scope: UserScope | null): scope is UserScope {
-  return !!scope && scope.role === "RESPONSABLE_INSTITUCION";
+export function isDirectivo(scope: UserScope | null): boolean {
+  return !!scope && scope.role === "DIRECTIVO";
 }
+
+export function hasAdminViewAccess(scope: UserScope | null): boolean {
+  return !!scope && (scope.role === "ADMIN" || scope.role === "DIRECTIVO");
+}
+
+export function isResponsable(scope: UserScope | null): boolean { return !!scope && scope.role === 'RESPONSABLE_INSTITUCION'; }

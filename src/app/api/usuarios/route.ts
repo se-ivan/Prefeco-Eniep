@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isAdmin } from "@/lib/rbac";
+import { getUserScope, isAdmin, hasAdminViewAccess } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
     const scope = await getUserScope(req.headers);
-    if (!isAdmin(scope)) {
+    if (!hasAdminViewAccess(scope)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -48,8 +48,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "userId y role son obligatorios" }, { status: 400 });
     }
 
-    if (!["ADMIN", "RESPONSABLE_INSTITUCION"].includes(String(role))) {
-      return NextResponse.json({ error: "role inválido" }, { status: 400 });
+    if (!["ADMIN", "RESPONSABLE_INSTITUCION", "DIRECTIVO"].includes(String(role))) {
+      return NextResponse.json({ error: "role inválido" }, { status: 400 });   
     }
 
     if (role === "RESPONSABLE_INSTITUCION" && !institucionId) {
@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedRole = role ?? "RESPONSABLE_INSTITUCION";
-    if (!["ADMIN", "RESPONSABLE_INSTITUCION"].includes(String(normalizedRole))) {
-      return NextResponse.json({ error: "role inválido" }, { status: 400 });
+    if (!["ADMIN", "RESPONSABLE_INSTITUCION", "DIRECTIVO"].includes(String(normalizedRole))) {
+      return NextResponse.json({ error: "role inválido" }, { status: 400 }); 
     }
 
     if (normalizedRole === "RESPONSABLE_INSTITUCION" && !institucionId) {

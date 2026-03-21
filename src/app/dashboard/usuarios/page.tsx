@@ -16,14 +16,14 @@ type UserItem = {
   name: string;
   username: string | null;
   email: string;
-  role: "ADMIN" | "RESPONSABLE_INSTITUCION";
+  role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
   institucionId: number | null;
   institucion: Institucion | null;
   createdAt: string;
 };
 
 type Scope = {
-  role: "ADMIN" | "RESPONSABLE_INSTITUCION";
+  role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
 };
 
 const fetcher = async (url: string) => {
@@ -295,13 +295,14 @@ export default function UsuariosPage() {
             <select
               value={newUser.role}
               onChange={(e) => {
-                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
+                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
                 setNewUser((p) => ({ ...p, role, institucionId: role === "ADMIN" ? "" : p.institucionId }));
               }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             >
               <option value="">Selecciona un cargo</option>
-              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
+              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE</option>
+<option value="DIRECTIVO">DIRECTIVO</option>
               <option value="ADMIN">ADMIN</option>
             </select>
             <select
@@ -337,14 +338,15 @@ export default function UsuariosPage() {
             <select
               value={editData.role}
               onChange={(e) => {
-                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION";
+                const role = e.target.value as "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
                 setEditData((p) => ({ ...p, role, institucionId: role === "ADMIN" ? "" : p.institucionId }));
               }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             >
               <option value="">Selecciona un cargo</option>
               <option value="ADMIN">ADMIN</option>
-              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE_INSTITUCION</option>
+              <option value="RESPONSABLE_INSTITUCION">RESPONSABLE</option>
+<option value="DIRECTIVO">DIRECTIVO</option>
             </select>
             <select
               value={editData.institucionId}
@@ -384,9 +386,12 @@ function StatCard({ title, value }: { title: string; value: string }) {
   );
 }
 
-function RoleBadge({ role }: { role: "ADMIN" | "RESPONSABLE_INSTITUCION" }) {
-  if (role === "ADMIN") {
-    return <span className="rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-700">ADMIN</span>;
+function RoleBadge({ role }: { role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO" | "DIRECTIVO" }) { 
+    if (role === "ADMIN") {
+      return <span className="rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-700">ADMIN</span>;
+    }
+    if (role === "DIRECTIVO") {
+      return <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">DIRECTIVO</span>;
   }
 
   return (

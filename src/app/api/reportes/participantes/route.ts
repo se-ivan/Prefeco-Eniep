@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isAdmin } from "@/lib/rbac";
+import { getUserScope, hasAdminViewAccess } from "@/lib/rbac";
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +9,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const admin = isAdmin(scope);
+    const admin = hasAdminViewAccess(scope);
     const userInstitucionId = scope.institucionId;
 
     if (!admin && !userInstitucionId) {

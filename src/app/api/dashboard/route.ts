@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
+import { getUserScope, isAdmin, isResponsable, hasAdminViewAccess } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
     const scope = await getUserScope(request.headers);
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
             upcomingEvents: 0,
             activeDisciplines: activeDisciplines,
             recentActivity,
-            isAdmin: isAdmin(scope),
+            isAdmin: hasAdminViewAccess(scope),
         };
 
         return NextResponse.json(dashboardData);

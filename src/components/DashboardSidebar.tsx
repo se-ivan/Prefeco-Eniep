@@ -29,6 +29,7 @@ type MenuSection = {
 
 type DashboardSidebarProps = {
   isAdmin: boolean;
+  isDirectivo?: boolean;
   userName: string;
   userEmail: string;
   footer: React.ReactNode;
@@ -53,11 +54,14 @@ function getActiveHref(pathname: string, sections: MenuSection[]) {
 
 export default function DashboardSidebar({
   isAdmin,
+  isDirectivo,
   userName,
   userEmail,
   footer,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+
+  const showAdminViews = isAdmin || isDirectivo;
 
   const sections: MenuSection[] = [
     {
@@ -67,13 +71,15 @@ export default function DashboardSidebar({
         { name: "Documentos Institucionales", icon: FileText, href: "/dashboard/institucion-documentos" },
       ],
     },
-    ...(isAdmin
+    ...(showAdminViews
       ? [
           {
             title: "Administración",
             items: [
               { name: "Instituciones", icon: Building2, href: "/dashboard/instituciones" },
-              { name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" },
+              // Hide Registrar Institución for directivo, since they can't edit?
+              // Or leave it but prevent backend access? Better remove to indicate not possible.
+              ...(isAdmin ? [{ name: "Registrar Institución", icon: UserPlus, href: "/dashboard/instituciones/registro" }] : []),
               { name: "Encargados", icon: ShieldCheck, href: "/dashboard/usuarios" },
             ],
           },
@@ -82,14 +88,14 @@ export default function DashboardSidebar({
     {
       title: "Participantes",
       items: [
-        { name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" },
+        ...(isAdmin || (!isAdmin && !isDirectivo) ? [{ name: "Registrar Participante", icon: UserPlus, href: "/dashboard/participantes" }] : []),
         { name: "Lista de Participantes", icon: Users, href: "/dashboard/participantes/lista" },
       ],
     },
     {
       title: "Personal de Apoyo",
       items: [
-        { name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" },
+        ...(isAdmin || (!isAdmin && !isDirectivo) ? [{ name: "Registrar Personal", icon: Briefcase, href: "/dashboard/personal-apoyo" }] : []),
         { name: "Lista de Personal", icon: ClipboardList, href: "/dashboard/personal-apoyo/lista" },
       ],
     },

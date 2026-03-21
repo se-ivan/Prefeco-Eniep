@@ -292,6 +292,7 @@ enum Modalidad {
 enum UserRole {
   ADMIN
   RESPONSABLE_INSTITUCION
+  DIRECTIVO
 }
 
 enum Rama {

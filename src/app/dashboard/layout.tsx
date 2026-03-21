@@ -19,6 +19,7 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = scope?.role === "ADMIN";
+  const isDirectivo = scope?.role === "DIRECTIVO";
 
   const userName = scope?.name || "Usuario";
   const userEmail = scope?.username ? `@${scope.username}` : (scope?.email || "Sin email");
@@ -35,6 +36,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen bg-[#f8fafc]">
       <DashboardSidebar
         isAdmin={isAdmin}
+        isDirectivo={isDirectivo}
         userName={userName}
         userEmail={userEmail}
         footer={<SidebarFooterActions />}
