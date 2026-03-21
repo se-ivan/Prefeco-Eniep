@@ -6,6 +6,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (scope.role === "DIRECTIVO") return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     const { id } = await params;
     const personalId = Number(id);
@@ -121,6 +122,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (scope.role === "DIRECTIVO") return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     const { id } = await params;
     const personalId = Number(id);

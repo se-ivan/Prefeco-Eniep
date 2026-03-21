@@ -25,7 +25,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    
+    if (scope.role === "DIRECTIVO") return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
     const body = await req.json();
     const { name, email, telefono, urlLogo, avalPresidenciaUrl, liberacionAdeudosUrl } = body ?? {};
 

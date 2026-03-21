@@ -108,6 +108,9 @@ const estadosMexico = [
 
 export default function ListaInstitucionesPage() {
   const { data: instituciones = [], isLoading, mutate } = useSWR<Institucion[]>("/api/instituciones");
+  const { data: scope } = useSWR<{ role: string }>("/api/me");
+  const isDirectivo = scope?.role === "DIRECTIVO";
+
   const [searchTerm, setSearchTerm] = useState("");
   const [documentsFilter, setDocumentsFilter] = useState<"all" | "uploaded" | "pending">("all");
   const [deleteTarget, setDeleteTarget] = useState<Institucion | null>(null);
@@ -268,12 +271,14 @@ export default function ListaInstitucionesPage() {
             <div className="bg-amber-50 px-4 py-2 rounded-xl text-sm font-semibold text-amber-700 text-center flex-1 sm:flex-none">
               Sin documentos: {pendingDocumentsCount}
             </div>
+            {!isDirectivo && (
             <Link href="/dashboard/instituciones/registro" className="flex-1 sm:flex-none">
               <Button className="w-full h-9 gap-2 bg-[#ffa52d] text-white hover:bg-[#ffa52d]/90">
                 <Plus className="h-4 w-4" />
                 Registrar
               </Button>
             </Link>
+            )}
           </div>
         </div>
 
@@ -317,28 +322,29 @@ export default function ListaInstitucionesPage() {
                       <Building2 className="h-6 w-6" />
                     </div>
                   )}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-[#0b697d] hover:bg-[#0b697d]/10"
-                      onClick={() => openEdit(inst)}
-                      title="Editar institución"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                      onClick={() => setDeleteTarget(inst)}
-                      title="Eliminar institución"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {!isDirectivo && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-[#0b697d] hover:bg-[#0b697d]/10"
+                          onClick={() => openEdit(inst)}
+                          title="Editar institución"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                          onClick={() => setDeleteTarget(inst)}
+                          title="Eliminar institución"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-
                 <h3 className="text-lg font-bold text-slate-800 mb-1 leading-tight line-clamp-2">
                     {inst.nombre} - {inst.cct}
                 </h3>

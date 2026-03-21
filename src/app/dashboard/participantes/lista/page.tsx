@@ -50,7 +50,7 @@ type Tutor = {
 } | null;
 
 type UserScope = {
-  role: "ADMIN" | "RESPONSABLE_INSTITUCION";
+  role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
   institucionId: number | null;
 };
 
@@ -497,7 +497,7 @@ export default function ListaParticipantesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800 w-full"
+                      className={`h-8 px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800 w-full ${scope?.role === "DIRECTIVO" ? "col-span-3" : ""}`}
                       onClick={(e) => {
                         e.preventDefault();
                         setPreviewItem(part);
@@ -506,31 +506,33 @@ export default function ListaParticipantesPage() {
                       <Eye className="h-4 w-4 mr-2" />
                       Ver
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-[#08677a] hover:bg-teal-50 hover:text-[#08677a] w-full"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        openEditModal(part);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-red-600 hover:bg-red-50 hover:text-red-700 w-full"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setDeleteTarget(part);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                    {scope?.role !== "DIRECTIVO" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-[#08677a] hover:bg-teal-50 hover:text-[#08677a] w-full"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openEditModal(part);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-red-600 hover:bg-red-50 hover:text-red-700 w-full"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setDeleteTarget(part);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
                       Eliminar
-                    </Button>
-                </div>
+                    </Button>                      </>
+                    )}                </div>
               </div>
             ))}
           </div>

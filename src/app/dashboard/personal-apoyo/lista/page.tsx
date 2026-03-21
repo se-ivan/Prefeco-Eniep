@@ -38,7 +38,7 @@ type PersonalApoyo = {
 };
 
 type UserScope = {
-  role: "ADMIN" | "RESPONSABLE_INSTITUCION";
+  role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
   institucionId: number | null;
 };
 
@@ -333,6 +333,7 @@ export default function ListaPersonalApoyoPage() {
           <h1 className="text-2xl font-bold text-gray-800">Personal de Apoyo</h1>
           <p className="text-sm text-gray-500">Listado y edición de registros</p>
         </div>
+        {scope?.role !== "DIRECTIVO" && (
         <Link
           href="/dashboard/personal-apoyo"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#08677a] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
@@ -340,6 +341,7 @@ export default function ListaPersonalApoyoPage() {
           <UserPlus size={16} />
           Registrar personal
         </Link>
+        )}
       </div>
 
       <div className="relative w-full md:max-w-md">
@@ -385,11 +387,12 @@ export default function ListaPersonalApoyoPage() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setPreviewItem(item)}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 ${scope?.role === "DIRECTIVO" ? "col-span-2" : ""}`}
                   >
                     <Eye size={14} />
                     Ver
                   </button>
+                  {scope?.role !== "DIRECTIVO" && (
                   <button
                     onClick={() => openEditModal(item)}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#08677a]/30 px-3 py-2 text-sm font-semibold text-[#08677a] hover:bg-[#08677a]/5"
@@ -397,6 +400,7 @@ export default function ListaPersonalApoyoPage() {
                     <Edit3 size={14} />
                     Editar
                   </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -465,6 +469,7 @@ export default function ListaPersonalApoyoPage() {
               >
                 Cerrar
               </button>
+              {scope?.role !== "DIRECTIVO" && (
               <button
                 onClick={() => {
                   const current = previewItem;
@@ -476,6 +481,7 @@ export default function ListaPersonalApoyoPage() {
                 <Edit3 size={14} />
                 Editar registro
               </button>
+              )}
             </div>
           </div>
         </div>
