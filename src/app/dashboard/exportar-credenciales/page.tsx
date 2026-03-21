@@ -35,8 +35,15 @@ type Institucion = {
 
 type TipoCredencial = 'ALUMNO' | 'PERSONAL';
 
+type MeScope = {
+  institucion: {
+    urlLogo?: string | null;
+  } | null;
+};
+
 export default function ExportarPage() {
   const { data: instituciones = [], isLoading } = useSWR<Institucion[]>('/api/instituciones');
+  const { data: meScope } = useSWR<MeScope>('/api/me');
   const [registros, setRegistros] = useState<any[]>([]);
   const [institucionSeleccionada, setInstitucionSeleccionada] = useState<Institucion | null>(null);
   const [loadingDatos, setLoadingDatos] = useState(false);
@@ -127,8 +134,13 @@ export default function ExportarPage() {
     if (!institucionSeleccionada || registrosFiltradosPorCheckboxes.length === 0) return;
     setGenerandoCredenciales(true);
     try {
+      const logoInstitucionGenerador = meScope?.institucion?.urlLogo ?? institucionSeleccionada.urlLogo ?? null;
       const blob = await pdf(
-        <CredencialesPDF usuarios={registrosFiltradosPorCheckboxes} tipo={tipoCredencial} />
+        <CredencialesPDF
+          usuarios={registrosFiltradosPorCheckboxes}
+          tipo={tipoCredencial}
+          institucionLogoUrl={logoInstitucionGenerador}
+        />
       ).toBlob();
       const fileName = `credenciales_${tipoCredencial.toLowerCase()}_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadBlob(blob, fileName);
@@ -139,7 +151,7 @@ export default function ExportarPage() {
     } finally {
       setGenerandoCredenciales(false);
     }
-  }, [institucionSeleccionada, registrosFiltradosPorCheckboxes, tipoCredencial]);
+  }, [institucionSeleccionada, meScope?.institucion?.urlLogo, registrosFiltradosPorCheckboxes, tipoCredencial]);
 
   const handleDescargarCedula = useCallback(async () => {
     if (!institucionSeleccionada || registrosFiltradosPorCheckboxes.length === 0) return;

@@ -113,8 +113,17 @@ const fitFontSize = (value: unknown, base: number, min: number, step = 12) => {
   return Math.max(min, reduced);
 };
 
-export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[], tipo: 'ALUMNO' | 'PERSONAL' }) => {
+export const CredencialesPDF = ({
+  usuarios,
+  tipo = 'ALUMNO',
+  institucionLogoUrl,
+}: {
+  usuarios: any[];
+  tipo: 'ALUMNO' | 'PERSONAL';
+  institucionLogoUrl?: string | null;
+}) => {
   const isAlumno = tipo === 'ALUMNO';
+  const dynamicInstitutionLogo = institucionLogoUrl ? getProxiedImageUrl(institucionLogoUrl) : LEFT_LOGO_SRC;
   
   const chunkArray = (arr: any[], size: number) => {
     const result = [];
@@ -246,7 +255,7 @@ export const CredencialesPDF = ({ usuarios, tipo = 'ALUMNO' }: { usuarios: any[]
                         <Image src={RIGHT_LOGO_SRC} style={styles.logoTopImage} />
                       </View>
                       <View style={styles.logoBottom}>
-                        <Image src={LEFT_LOGO_SRC} style={styles.logoBottomImage} />
+                        <Image src={dynamicInstitutionLogo} style={styles.logoBottomImage} />
                       </View>
                     </View>
 
