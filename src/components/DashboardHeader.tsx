@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Calendar } from "lucide-react";
+import { Calendar, Menu } from "lucide-react";
 import { motion } from "motion/react";
 
 const routeMap: Record<string, { title: string; subtitle: string }> = {
@@ -36,20 +36,28 @@ export default function DashboardHeader() {
   const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
 
   return (
-    <header className="h-16 flex-none flex items-center justify-between px-8 bg-white/50 backdrop-blur-md border-b border-gray-100 z-10 sticky top-0">
-       <motion.div 
-         initial={{ opacity: 0, x: -20 }}
-         animate={{ opacity: 1, x: 0 }}
-         key={pathname}
-         className="flex flex-col"
-       >
-          <h2 className="text-sm font-bold text-gray-800">{currentRoute.title}</h2>
-          <p className="text-[10px] text-gray-500">{currentRoute.subtitle}</p>
-       </motion.div>
+    <header className="h-16 flex-none flex items-center justify-between px-4 md:px-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 z-10 sticky top-0">
+       <div className="flex items-center gap-3">
+         <button 
+           className="md:hidden p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+           onClick={() => window.dispatchEvent(new Event('toggleMobileSidebar'))}
+         >
+           <Menu size={20} />
+         </button>
+         <motion.div 
+           initial={{ opacity: 0, x: -20 }}
+           animate={{ opacity: 1, x: 0 }}
+           key={pathname}
+           className="flex flex-col"
+         >
+            <h2 className="text-sm font-bold text-gray-800 dark:text-slate-100">{currentRoute.title}</h2>
+            <p className="text-[10px] text-gray-500 dark:text-slate-400">{currentRoute.subtitle}</p>
+         </motion.div>
+       </div>
        <motion.div 
          initial={{ opacity: 0, scale: 0.95 }}
          animate={{ opacity: 1, scale: 1 }}
-         className="bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-medium border border-teal-100 flex items-center gap-2 shadow-sm"
+         className="bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 px-3 py-1.5 rounded-lg text-xs font-medium border border-teal-100 dark:border-teal-900/50 flex items-center gap-2 shadow-sm"
        >
          <Calendar size={14} />
          <span className="hidden sm:inline">{formattedDate}</span>

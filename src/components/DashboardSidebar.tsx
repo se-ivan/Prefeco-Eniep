@@ -113,14 +113,14 @@ export default function DashboardSidebar({
 
   const activeHref = getActiveHref(pathname, sections);
 
-  return (
-    <aside className="w-72 bg-[#08677a] text-white hidden md:flex md:flex-col">
+  const sidebarContent = (
+    <>
       <div className="p-8">
         <h1 className="text-2xl font-bold tracking-tight">ENIEP</h1>
         <p className="text-xs text-teal-200/60 font-medium">2026</p>
       </div>
 
-      <nav className="flex-1 px-4 pb-4 overflow-y-auto">
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto w-full">
         <div className="space-y-6">
           {sections.map((section) => (
             <div key={section.title}>
@@ -153,7 +153,7 @@ export default function DashboardSidebar({
         </div>
       </nav>
 
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 w-full">
         <div className="bg-teal-800/40 p-4 rounded-2xl border border-teal-700/30">
           <p className="text-sm font-semibold text-white truncate">{userName}</p>
           <p className="text-xs text-teal-200/70 truncate">{userEmail}</p>
@@ -161,6 +161,47 @@ export default function DashboardSidebar({
 
         {footer}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="w-72 bg-[#08677a] text-white hidden md:flex md:flex-col flex-none">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Drawer will be triggered externally, but we can mount a hidden element to portal into or just rely on a Sheet provider */}
+      <MobileSidebarContent content={sidebarContent} />
+    </>
+  );
+}
+
+// Global event listener approach for quick integration without context restructuring
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+
+function MobileSidebarContent({ content }: { content: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    window.addEventListener("toggleMobileSidebar", handleToggle);
+    return () => window.removeEventListener("toggleMobileSidebar", handleToggle);
+  }, []);
+
+  // Close on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent side="left" className="p-0 bg-[#08677a] text-white border-r-0 w-72 flex flex-col pt-8">
+        <SheetTitle className="sr-only">Navegación</SheetTitle>
+        {content}
+      </SheetContent>
+    </Sheet>
   );
 }

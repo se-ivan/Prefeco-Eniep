@@ -33,7 +33,7 @@ export default async function DashboardLayout({
   const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc]">
+    <div className="flex min-h-screen bg-[#f8fafc] dark:bg-[#0f172a]">
       <DashboardSidebar
         isAdmin={isAdmin}
         isDirectivo={isDirectivo}
@@ -47,7 +47,7 @@ export default async function DashboardLayout({
         <DashboardHeader />
         
         <DashboardAnimationWrapper>
-          <section className="flex-1 p-8 overflow-y-auto w-full">
+          <section className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
             {children}
           </section>
         </DashboardAnimationWrapper>

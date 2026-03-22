@@ -16,7 +16,7 @@ export function DemographicsChart({ data }: { data: { male: number, female: numb
   return (
     <Card className="col-span-full xl:col-span-3">
       <CardHeader className="flex flex-row items-center gap-2">
-        <PieChartIcon className="w-5 h-5 text-slate-500" />
+        <PieChartIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
         <div>
           <CardTitle className="text-lg">Distribución de Participantes</CardTitle>
         </div>
@@ -24,7 +24,7 @@ export function DemographicsChart({ data }: { data: { male: number, female: numb
       <CardContent>
         <div className="h-[300px] w-full flex items-center justify-center">
           {data.male + data.female + data.support === 0 ? (
-             <p className="text-sm text-slate-500">No hay datos aún.</p>
+             <p className="text-sm text-slate-500 dark:text-slate-400">No hay datos aún.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
