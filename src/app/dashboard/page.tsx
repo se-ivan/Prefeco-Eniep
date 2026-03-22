@@ -8,7 +8,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useSWR from "swr";
-import { DemographicsChart } from "@/components/DemographicsChart";
+import dynamic from "next/dynamic";
+import { PieChart as PieChartIcon } from "lucide-react";
+
+const DemographicsChart = dynamic(
+  () => import("@/components/DemographicsChart").then(mod => mod.DemographicsChart),
+  { 
+    ssr: false, 
+    loading: () => (
+      <Card className="col-span-full lg:col-span-3 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-row items-center gap-2">
+          <PieChartIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+          <div>
+            <CardTitle className="text-lg dark:text-slate-100">Distribución de Participantes</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] w-full flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+            Cargando gráfico...
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+);
 
 function getActivityLabel(action: string) {
   if (action === "ALUMNO_REGISTRADO") return "Registro de participante";

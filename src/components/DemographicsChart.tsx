@@ -14,11 +14,11 @@ export function DemographicsChart({ data }: { data: { male: number, female: numb
   ];
 
   return (
-    <Card className="col-span-full xl:col-span-3">
+    <Card className="col-span-full lg:col-span-3 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
       <CardHeader className="flex flex-row items-center gap-2">
         <PieChartIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
         <div>
-          <CardTitle className="text-lg">Distribución de Participantes</CardTitle>
+          <CardTitle className="text-lg dark:text-slate-100">Distribución de Participantes</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
@@ -41,8 +41,11 @@ export function DemographicsChart({ data }: { data: { male: number, female: numb
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value} integrantes`, 'Cantidad']} />
-                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip 
+                  formatter={(value: number) => [`${value} integrantes`, 'Cantidad']} 
+                  contentStyle={{ backgroundColor: 'var(--tooltip-bg, #ffffff)', borderColor: 'var(--tooltip-border, #e2e8f0)', color: 'var(--tooltip-text, #0f172a)' }}
+                />
+                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--legend-text, #64748b)' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
