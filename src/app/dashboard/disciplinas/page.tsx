@@ -19,6 +19,7 @@ type Disciplina = {
   minIntegrantes?: number | null;
   maxIntegrantes?: number | null;
   maxParticipantesPorEscuela?: number | null;
+  disciplinaBaseId?: number | null;
 
   categorias?: {
     id: number;

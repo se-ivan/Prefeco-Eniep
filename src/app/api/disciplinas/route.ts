@@ -24,7 +24,7 @@ export async function GET() {
         minIntegrantes: true,
         maxIntegrantes: true,
         maxParticipantesPorEscuela: true,
-        // disciplinaBaseId: true, // temporalmente desactivado para evitar PrismaClientValidationError
+        disciplinaBaseId: true,
         categorias: {
           where: { deletedAt: null },
           select: { id: true, nombre: true },
@@ -50,7 +50,7 @@ export async function GET() {
       minIntegrantes: d.minIntegrantes,
       maxIntegrantes: d.maxIntegrantes,
       maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
-      // disciplinaBaseId: d.disciplinaBaseId,
+      disciplinaBaseId: d.disciplinaBaseId,
       categorias: d.categorias ?? [],
       totalEquipos: d._count?.equipos ?? 0,
       totalParticipantes: d._count?.inscripciones ?? 0,
