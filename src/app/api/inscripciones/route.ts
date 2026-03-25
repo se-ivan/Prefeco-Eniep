@@ -186,8 +186,8 @@ export async function POST(req: Request) {
         });
 
         const now = new Date();
-        const insData = participantes.map((p: any) => ({
-          participanteId: Number(p.participanteId),
+        const insData = fetchedParts.map((p: any) => ({
+          participanteId: p.id,
           equipoId: equipo.id,
           disciplinaId: Number(disciplinaId),
           categoriaId: Number(categoriaId),
