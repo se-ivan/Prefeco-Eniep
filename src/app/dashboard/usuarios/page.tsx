@@ -47,6 +47,7 @@ export default function UsuariosPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
 
   const [newUser, setNewUser] = useState({
@@ -125,6 +126,29 @@ export default function UsuariosPage() {
       toast.error(error?.message || "No se pudo actualizar el usuario");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendResetEmail() {
+    if (!selectedUser) return;
+    setSendingReset(true);
+    try {
+      const res = await fetch("/api/usuarios/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUser.id }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Error ${res.status}`);
+      }
+
+      toast.success("Enlace de restablecimiento enviado al correo del usuario");
+    } catch (error: any) {
+      toast.error(error?.message || "No se pudo enviar el enlace de restablecimiento");
+    } finally {
+      setSendingReset(false);
     }
   }
 
@@ -361,6 +385,14 @@ export default function UsuariosPage() {
             </select>
           </div>
           <div className="mt-4 flex justify-end gap-2">
+            <button
+              onClick={sendResetEmail}
+              disabled={sendingReset}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              {sendingReset ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+              Enviar enlace de restablecimiento
+            </button>
             <button onClick={closeEditModal} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700">Cancelar</button>
             <button
               onClick={saveUser}
