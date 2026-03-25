@@ -108,7 +108,6 @@ export default function RegistrarAlumnoPage() {
     docComprobanteEstudios: false,
     docCartaResponsiva: false,
     docCertificadoMedico: false,
-    docIneTutor: false,
   });
 
   useEffect(() => {
@@ -338,7 +337,6 @@ export default function RegistrarAlumnoPage() {
         docComprobanteEstudios: !!formData.docCredencialUrl,
         docCartaResponsiva: !!formData.docCartaResponsivaTutorUrl,
         docCertificadoMedico: !!formData.docHistorialMedicoUrl,
-        docIneTutor: formData.docIneTutor,
         docCredencialUrl: formData.docCredencialUrl || null,
         docCartaResponsivaTutorUrl: formData.docCartaResponsivaTutorUrl || null,
         docHistorialMedicoUrl: formData.docHistorialMedicoUrl || null,

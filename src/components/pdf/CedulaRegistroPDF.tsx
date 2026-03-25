@@ -102,8 +102,20 @@ const chunkArray = (arr: any[], size: number) => {
 };
 
 export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) => {
-  // Generamos páginas de 10 en 10
-  const pages = chunkArray(participantes, 10);
+  // Agrupamos participantes por disciplina para que cada página tenga solo una disciplina
+  const groupedByDisciplina = participantes.reduce((acc, p) => {
+    const disciplinaKey = p.disciplina?.nombre ?? 'Sin Disciplina';
+    if (!acc[disciplinaKey]) acc[disciplinaKey] = [];
+    acc[disciplinaKey].push(p);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  // Generamos páginas de 10 en 10 por cada disciplina
+  const pages: any[][] = [];
+  for (const key in groupedByDisciplina) {
+    const chunks = chunkArray(groupedByDisciplina[key], 10);
+    pages.push(...chunks);
+  }
 
   return (
     <Document>

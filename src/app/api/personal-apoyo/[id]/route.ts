@@ -89,8 +89,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         email: email ? String(email).trim() : null,
         contactoEmergenciaNombre: contactoEmergenciaNombre ? String(contactoEmergenciaNombre).trim() : null,
         contactoEmergenciaTelefono: contactoEmergenciaTelefono ? String(contactoEmergenciaTelefono).trim() : null,
-        docCurp: !!docCurp,
-        docIdentificacionOficial: !!docIdentificacionOficial,
+        docCurp: docCurp !== undefined ? !!docCurp : (docCurpUrl ? true : undefined),
+        docIdentificacionOficial:
+          docIdentificacionOficial !== undefined ? !!docIdentificacionOficial : (docIdentificacionOficialUrl ? true : undefined),
         docCurpUrl: docCurpUrl !== undefined ? (docCurpUrl ? String(docCurpUrl) : null) : undefined,
         docIdentificacionOficialUrl: docIdentificacionOficialUrl !== undefined ? (docIdentificacionOficialUrl ? String(docIdentificacionOficialUrl) : null) : undefined,
         estatus,
