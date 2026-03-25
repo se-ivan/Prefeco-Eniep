@@ -77,7 +77,6 @@ type Participante = {
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
-  docIneTutor: boolean;
   tutor: Tutor;
   institucion: Institucion;
 };
@@ -100,11 +99,9 @@ type EditForm = {
   medicamentos: string;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
-  docCurp: boolean;
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
-  docIneTutor: boolean;
   tutorNombreCompleto: string;
   tutorParentesco: string;
   tutorTelefono: string;
@@ -134,7 +131,6 @@ const INITIAL_EDIT_FORM: EditForm = {
   docComprobanteEstudios: false,
   docCartaResponsiva: false,
   docCertificadoMedico: false,
-  docIneTutor: false,
   tutorNombreCompleto: "",
   tutorParentesco: "",
   tutorTelefono: "",
@@ -213,7 +209,6 @@ export default function ListaParticipantesPage() {
       docComprobanteEstudios: part.docComprobanteEstudios,
       docCartaResponsiva: part.docCartaResponsiva,
       docCertificadoMedico: part.docCertificadoMedico,
-      docIneTutor: part.docIneTutor,
       tutorNombreCompleto: part.tutor?.nombreCompleto ?? "",
       tutorParentesco: part.tutor?.parentesco ?? "",
       tutorTelefono: part.tutor?.telefono ?? "",
@@ -348,7 +343,6 @@ export default function ListaParticipantesPage() {
         docComprobanteEstudios: editForm.docComprobanteEstudios,
         docCartaResponsiva: editForm.docCartaResponsiva,
         docCertificadoMedico: editForm.docCertificadoMedico,
-        docIneTutor: editForm.docIneTutor,
         tutor: hasTutorData
           ? {
               nombreCompleto: editForm.tutorNombreCompleto,
@@ -627,7 +621,7 @@ export default function ListaParticipantesPage() {
                     <PreviewCheck label="Comprobante estudios" checked={previewItem.docComprobanteEstudios} />
                     <PreviewCheck label="Carta responsiva" checked={previewItem.docCartaResponsiva} />
                     <PreviewCheck label="Certificado médico" checked={previewItem.docCertificadoMedico} />
-                    <PreviewCheck label="INE tutor" checked={previewItem.docIneTutor} />
+                    
                   </div>
                 </div>
               </div>
@@ -749,7 +743,6 @@ export default function ListaParticipantesPage() {
                 <CheckField label="Comprobante estudios" name="docComprobanteEstudios" checked={editForm.docComprobanteEstudios} onChange={handleEditCheckboxChange} />
                 <CheckField label="Carta responsiva" name="docCartaResponsiva" checked={editForm.docCartaResponsiva} onChange={handleEditCheckboxChange} />
                 <CheckField label="Certificado médico" name="docCertificadoMedico" checked={editForm.docCertificadoMedico} onChange={handleEditCheckboxChange} />
-                <CheckField label="INE tutor" name="docIneTutor" checked={editForm.docIneTutor} onChange={handleEditCheckboxChange} />
               </div>
 
               <div className="md:col-span-2 rounded-xl border border-[#08677a]/20 bg-[#08677a]/5 p-4">
@@ -808,11 +801,10 @@ function Field({
       <label className="mb-1 block text-xs font-semibold text-gray-600">{label}</label>
       <input
         name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? "border-red-400 bg-red-50/40" : "border-gray-200"}`}
-      />
+  docCurp: boolean;
+  docComprobanteEstudios: boolean;
+  docCartaResponsiva: boolean;
+  docCertificadoMedico: boolean;
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );

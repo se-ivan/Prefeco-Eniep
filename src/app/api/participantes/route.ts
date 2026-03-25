@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       docComprobanteEstudios,
       docCartaResponsiva,
       docCertificadoMedico,
-      docIneTutor,
+      
       docCredencialUrl,
       docCartaResponsivaTutorUrl,
       docHistorialMedicoUrl,
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
           docComprobanteEstudios: !!docComprobanteEstudios || !!docCredencialUrl,
           docCartaResponsiva: !!docCartaResponsiva || !!docCartaResponsivaTutorUrl,
           docCertificadoMedico: !!docCertificadoMedico || !!docHistorialMedicoUrl,
-          docIneTutor: !!docIneTutor,
+          
           docCredencialUrl: docCredencialUrl ? String(docCredencialUrl).trim() : null,
           docCartaResponsivaTutorUrl: docCartaResponsivaTutorUrl ? String(docCartaResponsivaTutorUrl).trim() : null,
           docHistorialMedicoUrl: docHistorialMedicoUrl ? String(docHistorialMedicoUrl).trim() : null,
