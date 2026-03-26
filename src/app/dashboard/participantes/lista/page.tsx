@@ -99,6 +99,7 @@ type EditForm = {
   medicamentos: string;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
+  docCurp: boolean;
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
@@ -801,10 +802,11 @@ function Field({
       <label className="mb-1 block text-xs font-semibold text-gray-600">{label}</label>
       <input
         name={name}
-  docCurp: boolean;
-  docComprobanteEstudios: boolean;
-  docCartaResponsiva: boolean;
-  docCertificadoMedico: boolean;
+        value={value}
+        type={type}
+        onChange={onChange}
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+      />
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
