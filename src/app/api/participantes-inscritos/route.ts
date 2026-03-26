@@ -9,9 +9,11 @@ import { getUserScope, isResponsable } from "@/lib/rbac";
  *  - disciplinaId (opcional)
  *  - categoriaId (opcional)
  *  - institucionId (opcional)  // filtra por institución del participante
+ *  - includeEquipos (opcional) // true/1 => incluye inscripciones de equipo
  *  - q (opcional) // búsqueda por nombre/matrícula
  *
- * Devuelve array de inscripciones individuales (equipoId == null)
+ * Devuelve array de inscripciones individuales por defecto.
+ * Si includeEquipos=true, también incluye inscripciones ligadas a equipo.
  */
 export async function GET(req: Request) {
   try {
@@ -22,13 +24,16 @@ export async function GET(req: Request) {
     const disciplinaId = url.searchParams.get("disciplinaId");
     const categoriaId = url.searchParams.get("categoriaId");
     const institucionId = url.searchParams.get("institucionId");
+    const includeEquipos = ["1", "true", "yes", "si"].includes(
+      (url.searchParams.get("includeEquipos") ?? "").toLowerCase()
+    );
     const q = url.searchParams.get("q")?.trim().toLowerCase();
 
     const where: any = {
-      equipoId: null,
       disciplina: { deletedAt: null },
       categoria: { deletedAt: null },
-    }; // individual
+    };
+    if (!includeEquipos) where.equipoId = null;
     if (disciplinaId) where.disciplinaId = Number(disciplinaId);
     if (categoriaId) where.categoriaId = Number(categoriaId);
     // join on participante.institucionId
