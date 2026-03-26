@@ -191,7 +191,6 @@ model Equipo {
   institucion   Institucion   @relation(fields: [institucionId], references: [id])
   inscripciones Inscripcion[]
 
-  @@unique([disciplinaId, nombreEquipo])
   @@map("equipos")
 }
 

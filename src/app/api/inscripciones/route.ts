@@ -92,17 +92,24 @@ export async function POST(req: Request) {
           throw { status: 400, message: "institucionId es obligatorio para modalidad EQUIPO" };
         }
 
+        // Permite múltiples equipos por institución en la misma disciplina,
+        // pero no si ya hay uno en la MISMA categoría
         const existingTeam = await tx.equipo.findFirst({
           where: {
             disciplinaId: Number(disciplinaId),
             institucionId: Number(institucionId),
+            inscripciones: {
+              some: {
+                categoriaId: Number(categoriaId),
+              },
+            },
           },
           select: { id: true, nombreEquipo: true },
         });
         if (existingTeam) {
           throw {
             status: 409,
-            message: `La institución ya tiene un equipo registrado en esta disciplina (${existingTeam.nombreEquipo})`,
+            message: `La institución ya tiene un equipo en esta disciplina y categoría (${existingTeam.nombreEquipo})`,
           };
         }
 

@@ -25,20 +25,6 @@ export async function POST(req: Request) {
     const disciplina = await prisma.disciplina.findFirst({ where: { id: Number(disciplinaId), deletedAt: null } });
     if (!disciplina) return NextResponse.json({ error: "Disciplina no encontrada" }, { status: 404 });
 
-    const existingTeam = await prisma.equipo.findFirst({
-      where: {
-        disciplinaId: Number(disciplinaId),
-        institucionId: Number(institucionId),
-      },
-      select: { id: true, nombreEquipo: true },
-    });
-    if (existingTeam) {
-      return NextResponse.json(
-        { error: `La institución ya tiene un equipo registrado en esta disciplina (${existingTeam.nombreEquipo})` },
-        { status: 409 }
-      );
-    }
-
     const institucion = await prisma.institucion.findUnique({ where: { id: Number(institucionId) } });
     if (!institucion) return NextResponse.json({ error: "Institución no encontrada" }, { status: 404 });
 

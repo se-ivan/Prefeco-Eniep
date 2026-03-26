@@ -103,12 +103,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         where: {
           id: { not: equipoId },
           disciplinaId: Number(equipo.disciplinaId),
+          institucionId: Number(equipo.institucionId),
           nombreEquipo: { equals: String(nombreEquipo).trim(), mode: "insensitive" },
+          inscripciones: {
+            some: {
+              categoriaId: Number(categoriaId),
+            },
+          },
         },
         select: { id: true },
       });
       if (duplicateName) {
-        throw { status: 409, message: "Ya existe otro equipo con ese nombre en la disciplina" };
+        throw { status: 409, message: "Ya existe otro equipo con ese nombre en esta disciplina y categoría" };
       }
 
       // Deduplicar participantesIds
