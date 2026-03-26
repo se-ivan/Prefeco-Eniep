@@ -10,8 +10,12 @@ function normalizeTipoDisciplina(tipo: unknown) {
 }
 
 // GET: lista disciplinas 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const scope = await getUserScope(req.headers);
+    const isAdminUser = isAdmin(scope);
+    const userInstitucionId = scope?.institucionId ?? null;
+
     const disciplinas = await prisma.disciplina.findMany({
       orderBy: { nombre: "asc" },
       select: {
@@ -40,22 +44,95 @@ export async function GET() {
       },
     });
 
-    const mapped = (disciplinas as any[]).map((d) => ({
-      id: d.id,
-      nombre: d.nombre,
-      tipo: d.tipo,
-      rama: d.rama,
-      modalidad: d.modalidad,
-      deletedAt: d.deletedAt,
-      minIntegrantes: d.minIntegrantes,
-      maxIntegrantes: d.maxIntegrantes,
-      maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
-      disciplinaBaseId: d.disciplinaBaseId,
-      categorias: d.categorias ?? [],
-      totalEquipos: d._count?.equipos ?? 0,
-      totalParticipantes: d._count?.inscripciones ?? 0,
-      totalApoyos: d._count?.asignacionesApoyo ?? 0,
-    }));
+    let mapped: any[] = [];
+
+    if (isAdminUser) {
+      // ADMIN: mostrar conteo global (como antes)
+      mapped = (disciplinas as any[]).map((d) => ({
+        id: d.id,
+        nombre: d.nombre,
+        tipo: d.tipo,
+        rama: d.rama,
+        modalidad: d.modalidad,
+        deletedAt: d.deletedAt,
+        minIntegrantes: d.minIntegrantes,
+        maxIntegrantes: d.maxIntegrantes,
+        maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
+        disciplinaBaseId: d.disciplinaBaseId,
+        categorias: d.categorias ?? [],
+        totalEquipos: d._count?.equipos ?? 0,
+        totalParticipantes: d._count?.inscripciones ?? 0,
+        totalApoyos: d._count?.asignacionesApoyo ?? 0,
+      }));
+    } else if (userInstitucionId) {
+      // NO ADMIN: mostrar conteo solo de su institución
+      mapped = await Promise.all(
+        (disciplinas as any[]).map(async (d) => {
+          // Contar equipos de la institución para esta disciplina
+          const totalEquipos = await prisma.equipo.count({
+            where: {
+              disciplinaId: d.id,
+              institucionId: userInstitucionId,
+            },
+          });
+
+          // Contar inscripciones de participantes de la institución para esta disciplina
+          const totalParticipantes = await prisma.inscripcion.count({
+            where: {
+              disciplinaId: d.id,
+              participante: {
+                institucionId: userInstitucionId,
+              },
+            },
+          });
+
+          // Contar asignaciones de apoyo de personal de la institución para esta disciplina
+          const totalApoyos = await prisma.asignacionApoyo.count({
+            where: {
+              disciplinaId: d.id,
+              personal: {
+                institucionId: userInstitucionId,
+              },
+            },
+          });
+
+          return {
+            id: d.id,
+            nombre: d.nombre,
+            tipo: d.tipo,
+            rama: d.rama,
+            modalidad: d.modalidad,
+            deletedAt: d.deletedAt,
+            minIntegrantes: d.minIntegrantes,
+            maxIntegrantes: d.maxIntegrantes,
+            maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
+            disciplinaBaseId: d.disciplinaBaseId,
+            categorias: d.categorias ?? [],
+            totalEquipos,
+            totalParticipantes,
+            totalApoyos,
+          };
+        })
+      );
+    } else {
+      // Sin institución asignada (caso extraño): mostrar ceros
+      mapped = (disciplinas as any[]).map((d) => ({
+        id: d.id,
+        nombre: d.nombre,
+        tipo: d.tipo,
+        rama: d.rama,
+        modalidad: d.modalidad,
+        deletedAt: d.deletedAt,
+        minIntegrantes: d.minIntegrantes,
+        maxIntegrantes: d.maxIntegrantes,
+        maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
+        disciplinaBaseId: d.disciplinaBaseId,
+        categorias: d.categorias ?? [],
+        totalEquipos: 0,
+        totalParticipantes: 0,
+        totalApoyos: 0,
+      }));
+    }
 
     return NextResponse.json(mapped);
   } catch (err) {
