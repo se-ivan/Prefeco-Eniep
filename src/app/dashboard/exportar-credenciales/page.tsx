@@ -82,7 +82,7 @@ export default function ExportarPage() {
     try {
       const endpoint =
         tipo === 'ALUMNO'
-          ? `/api/participantes-inscritos?institucionId=${institucionId}`
+          ? `/api/participantes-inscritos?institucionId=${institucionId}&includeEquipos=true`
           : `/api/personal-apoyo-inscrito?institucionId=${institucionId}`;
 
       const res = await fetch(endpoint);
