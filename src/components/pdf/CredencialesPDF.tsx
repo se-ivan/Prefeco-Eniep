@@ -53,8 +53,8 @@ const styles = StyleSheet.create({
   
   // SOLUCIÓN 1: Se eliminó el "height" fijo miniatura para que los nombres puedan respirar en dos líneas
   nameContainer: { flex: 1, paddingRight: 5, justifyContent: 'center' },
-  firstName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal },
-  lastName: { fontSize: 13, fontWeight: 'bold', color: COLORS.teal },
+  firstName: { fontSize: 3, fontWeight: 'bold', color: COLORS.teal },
+  lastName: { fontSize: 3, fontWeight: 'bold', color: COLORS.teal },
 
   // --- CAJA DE DATOS ---
   // SOLUCIÓN 2: justify-content space-evenly distribuye las filas sin aplastarlas
@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
   dataRow: { flexDirection: 'row', alignItems: 'flex-end', height: 10, overflow: 'hidden' },
   dataRowTwoCols: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 10, overflow: 'hidden' },
   
-  // SOLUCIÓN 4: Ajustamos proporciones para dar más espacio al Estado (Edo.)
-  dataColLeft: { width: '45%', flexDirection: 'row', alignItems: 'flex-end', paddingRight: 4, overflow: 'hidden' },
-  dataColRight: { width: '55%', flexDirection: 'row', alignItems: 'flex-end', overflow: 'hidden' },
+  // Damos más espacio a la Clave (CCT), que suele ser más larga que Edo.
+  dataColLeft: { width: '55%', flexDirection: 'row', alignItems: 'flex-end', paddingRight: 4, overflow: 'hidden' },
+  dataColRight: { width: '45%', flexDirection: 'row', alignItems: 'flex-end', overflow: 'hidden' },
   
   dataLabel: { fontSize: 6.5, color: COLORS.textDark, fontWeight: 'bold', marginRight: 2 },
   dataValueLine: { fontSize: 6.5, color: COLORS.textDark, flex: 1 },
@@ -113,6 +113,11 @@ const fitFontSize = (value: unknown, base: number, min: number, step = 12) => {
   return Math.max(min, reduced);
 };
 
+const truncateText = (text: string, maxLength: number = 30) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim();
+};
+
 export const CredencialesPDF = ({
   usuarios,
   tipo = 'ALUMNO',
@@ -143,8 +148,10 @@ export const CredencialesPDF = ({
               const disciplina = user?.disciplina ?? {};
               const categoria = user?.categoria ?? {};
               const nombreCompleto = [user?.nombres, user?.apellidoPaterno, user?.apellidoMaterno].filter(Boolean).join(' ').trim();
-              const nameFont = fitFontSize(nombreCompleto, 13, 9, 10);
+              const nombreCorto = [user?.nombres, user?.apellidoPaterno].filter(Boolean).join(' ').trim();
+              const nameFont = fitFontSize(nombreCompleto, 8, 9, 10);
               const dataFont = fitFontSize(`${institucion?.nombre ?? ''}${institucion?.cct ?? ''}${user?.puesto ?? ''}`, 6.5, 5, 14);
+              const cctFont = fitFontSize(institucion?.cct ?? '', 6.5, 4.5, 8);
               const tagFont = fitFontSize(`${disciplina?.nombre ?? ''}${categoria?.nombre ?? ''}${disciplina?.rama ?? ''}`, 5.5, 4.5, 10);
               const edoFont = fitFontSize(institucion?.estado ?? '', 6.5, 4.5, 14); // Nuevo cálculo dinámico extra para Edo
               const photoUrl = user?.fotoUrl ? String(user.fotoUrl) : '';
@@ -180,8 +187,8 @@ export const CredencialesPDF = ({
                       <View style={styles.nameRow}>
                         <Text style={styles.chevron}>{'>'}</Text>
                         <View style={styles.nameContainer}>
-                          <Text style={[styles.firstName, { fontSize: nameFont }]}>{safeText(user?.nombres)}</Text>
-                          <Text style={[styles.lastName, { fontSize: nameFont }]}>{safeText(user?.apellidoPaterno)}</Text>
+                          <Text style={[styles.firstName, { fontSize: nameFont }]}>{safeText(user?.nombres).toUpperCase()}</Text>
+                          <Text style={[styles.lastName, { fontSize: nameFont }]}>{safeText(user?.apellidoPaterno).toUpperCase()}</Text>
                         </View>
                       </View>
 
@@ -194,7 +201,7 @@ export const CredencialesPDF = ({
                         <View style={styles.dataRowTwoCols}>
                           <View style={styles.dataColLeft}>
                             <Text style={styles.dataLabel}>Clave:</Text>
-                            <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(institucion.cct)}</Text>
+                            <Text style={[styles.dataValueLine, { fontSize: cctFont }]}>{safeText(institucion.cct)}</Text>
                           </View>
                           <View style={styles.dataColRight}>
                             <Text style={styles.dataLabel}>Edo:</Text>
@@ -206,7 +213,7 @@ export const CredencialesPDF = ({
                           <>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Alumno:</Text>
-                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{safeText(nombreCompleto)}</Text>
+                              <Text style={[styles.dataValueLine, { fontSize: dataFont }]}>{truncateText(safeText(nombreCorto)).toUpperCase()}</Text>
                             </View>
                             <View style={styles.dataRow}>
                               <Text style={styles.dataLabel}>Matrícula:</Text>
