@@ -66,6 +66,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             select: {
               id: true,
               nombre: true,
+              tipo: true,
               disciplinaBaseId: true,
               rama: true,
               deletedAt: true,
@@ -167,6 +168,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       const esAtletismo = String(equipo.disciplina.nombre ?? "").trim().toUpperCase() === "ATLETISMO";
+      const validarEdad = String(equipo.disciplina.tipo) !== "ACADEMICA";
       if (equipo.disciplina.rama === "MIXTO" && esAtletismo) {
         const hombres = participantesValidos.filter((p: any) => p.genero === "MASCULINO").length;
         const mujeres = participantesValidos.filter((p: any) => p.genero === "FEMENINO").length;
@@ -180,9 +182,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       for (const p of participantesValidos) {
-        const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
-        if (edad >= 20) {
-          throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
+        if (validarEdad) {
+          const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
+          if (edad >= 20) {
+            throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
+          }
         }
 
         if (equipo.disciplina.rama !== "MIXTO" && equipo.disciplina.rama !== "UNICA") {
