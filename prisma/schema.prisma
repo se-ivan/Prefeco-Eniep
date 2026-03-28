@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  directUrl = env("DIRECT_URL")
   url      = env("DATABASE_URL")
 }
 
@@ -282,6 +281,7 @@ enum TipoDisciplina {
   ACADEMICA
   EXHIBICION
   EMBAJADORA_NACIONAL @map("EMBAJADORA NACIONAL")
+  COORDINACION_DEPORTIVA @map("COORDINACION DEPORTIVA")
 }
 
 enum Modalidad {

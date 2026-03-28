@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "TipoDisciplina" ADD VALUE 'COORDINACION DEPORTIVA';
