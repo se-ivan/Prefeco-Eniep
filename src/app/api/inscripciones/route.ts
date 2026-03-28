@@ -47,6 +47,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "personalIds debe ser un array (incluir al menos [])" }, { status: 400 });
     }
 
+    const personalIdsRaw: number[] = personalIds.map((pid: any) => Number(pid));
+    const uniquePersonalIds = Array.from(new Set(personalIdsRaw));
+    if (uniquePersonalIds.length !== personalIdsRaw.length) {
+      return NextResponse.json({ error: "IDs de personal duplicados en el payload" }, { status: 400 });
+    }
+
     const participantIdsRaw: number[] = participantes.map((p: any) => Number(p.participanteId));
     const uniqueParticipantIds = Array.from(new Set(participantIdsRaw));
     if (uniqueParticipantIds.length !== participantIdsRaw.length) {
@@ -73,12 +79,37 @@ export async function POST(req: Request) {
 
       // verify personals if provided
       if (personalIds && personalIds.length > 0) {
+        if (!institucionId) {
+          throw { status: 400, message: "institucionId es obligatorio cuando se asigna personal de apoyo" };
+        }
+
         const personals = await tx.personalApoyo.findMany({
-          where: { id: { in: personalIds.map(Number) } },
-          select: { id: true },
+          where: { id: { in: uniquePersonalIds } },
+          select: { id: true, institucionId: true },
         });
-        if (personals.length !== personalIds.length) {
+        if (personals.length !== uniquePersonalIds.length) {
           throw { status: 404, message: "Alguno(s) de los personalIds no existe(n)" };
+        }
+
+        const personalOtraInst = personals.filter((p: any) => Number(p.institucionId) !== Number(institucionId));
+        if (personalOtraInst.length > 0) {
+          throw { status: 409, message: "No puedes asignar personal de apoyo de otra institución" };
+        }
+
+        const existentes = await tx.asignacionApoyo.findMany({
+          where: {
+            personalId: { in: uniquePersonalIds },
+            disciplinaId: Number(disciplinaId),
+            categoriaId: Number(categoriaId),
+          },
+          select: { personalId: true },
+        });
+        if (existentes.length > 0) {
+          const repetidos = Array.from(new Set(existentes.map((e: any) => Number(e.personalId))));
+          throw {
+            status: 409,
+            message: `Personal de apoyo ya asignado en esta disciplina y categoría: ${repetidos.join(", ")}`,
+          };
         }
       }
 
@@ -214,8 +245,8 @@ export async function POST(req: Request) {
           },
         });
 
-        if (personalIds && personalIds.length > 0) {
-          for (const pid of personalIds) {
+        if (uniquePersonalIds.length > 0) {
+          for (const pid of uniquePersonalIds) {
             await tx.asignacionApoyo.create({
               data: {
                 personalId: Number(pid),
@@ -332,8 +363,8 @@ export async function POST(req: Request) {
           });
         }
 
-        if (personalIds && personalIds.length > 0) {
-          for (const pid of personalIds) {
+        if (uniquePersonalIds.length > 0) {
+          for (const pid of uniquePersonalIds) {
             await tx.asignacionApoyo.create({
               data: {
                 personalId: Number(pid),
