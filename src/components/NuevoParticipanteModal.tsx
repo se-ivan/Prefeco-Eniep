@@ -404,7 +404,12 @@ export default function NuevoParticipanteModal({
                     {(["ALUMNO", "APOYO"] as const).map((t) => (
                       <button
                         key={t}
-                        onClick={() => setTipo(t)}
+                        onClick={() => {
+                          if (tipo !== t) {
+                            setTipo(t);
+                            setSeleccionados([]);
+                          }
+                        }}
                         className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all cursor-pointer ${tipo === t ? "bg-[#08677a] text-white border-[#08677a] hover:bg-[#075867]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
                       >
                         {t === "ALUMNO" ? "Alumno" : "Apoyo"}
