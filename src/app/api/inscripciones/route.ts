@@ -62,9 +62,22 @@ export async function POST(req: Request) {
     const res = await prisma.$transaction(async (tx: any) => {
       const disciplina = await tx.disciplina.findFirst({
         where: { id: Number(disciplinaId), deletedAt: null },
-        include: { categorias: { where: { deletedAt: null } } },
+        include: {
+          categorias: { where: { deletedAt: null } },
+          disciplinaBase: { select: { nombre: true } },
+        },
       });
       if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
+
+      const esSoloApoyo =
+        String(disciplina.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
+        String(disciplina.disciplinaBase?.nombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+      if (esSoloApoyo) {
+        throw {
+          status: 409,
+          message: "Esta disciplina solo permite inscripción de personal de apoyo",
+        };
+      }
 
       const categoriaActiva = (disciplina.categorias ?? []).some((c: any) => c.id === Number(categoriaId));
       if (!categoriaActiva) {

@@ -68,6 +68,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
               nombre: true,
               tipo: true,
               disciplinaBaseId: true,
+              disciplinaBase: { select: { nombre: true } },
               rama: true,
               deletedAt: true,
               minIntegrantes: true,
@@ -86,6 +87,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
       if (equipo.disciplina?.deletedAt) {
         throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const esSoloApoyo =
+        String(equipo.disciplina?.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
+        String(equipo.disciplina?.disciplinaBase?.nombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+      if (esSoloApoyo) {
+        throw {
+          status: 409,
+          message: "Esta disciplina solo permite inscripción de personal de apoyo",
+        };
       }
 
       const categoria = await tx.categoria.findFirst({

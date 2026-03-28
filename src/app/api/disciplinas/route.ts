@@ -29,6 +29,9 @@ export async function GET(req: Request) {
         maxIntegrantes: true,
         maxParticipantesPorEscuela: true,
         disciplinaBaseId: true,
+        disciplinaBase: {
+          select: { nombre: true },
+        },
         categorias: {
           where: { deletedAt: null },
           select: { id: true, nombre: true },
@@ -59,6 +62,7 @@ export async function GET(req: Request) {
         maxIntegrantes: d.maxIntegrantes,
         maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
         disciplinaBaseId: d.disciplinaBaseId,
+        disciplinaBaseNombre: d.disciplinaBase?.nombre ?? null,
         categorias: d.categorias ?? [],
         totalEquipos: d._count?.equipos ?? 0,
         totalParticipantes: d._count?.inscripciones ?? 0,
@@ -107,6 +111,7 @@ export async function GET(req: Request) {
             maxIntegrantes: d.maxIntegrantes,
             maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
             disciplinaBaseId: d.disciplinaBaseId,
+            disciplinaBaseNombre: d.disciplinaBase?.nombre ?? null,
             categorias: d.categorias ?? [],
             totalEquipos,
             totalParticipantes,
@@ -127,6 +132,7 @@ export async function GET(req: Request) {
         maxIntegrantes: d.maxIntegrantes,
         maxParticipantesPorEscuela: d.maxParticipantesPorEscuela,
         disciplinaBaseId: d.disciplinaBaseId,
+        disciplinaBaseNombre: d.disciplinaBase?.nombre ?? null,
         categorias: d.categorias ?? [],
         totalEquipos: 0,
         totalParticipantes: 0,
@@ -166,7 +172,7 @@ export async function POST(req: Request) {
     }
 
     const normalizedTipo = normalizeTipoDisciplina(tipo);
-    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION", "EMBAJADORA_NACIONAL"];
+    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION", "EMBAJADORA_NACIONAL", "COORDINACION_DEPORTIVA"];
     const allowedRamas = ["VARONIL", "FEMENIL", "UNICA", "MIXTO"];
     const allowedModalidades = ["INDIVIDUAL", "EQUIPO"];
 
