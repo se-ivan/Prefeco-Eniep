@@ -71,7 +71,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const normalizedTipo = normalizeTipoDisciplina(tipo);
-    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION", "EMBAJADORA_NACIONAL"];
+    const allowedTipos = ["DEPORTIVA", "CULTURAL", "CIVICA", "ACADEMICA", "EXHIBICION", "EMBAJADORA_NACIONAL", "COORDINACION_DEPORTIVA"];
     const allowedRamas = ["VARONIL", "FEMENIL", "UNICA", "MIXTO"];
     const allowedModalidades = ["INDIVIDUAL", "EQUIPO"];
 

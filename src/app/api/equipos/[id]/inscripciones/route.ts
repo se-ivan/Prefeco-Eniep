@@ -1,6 +1,7 @@
 // app/api/equipos/[id]/inscripciones/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -8,6 +9,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!Number.isInteger(equipoId)) return NextResponse.json({ error: "Invalid equipo id" }, { status: 400 });
 
   try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!isAdmin(scope) && !isResponsable(scope)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    if (isResponsable(scope) && !scope.institucionId) {
+      return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+    }
+
     const body = await req.json();
       const { participantes: participantesRaw, categoriaId } = body ?? {};
     
@@ -23,11 +34,32 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const created = await prisma.$transaction(async (tx: any) => {
       const equipo = await tx.equipo.findUnique({
         where: { id: equipoId },
-        include: { disciplina: true },
+        include: {
+          disciplina: {
+            include: {
+              disciplinaBase: { select: { nombre: true } },
+            },
+          },
+        },
       });
       if (!equipo) throw { status: 404, message: "Equipo no encontrado" };
+
+      if (isResponsable(scope) && Number(scope.institucionId) !== Number(equipo.institucionId)) {
+        throw { status: 403, message: "No tienes permisos para editar equipos de otra institución" };
+      }
+
       if (equipo.disciplina?.deletedAt) {
         throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const esSoloApoyo =
+        String(equipo.disciplina?.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
+        String(equipo.disciplina?.disciplinaBase?.nombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+      if (esSoloApoyo) {
+        throw {
+          status: 409,
+          message: "Esta disciplina solo permite inscripción de personal de apoyo",
+        };
       }
 
       const categoria = await tx.categoria.findFirst({
@@ -64,9 +96,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       for (const pid of participantIds) {
         const participante = await tx.participante.findUnique({
           where: { id: pid },
-          select: { id: true, nombres: true },
+          select: { id: true, nombres: true, institucionId: true },
         });
         if (!participante) throw { status: 404, message: "Participante no encontrado" };
+
+        if (Number(participante.institucionId) !== Number(equipo.institucionId)) {
+          throw {
+            status: 409,
+            message: `${participante.nombres} no pertenece a la institución ${equipo.institucionId}`,
+          };
+        }
 
         // check if already in same discipline and category
         const already = await tx.inscripcion.findFirst({
