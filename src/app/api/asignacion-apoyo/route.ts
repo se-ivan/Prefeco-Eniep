@@ -18,6 +18,9 @@ export async function POST(req: Request) {
     // validar existencia de personal
     const personal = await prisma.personalApoyo.findUnique({ where: { id: Number(personalId) } });
     if (!personal) return NextResponse.json({ error: "personal no encontrado" }, { status: 404 });
+    if (personal.estatus !== 'ACTIVO') {
+      return NextResponse.json({ error: "El personal de apoyo no está activo" }, { status: 409 });
+    }
 
     const disciplina = await prisma.disciplina.findFirst({
       where: { id: Number(disciplinaId), deletedAt: null },
