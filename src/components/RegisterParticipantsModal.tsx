@@ -252,13 +252,15 @@ export default function RegisterParticipantsModal({
       }
     }
 
-    // validación rama + edad para cada participante seleccionados
-    const referencia = fechaInicio;
+    // validación rama para cada participante seleccionado
+    // const referencia = fechaInicio;
     const checarParticipantes = modalidad === "EQUIPO" ? selectedTeam.map(s => participantes.find(p => p.id === s.participanteId)).filter(Boolean) : selectedIndividuals.map(id => participantes.find(p => p.id === id)).filter(Boolean);
     for (const p of checarParticipantes as ParticipanteShort[]) {
       if (!p) continue;
+      /*
       const edad = edadEnFecha(p.fechaNacimiento, referencia);
       if (edad >= 20) return `El participante ${p.nombres} ${p.apellidoPaterno} tiene ${edad} años (>=20)`;
+      */
       // rama/genero
       if (disc.rama !== "MIXTO" && disc.rama !== "UNICA") {
         if (disc.rama === "VARONIL" && p.genero !== "MASCULINO") return `El participante ${p.nombres} no cumple la rama VARONIL`;

@@ -194,10 +194,12 @@ export async function POST(req: Request) {
         }
 
         for (const p of fetchedParts as any[]) {
+          /*
           if (validarEdad) {
             const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
             if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
           }
+          */
 
           if (disciplina.rama !== "MIXTO" && disciplina.rama !== "UNICA") {
             if (disciplina.rama === "VARONIL" && p.genero !== "MASCULINO") {
@@ -311,10 +313,12 @@ export async function POST(req: Request) {
             select: { categoriaId: true },
           });
 
+          /*
           if (validarEdad) {
             const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
             if (edad >= 20) throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
           }
+          */
 
           if (disciplina.rama !== "MIXTO" && disciplina.rama !== "UNICA") {
             if (disciplina.rama === "VARONIL" && p.genero !== "MASCULINO") {
