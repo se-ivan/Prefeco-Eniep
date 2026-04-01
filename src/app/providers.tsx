@@ -2,9 +2,13 @@
 "use client";
 
 import { SWRConfig } from 'swr';
+import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const allowDarkTheme = pathname === "/";
+
   return (
     <SWRConfig
       value={{
@@ -21,6 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         attribute="class"
         defaultTheme="system"
         enableSystem
+        forcedTheme={allowDarkTheme ? undefined : "light"}
         disableTransitionOnChange
       >
         {children}
