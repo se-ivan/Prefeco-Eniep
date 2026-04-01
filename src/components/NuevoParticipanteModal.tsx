@@ -54,6 +54,8 @@ type InstitucionOption = {
 type Disciplina = {
   id: number;
   nombre: string;
+  tipo?: string | null;
+  disciplinaBaseNombre?: string | null;
   modalidad: "INDIVIDUAL" | "EQUIPO";
   categorias?: Categoria[];
   minIntegrantes?: number | null;
@@ -77,6 +79,10 @@ export default function NuevoParticipanteModal({
   maxIntegrantes,
   existingParticipants = [],
 }: Props) {
+  const esSoloApoyo =
+    String(disciplina.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
+    String(disciplina.disciplinaBaseNombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<ParticipanteApi[] | PersonalApi[]>([]);
   const [seleccionados, setSeleccionados] = useState<SeleccionParticipante[]>([]);
@@ -102,14 +108,21 @@ export default function NuevoParticipanteModal({
       setSeleccionados([]);
       setSearchError(null);
       setCategoriaId("");
-      setTipo("");
+      setTipo(esSoloApoyo ? "APOYO" : "");
       setNombreEquipo("");
       if (!isResponsable) {
         setInstitucionId("");
       }
       initialRef.current = null;
     }
-  }, [open, isResponsable]);
+  }, [open, isResponsable, esSoloApoyo]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (esSoloApoyo) {
+      setTipo("APOYO");
+    }
+  }, [open, esSoloApoyo]);
 
   // Obtener datos del usuario actual (rol e institucionId)
   useEffect(() => {
@@ -261,6 +274,10 @@ export default function NuevoParticipanteModal({
 
   async function confirmarAltas() {
     setSearchError(null);
+    if (esSoloApoyo && tipo !== "APOYO") {
+      setSearchError("Esta disciplina solo permite inscripción de personal de apoyo.");
+      return;
+    }
     if (!tipo || (tipo === "ALUMNO" && !institucionId) || !categoriaId || seleccionados.length === 0) {
       setSearchError("Por favor completa los campos y selecciona participantes.");
       return;
@@ -400,17 +417,30 @@ export default function NuevoParticipanteModal({
                 )}
                 <div>
                   <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Tipo participante</label>
+                  {esSoloApoyo && (
+                    <p className="text-[11px] text-amber-700 mb-2">
+                      Esta disciplina es solo para personal de apoyo.
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     {(["ALUMNO", "APOYO"] as const).map((t) => (
                       <button
                         key={t}
                         onClick={() => {
+                          if (esSoloApoyo && t === "ALUMNO") return;
                           if (tipo !== t) {
                             setTipo(t);
                             setSeleccionados([]);
                           }
                         }}
-                        className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all cursor-pointer ${tipo === t ? "bg-[#08677a] text-white border-[#08677a] hover:bg-[#075867]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
+                        disabled={esSoloApoyo && t === "ALUMNO"}
+                        className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${
+                          esSoloApoyo && t === "ALUMNO"
+                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            : tipo === t
+                              ? "bg-[#08677a] text-white border-[#08677a] hover:bg-[#075867] cursor-pointer"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer"
+                        }`}
                       >
                         {t === "ALUMNO" ? "Alumno" : "Apoyo"}
                       </button>

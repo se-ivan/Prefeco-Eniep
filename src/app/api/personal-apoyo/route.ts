@@ -85,8 +85,7 @@ export async function POST(req: NextRequest) {
       !nombres ||
       !apellidoPaterno ||
       !puesto ||
-      !telefono ||
-      !estatus
+      !telefono 
     ) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios del personal de apoyo" },
@@ -122,7 +121,7 @@ export async function POST(req: NextRequest) {
         docIdentificacionOficial: !!docIdentificacionOficial || !!docIdentificacionOficialUrl,
         docCurpUrl: docCurpUrl ? String(docCurpUrl) : null,
         docIdentificacionOficialUrl: docIdentificacionOficialUrl ? String(docIdentificacionOficialUrl) : null,
-        estatus,
+        estatus: "ACTIVO",
       },
       include: {
         institucion: {

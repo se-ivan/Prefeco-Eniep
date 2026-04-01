@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION" | "EMBAJADORA_NACIONAL";
+type Tipo = "DEPORTIVA" | "CULTURAL" | "CIVICA" | "ACADEMICA" | "EXHIBICION" | "EMBAJADORA_NACIONAL" | "COORDINACION_DEPORTIVA";
 type Modalidad = "EQUIPO" | "INDIVIDUAL";
 type Rama = "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
 
@@ -243,6 +243,7 @@ export default function DisciplinaModalEditar({ open, disciplina, onClose, onSav
 							<option value="ACADEMICA">Académica</option>
 							<option value="EXHIBICION">Exhibición</option>
 							<option value="EMBAJADORA_NACIONAL">Embajadora Nacional</option>
+							<option value="COORDINACION_DEPORTIVA">Coordinación Deportiva</option>
 						</select>
 					</div>
 

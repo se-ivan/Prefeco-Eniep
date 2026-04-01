@@ -66,7 +66,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             select: {
               id: true,
               nombre: true,
+              tipo: true,
               disciplinaBaseId: true,
+              disciplinaBase: { select: { nombre: true } },
               rama: true,
               deletedAt: true,
               minIntegrantes: true,
@@ -85,6 +87,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
       if (equipo.disciplina?.deletedAt) {
         throw { status: 409, message: "La disciplina de este equipo está inactiva" };
+      }
+
+      const esSoloApoyo =
+        String(equipo.disciplina?.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
+        String(equipo.disciplina?.disciplinaBase?.nombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+      if (esSoloApoyo) {
+        throw {
+          status: 409,
+          message: "Esta disciplina solo permite inscripción de personal de apoyo",
+        };
       }
 
       const categoria = await tx.categoria.findFirst({
@@ -167,6 +179,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       const esAtletismo = String(equipo.disciplina.nombre ?? "").trim().toUpperCase() === "ATLETISMO";
+      const validarEdad = String(equipo.disciplina.tipo) !== "ACADEMICA";
       if (equipo.disciplina.rama === "MIXTO" && esAtletismo) {
         const hombres = participantesValidos.filter((p: any) => p.genero === "MASCULINO").length;
         const mujeres = participantesValidos.filter((p: any) => p.genero === "FEMENINO").length;
@@ -180,9 +193,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       for (const p of participantesValidos) {
-        const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
-        if (edad >= 20) {
-          throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
+        if (validarEdad) {
+          const edad = calcularEdadEnFecha(new Date(p.fechaNacimiento), EVENT_START);
+          if (edad >= 20) {
+            throw { status: 409, message: `${p.nombres} tiene ${edad} anos (>=20)` };
+          }
         }
 
         if (equipo.disciplina.rama !== "MIXTO" && equipo.disciplina.rama !== "UNICA") {

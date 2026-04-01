@@ -79,13 +79,57 @@ type Participante = {
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
-  docActaNacimientoUrl?: string | null;
   docCredencialUrl?: string | null;
   docCartaResponsivaTutorUrl?: string | null;
   docHistorialMedicoUrl?: string | null;
+  docActaNacimientoUrl?: string | null;
   tutor: Tutor;
   institucion: Institucion;
 };
+
+type ParticipantDocumentField =
+  | "docCredencialUrl"
+  | "docCartaResponsivaTutorUrl"
+  | "docHistorialMedicoUrl"
+  | "docActaNacimientoUrl";
+
+type ParticipantDocumentCategory =
+  | "credencial"
+  | "carta-responsiva-tutor"
+  | "historial-medico"
+  | "acta-nacimiento";
+
+const DOCUMENT_UPLOAD_CONFIG: Array<{
+  field: ParticipantDocumentField;
+  boolField: "docComprobanteEstudios" | "docCartaResponsiva" | "docCertificadoMedico" | "docCurp";
+  label: string;
+  category: ParticipantDocumentCategory;
+}> = [
+  {
+    field: "docCredencialUrl",
+    boolField: "docComprobanteEstudios",
+    label: "Credencial",
+    category: "credencial",
+  },
+  {
+    field: "docCartaResponsivaTutorUrl",
+    boolField: "docCartaResponsiva",
+    label: "Carta responsiva del tutor",
+    category: "carta-responsiva-tutor",
+  },
+  {
+    field: "docHistorialMedicoUrl",
+    boolField: "docCertificadoMedico",
+    label: "Historial académico",
+    category: "historial-medico",
+  },
+  {
+    field: "docActaNacimientoUrl",
+    boolField: "docCurp",
+    label: "Acta de nacimiento",
+    category: "acta-nacimiento",
+  },
+];
 
 type EditForm = {
   institucionId: string;
@@ -109,10 +153,10 @@ type EditForm = {
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
-  docActaNacimientoUrl: string;
   docCredencialUrl: string;
   docCartaResponsivaTutorUrl: string;
   docHistorialMedicoUrl: string;
+  docActaNacimientoUrl: string;
   tutorNombreCompleto: string;
   tutorParentesco: string;
   tutorTelefono: string;
@@ -142,10 +186,10 @@ const INITIAL_EDIT_FORM: EditForm = {
   docComprobanteEstudios: false,
   docCartaResponsiva: false,
   docCertificadoMedico: false,
-  docActaNacimientoUrl: "",
   docCredencialUrl: "",
   docCartaResponsivaTutorUrl: "",
   docHistorialMedicoUrl: "",
+  docActaNacimientoUrl: "",
   tutorNombreCompleto: "",
   tutorParentesco: "",
   tutorTelefono: "",
@@ -166,25 +210,14 @@ export default function ListaParticipantesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Participante | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
-  const [autoEditHandled, setAutoEditHandled] = useState(false);
-  const [uploadingDocuments, setUploadingDocuments] = useState<Record<string, boolean>>({
+  const [uploadingDocuments, setUploadingDocuments] = useState<Record<ParticipantDocumentField, boolean>>({
     docCredencialUrl: false,
     docCartaResponsivaTutorUrl: false,
     docHistorialMedicoUrl: false,
     docActaNacimientoUrl: false,
   });
-
-  const DOCUMENT_UPLOAD_CONFIG: Array<{
-    field: string;
-    label: string;
-    category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento";
-  }> = [
-    { field: "docCredencialUrl", label: "Credencial", category: "credencial" },
-    { field: "docCartaResponsivaTutorUrl", label: "Carta responsiva del tutor", category: "carta-responsiva-tutor" },
-    { field: "docHistorialMedicoUrl", label: "Historial académico", category: "historial-medico" },
-    { field: "docActaNacimientoUrl", label: "Acta de nacimiento", category: "acta-nacimiento" },
-  ];
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
+  const [autoEditHandled, setAutoEditHandled] = useState(false);
 
   function booleanFieldForUrl(urlField: string) {
     switch (urlField) {
@@ -256,10 +289,10 @@ export default function ListaParticipantesPage() {
       docComprobanteEstudios: part.docComprobanteEstudios,
       docCartaResponsiva: part.docCartaResponsiva,
       docCertificadoMedico: part.docCertificadoMedico,
-      docActaNacimientoUrl: part.docActaNacimientoUrl ?? "",
       docCredencialUrl: part.docCredencialUrl ?? "",
       docCartaResponsivaTutorUrl: part.docCartaResponsivaTutorUrl ?? "",
       docHistorialMedicoUrl: part.docHistorialMedicoUrl ?? "",
+      docActaNacimientoUrl: part.docActaNacimientoUrl ?? "",
       tutorNombreCompleto: part.tutor?.nombreCompleto ?? "",
       tutorParentesco: part.tutor?.parentesco ?? "",
       tutorTelefono: part.tutor?.telefono ?? "",
@@ -314,6 +347,8 @@ export default function ListaParticipantesPage() {
     const { name, checked } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: checked }));
   };
+
+  
 
   const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -820,10 +855,56 @@ export default function ListaParticipantesPage() {
               </div>
 
               <div className="md:col-span-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <CheckField label="CURP" name="docCurp" checked={editForm.docCurp} onChange={handleEditCheckboxChange} />
-                <CheckField label="Comprobante estudios" name="docComprobanteEstudios" checked={editForm.docComprobanteEstudios} onChange={handleEditCheckboxChange} />
-                <CheckField label="Carta responsiva" name="docCartaResponsiva" checked={editForm.docCartaResponsiva} onChange={handleEditCheckboxChange} />
-                <CheckField label="Certificado médico" name="docCertificadoMedico" checked={editForm.docCertificadoMedico} onChange={handleEditCheckboxChange} />
+                {DOCUMENT_UPLOAD_CONFIG.map((doc) => {
+                  const hasFile = !!editForm[doc.field];
+                  const isUploading = uploadingDocuments[doc.field];
+                  return (
+                    <div key={doc.field} className="rounded-lg border border-gray-200 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-700">{doc.label}</p>
+                        {hasFile ? (
+                          <span className="text-xs rounded-full bg-emerald-100 text-emerald-700 px-2 py-1">Subido</span>
+                        ) : (
+                          <span className="text-xs rounded-full bg-slate-100 text-slate-600 px-2 py-1">Pendiente</span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <label className="inline-flex items-center gap-2 rounded-lg bg-[#08677a] px-3 py-2 text-xs font-semibold text-white cursor-pointer hover:bg-teal-800 transition-colors">
+                          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          {isUploading ? "Subiendo..." : hasFile ? "Reemplazar" : "Subir archivo"}
+                          <input
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => handleEditDocumentUpload(e, doc.field, doc.category)}
+                            disabled={isUploading}
+                          />
+                        </label>
+
+                        {hasFile && (
+                          <>
+                            <a
+                              href={editForm[doc.field]}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-[#08677a] hover:underline"
+                            >
+                              Ver archivo
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => clearDocumentSelection(doc.field)}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              Quitar
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="md:col-span-2 grid grid-cols-1 gap-3 mt-3">
@@ -940,21 +1021,3 @@ function PreviewCheck({ label, checked }: { label: string; checked: boolean }) {
   );
 }
 
-function CheckField({
-  label,
-  name,
-  checked,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
-      <input type="checkbox" name={name} checked={checked} onChange={onChange} className="h-4 w-4" />
-      {label}
-    </label>
-  );
-}

@@ -83,8 +83,8 @@
     "scripts": {
         "dev": "next dev",
         "prisma:generate": "prisma generate",
-        "postinstall": "pnpm prisma:generate",
-        "prebuild": "pnpm prisma:generate && prisma migrate deploy",
+        "postinstall": "npx pnpm prisma:generate",
+        "prebuild": "npx pnpm prisma:generate && npx prisma migrate deploy",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
