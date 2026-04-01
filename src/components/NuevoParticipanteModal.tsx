@@ -212,8 +212,13 @@ export default function NuevoParticipanteModal({
       return;
     }
 
-    if (maxIntegrantes && existingParticipants.length + seleccionados.length + 1 > maxIntegrantes) {
-      setSearchError(`Capacidad máxima (${maxIntegrantes}) excedida`);
+    const maxIntegrantesPermitidos =
+      tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO"
+        ? disciplina.maxIntegrantes ?? maxIntegrantes ?? Infinity
+        : maxIntegrantes ?? Infinity;
+
+    if (existingParticipants.length + seleccionados.length + 1 > maxIntegrantesPermitidos) {
+      setSearchError(`Capacidad máxima (${maxIntegrantesPermitidos}) excedida`);
       return;
     }
 
@@ -288,6 +293,22 @@ export default function NuevoParticipanteModal({
       return;
     }
 
+    if (tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO") {
+      const minIntegrantes = disciplina.minIntegrantes ?? 0;
+      const maxIntegrantesPermitidos = disciplina.maxIntegrantes ?? maxIntegrantes ?? Infinity;
+      const totalEquipo = existingParticipants.length + seleccionados.length;
+
+      if (totalEquipo < minIntegrantes) {
+        setSearchError(`El equipo debe tener al menos ${minIntegrantes} integrante(s).`);
+        return;
+      }
+
+      if (totalEquipo > maxIntegrantesPermitidos) {
+        setSearchError(`El equipo no puede exceder ${maxIntegrantesPermitidos} integrante(s).`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (tipo === "ALUMNO") {
@@ -350,7 +371,11 @@ export default function NuevoParticipanteModal({
   });
 
   const totalIntegrantes = existingParticipants.length + seleccionados.length;
-  const isMaxReached = maxIntegrantes ? totalIntegrantes >= maxIntegrantes : false;
+  const maxIntegrantesVista =
+    tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO"
+      ? disciplina.maxIntegrantes ?? maxIntegrantes ?? null
+      : maxIntegrantes ?? null;
+  const isMaxReached = maxIntegrantesVista ? totalIntegrantes >= maxIntegrantesVista : false;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -370,7 +395,7 @@ export default function NuevoParticipanteModal({
           </div>
           <div className="flex items-center gap-3">
             <div className={`text-xs px-3 py-1 rounded-full font-bold ${isMaxReached ? "bg-red-500 text-white" : "bg-white/20 text-white"}`}>
-              {totalIntegrantes} {maxIntegrantes ? `/ ${maxIntegrantes}` : ''} Integrantes
+              {totalIntegrantes} {maxIntegrantesVista ? `/ ${maxIntegrantesVista}` : ''} Integrantes
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer">
               <X size={20} />
@@ -585,6 +610,11 @@ export default function NuevoParticipanteModal({
               {searchError && (
                 <div className="p-3 bg-red-50 text-red-600 rounded-lg text-xs flex items-center gap-2 animate-pulse">
                   <AlertCircle size={14} /> {searchError}
+                </div>
+              )}
+              {tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO" && (
+                <div className="p-2 text-[11px] rounded-lg bg-slate-50 text-slate-700 border border-slate-200">
+                  Minimo: {disciplina.minIntegrantes ?? 0} | Maximo: {disciplina.maxIntegrantes ?? "Sin limite"}
                 </div>
               )}
               <div className="flex gap-3">

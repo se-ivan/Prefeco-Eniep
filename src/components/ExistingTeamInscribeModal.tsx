@@ -8,6 +8,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   equipoId: number | null;
+  categoriaId?: number | null;
   onSuccess?: () => void;
   maxIntegrantes?: number;
 };
@@ -16,6 +17,7 @@ export default function ExistingTeamInscribeModal({
   open,
   onClose,
   equipoId,
+  categoriaId,
   onSuccess,
   maxIntegrantes,
 }: Props) {
@@ -52,6 +54,11 @@ export default function ExistingTeamInscribeModal({
     if (!equipoId) return;
     setError(null);
 
+    if (!categoriaId) {
+      setError("No se especificó la categoría para inscribir al equipo.");
+      return;
+    }
+
     try {
       // Enviamos solo los nuevos participantes en el formato que el servidor espera:
       // { participantes: [{ participanteId }, ...] }
@@ -62,7 +69,10 @@ export default function ExistingTeamInscribeModal({
       const res = await fetch(`/api/equipos/${equipoId}/inscripciones`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantes: participantesPayload }),
+        body: JSON.stringify({
+          participantes: participantesPayload,
+          categoriaId,
+        }),
       });
 
       if (!res.ok) {
