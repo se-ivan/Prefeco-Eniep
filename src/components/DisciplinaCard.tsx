@@ -118,7 +118,7 @@ export default function DisciplinaCard({
             </button>
           </div>
         )}
-        <h3 className="text-lg font-semibold">{disciplina.nombre}</h3>
+        <h3 className="text-lg font-semibold text-slate-900">{disciplina.nombre}</h3>
 
         {/* Rama y Modalidad - debajo del nombre para mejor responsive */}
         <div className="mt-2 flex flex-wrap gap-3 items-center text-sm text-slate-600">
@@ -139,13 +139,13 @@ export default function DisciplinaCard({
         {disciplina.modalidad === "EQUIPO" && (
           <div>
             <div className="text-sm text-slate-500">Equipos</div>
-            <div className="text-2xl font-bold">{disciplina.totalEquipos ?? 0}</div>
+            <div className="text-2xl font-bold text-slate-900">{disciplina.totalEquipos ?? 0}</div>
           </div>
         )}
 
         <div className={disciplina.modalidad === "EQUIPO" ? "" : "col-span-2"}>
           <div className="text-sm text-slate-500">Participantes</div>
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold text-slate-900">
             {(disciplina.totalParticipantes ?? 0) + (disciplina.totalApoyos ?? 0)}
           </div>
         </div>
@@ -157,8 +157,8 @@ export default function DisciplinaCard({
           <div className="text-sm text-slate-500 mb-2">Integrantes por equipo</div>
 
           <div className="flex gap-2">
-            <span className="text-xs bg-slate-100 px-2 py-1 rounded">Min: {disciplina.minIntegrantes ?? "-"}</span>
-            <span className="text-xs bg-slate-100 px-2 py-1 rounded">Max: {disciplina.maxIntegrantes ?? "-"}</span>
+            <span className="text-xs text-slate-900 bg-slate-100 px-2 py-1 rounded">Min: {disciplina.minIntegrantes ?? "-"}</span>
+            <span className="text-xs text-slate-900 bg-slate-100 px-2 py-1 rounded">Max: {disciplina.maxIntegrantes ?? "-"}</span>
           </div>
         </div>
       )}
@@ -167,7 +167,7 @@ export default function DisciplinaCard({
       <div className="mt-4 flex gap-2">
         <button
           onClick={handleView}
-          className="flex-1 border border-slate-300 rounded py-2 text-sm cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-400"
+          className="flex-1 border border-slate-300 rounded py-2 text-sm text-slate-900 cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-400"
           aria-label={`Ver participantes de ${disciplina.nombre}`}
         >
           Ver Participantes

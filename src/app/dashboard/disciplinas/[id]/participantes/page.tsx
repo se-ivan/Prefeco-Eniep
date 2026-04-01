@@ -313,7 +313,7 @@ export default function ParticipantesPage() {
       </div>
 
       {/* Cabecera: mostrar disciplina (no editable) + selector alumno/apoyo + institución */}
-      <div className="bg-white rounded-xl border p-4 mb-6">
+      <div className="bg-white text-slate-900 rounded-xl border p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end mb-4">
           <div>
             <div className="text-xs text-gray-500">Disciplina</div>
@@ -341,7 +341,7 @@ export default function ParticipantesPage() {
               id="filtro-tipo"
               value={entityType}
               onChange={(e) => setEntityType(e.target.value as "ALUMNO" | "APOYO")}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="ALUMNO">Alumnos</option>
               <option value="APOYO">Personal de apoyo</option>
@@ -383,7 +383,7 @@ export default function ParticipantesPage() {
               id="filtro-rama"
               value={selectedRama}
               onChange={(e) => setSelectedRama(e.target.value as "" | "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO")}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">(todas las ramas)</option>
               <option value="VARONIL">Varonil</option>
@@ -430,7 +430,7 @@ export default function ParticipantesPage() {
 
       {/* Tabla */}
       <div className="space-y-4">
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-white text-slate-900 rounded-xl border p-4">
           <label htmlFor="busqueda-nombre" className="block text-xs text-gray-500 mb-1">
             Buscar por nombre
           </label>
@@ -440,7 +440,7 @@ export default function ParticipantesPage() {
             value={nameSearch}
             onChange={(e) => setNameSearch(e.target.value)}
             placeholder={entityType === "ALUMNO" ? "Ej. Juan Perez" : "Ej. Maria Lopez"}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
