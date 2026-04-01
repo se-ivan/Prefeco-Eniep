@@ -259,7 +259,6 @@ export default function ListaPersonalApoyoPage() {
     if (!editForm.curp.trim()) nextErrors.curp = "La CURP es obligatoria";
     if (!editForm.nombres.trim()) nextErrors.nombres = "El nombre es obligatorio";
     if (!editForm.apellidoPaterno.trim()) nextErrors.apellidoPaterno = "El apellido paterno es obligatorio";
-    if (!editForm.apellidoMaterno.trim()) nextErrors.apellidoMaterno = "El apellido materno es obligatorio";
     if (!editForm.puesto.trim()) nextErrors.puesto = "El puesto es obligatorio";
     if (!editForm.telefono.trim()) nextErrors.telefono = "El teléfono es obligatorio";
 
@@ -539,7 +538,7 @@ export default function ListaPersonalApoyoPage() {
 
               <Field label="Nombre(s) *" name="nombres" value={editForm.nombres} onChange={handleEditInputChange} error={formErrors.nombres} />
               <Field label="Apellido paterno *" name="apellidoPaterno" value={editForm.apellidoPaterno} onChange={handleEditInputChange} error={formErrors.apellidoPaterno} />
-              <Field label="Apellido materno *" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
+              <Field label="Apellido materno" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
               <Field label="CURP *" name="curp" value={editForm.curp} onChange={handleEditInputChange} error={formErrors.curp} />
               <Field label="Puesto *" name="puesto" value={editForm.puesto} onChange={handleEditInputChange} error={formErrors.puesto} />
               <Field label="Teléfono *" name="telefono" value={editForm.telefono} onChange={handleEditInputChange} error={formErrors.telefono} />

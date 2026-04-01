@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
       !curp ||
       !nombres ||
       !apellidoPaterno ||
-      !apellidoMaterno ||
       !puesto ||
       !telefono ||
       !estatus

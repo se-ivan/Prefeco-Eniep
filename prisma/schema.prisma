@@ -100,7 +100,7 @@ model Participante {
   matricula                  String
   nombres                    String
   apellidoPaterno            String
-  apellidoMaterno            String
+  apellidoMaterno            String?
   fechaNacimiento            DateTime
   genero                     Genero
   fotoUrl                    String?
@@ -216,7 +216,7 @@ model PersonalApoyo {
   curp                        String
   nombres                     String
   apellidoPaterno             String
-  apellidoMaterno             String
+  apellidoMaterno             String?
   puesto                      String
   telefono                    String
   email                       String?

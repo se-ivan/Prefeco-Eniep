@@ -12,6 +12,7 @@ import {
   Phone,
   Loader2,
   ImagePlus,
+  Upload,
   Search,
   Plus,
   Trash2,
@@ -35,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import { uploadParticipantDocumentToFirebase } from "@/lib/document-upload";
 
 type Institucion = {
   id: number;
@@ -77,6 +79,10 @@ type Participante = {
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
+  docActaNacimientoUrl?: string | null;
+  docCredencialUrl?: string | null;
+  docCartaResponsivaTutorUrl?: string | null;
+  docHistorialMedicoUrl?: string | null;
   tutor: Tutor;
   institucion: Institucion;
 };
@@ -103,6 +109,10 @@ type EditForm = {
   docComprobanteEstudios: boolean;
   docCartaResponsiva: boolean;
   docCertificadoMedico: boolean;
+  docActaNacimientoUrl: string;
+  docCredencialUrl: string;
+  docCartaResponsivaTutorUrl: string;
+  docHistorialMedicoUrl: string;
   tutorNombreCompleto: string;
   tutorParentesco: string;
   tutorTelefono: string;
@@ -132,6 +142,10 @@ const INITIAL_EDIT_FORM: EditForm = {
   docComprobanteEstudios: false,
   docCartaResponsiva: false,
   docCertificadoMedico: false,
+  docActaNacimientoUrl: "",
+  docCredencialUrl: "",
+  docCartaResponsivaTutorUrl: "",
+  docHistorialMedicoUrl: "",
   tutorNombreCompleto: "",
   tutorParentesco: "",
   tutorTelefono: "",
@@ -154,6 +168,38 @@ export default function ListaParticipantesPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [autoEditHandled, setAutoEditHandled] = useState(false);
+  const [uploadingDocuments, setUploadingDocuments] = useState<Record<string, boolean>>({
+    docCredencialUrl: false,
+    docCartaResponsivaTutorUrl: false,
+    docHistorialMedicoUrl: false,
+    docActaNacimientoUrl: false,
+  });
+
+  const DOCUMENT_UPLOAD_CONFIG: Array<{
+    field: string;
+    label: string;
+    category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento";
+  }> = [
+    { field: "docCredencialUrl", label: "Credencial", category: "credencial" },
+    { field: "docCartaResponsivaTutorUrl", label: "Carta responsiva del tutor", category: "carta-responsiva-tutor" },
+    { field: "docHistorialMedicoUrl", label: "Historial académico", category: "historial-medico" },
+    { field: "docActaNacimientoUrl", label: "Acta de nacimiento", category: "acta-nacimiento" },
+  ];
+
+  function booleanFieldForUrl(urlField: string) {
+    switch (urlField) {
+      case "docCredencialUrl":
+        return "docComprobanteEstudios";
+      case "docCartaResponsivaTutorUrl":
+        return "docCartaResponsiva";
+      case "docHistorialMedicoUrl":
+        return "docCertificadoMedico";
+      case "docActaNacimientoUrl":
+        return "docCurp";
+      default:
+        return null;
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -210,6 +256,10 @@ export default function ListaParticipantesPage() {
       docComprobanteEstudios: part.docComprobanteEstudios,
       docCartaResponsiva: part.docCartaResponsiva,
       docCertificadoMedico: part.docCertificadoMedico,
+      docActaNacimientoUrl: part.docActaNacimientoUrl ?? "",
+      docCredencialUrl: part.docCredencialUrl ?? "",
+      docCartaResponsivaTutorUrl: part.docCartaResponsivaTutorUrl ?? "",
+      docHistorialMedicoUrl: part.docHistorialMedicoUrl ?? "",
       tutorNombreCompleto: part.tutor?.nombreCompleto ?? "",
       tutorParentesco: part.tutor?.parentesco ?? "",
       tutorTelefono: part.tutor?.telefono ?? "",
@@ -286,13 +336,39 @@ export default function ListaParticipantesPage() {
     }
   };
 
+  const clearDocumentSelection = (field: string) => {
+    const booleanField = booleanFieldForUrl(field);
+    setEditForm((prev) => ({ ...prev, [field]: "", ...(booleanField ? { [booleanField]: false } : {}) } as any));
+  };
+
+  const handleEditDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: string,
+    category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento"
+  ) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
+    try {
+      const { url } = await uploadParticipantDocumentToFirebase(selectedFile, category);
+      const booleanField = booleanFieldForUrl(field) as string | null;
+      setEditForm((prev) => ({ ...prev, [field]: url, ...(booleanField ? { [booleanField]: true } : {}) } as any));
+      toast.success(`${selectedFile.name} subido correctamente`);
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo subir el documento");
+    } finally {
+      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
+      e.target.value = "";
+    }
+  };
+
   const handleSave = async () => {
     if (!editingItem) return;
 
     const nextErrors: Record<string, string> = {};
     if (!editForm.nombres.trim()) nextErrors.nombres = "El nombre es obligatorio";
     if (!editForm.apellidoPaterno.trim()) nextErrors.apellidoPaterno = "El apellido paterno es obligatorio";
-    if (!editForm.apellidoMaterno.trim()) nextErrors.apellidoMaterno = "El apellido materno es obligatorio";
     if (!editForm.curp.trim()) nextErrors.curp = "La CURP es obligatoria";
     if (!editForm.matricula.trim()) nextErrors.matricula = "La matrícula es obligatoria";
     if (!editForm.semestre.trim()) nextErrors.semestre = "El semestre es obligatorio";
@@ -344,6 +420,10 @@ export default function ListaParticipantesPage() {
         docComprobanteEstudios: editForm.docComprobanteEstudios,
         docCartaResponsiva: editForm.docCartaResponsiva,
         docCertificadoMedico: editForm.docCertificadoMedico,
+        docCredencialUrl: editForm.docCredencialUrl || null,
+        docCartaResponsivaTutorUrl: editForm.docCartaResponsivaTutorUrl || null,
+        docHistorialMedicoUrl: editForm.docHistorialMedicoUrl || null,
+        docActaNacimientoUrl: editForm.docActaNacimientoUrl || null,
         tutor: hasTutorData
           ? {
               nombreCompleto: editForm.tutorNombreCompleto,
@@ -696,7 +776,7 @@ export default function ListaParticipantesPage() {
 
               <Field label="Nombre(s) *" name="nombres" value={editForm.nombres} onChange={handleEditInputChange} error={formErrors.nombres} />
               <Field label="Apellido paterno *" name="apellidoPaterno" value={editForm.apellidoPaterno} onChange={handleEditInputChange} error={formErrors.apellidoPaterno} />
-              <Field label="Apellido materno *" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
+              <Field label="Apellido materno" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
               <Field label="CURP *" name="curp" value={editForm.curp} onChange={handleEditInputChange} error={formErrors.curp} />
               <Field label="Matrícula *" name="matricula" value={editForm.matricula} onChange={handleEditInputChange} error={formErrors.matricula} />
               <Field label="Semestre *" name="semestre" value={editForm.semestre} onChange={handleEditInputChange} type="number" error={formErrors.semestre} />
@@ -744,6 +824,37 @@ export default function ListaParticipantesPage() {
                 <CheckField label="Comprobante estudios" name="docComprobanteEstudios" checked={editForm.docComprobanteEstudios} onChange={handleEditCheckboxChange} />
                 <CheckField label="Carta responsiva" name="docCartaResponsiva" checked={editForm.docCartaResponsiva} onChange={handleEditCheckboxChange} />
                 <CheckField label="Certificado médico" name="docCertificadoMedico" checked={editForm.docCertificadoMedico} onChange={handleEditCheckboxChange} />
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 gap-3 mt-3">
+                <p className="text-xs font-semibold text-gray-600">Subir documentos (opcional)</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {DOCUMENT_UPLOAD_CONFIG.map((cfg) => (
+                    <div key={cfg.field} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 p-3">
+                      <div className="truncate">
+                        <p className="text-sm font-medium">{cfg.label}</p>
+                        <p className="text-xs text-gray-500 truncate">{(editForm as any)[cfg.field] ? String((editForm as any)[cfg.field]).slice(0, 80) : "No subido"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex items-center gap-2 rounded bg-[#08677a] px-3 py-2 text-white cursor-pointer">
+                          {uploadingDocuments[cfg.field] ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          <span className="text-sm">{uploadingDocuments[cfg.field] ? "Subiendo" : "Subir"}</span>
+                          <input
+                            type="file"
+                            accept="application/pdf,image/*"
+                            className="hidden"
+                            onChange={(e) => handleEditDocumentUpload(e, cfg.field, cfg.category)}
+                          />
+                        </label>
+                        {(editForm as any)[cfg.field] && (
+                          <button className="text-sm text-red-600" onClick={() => clearDocumentSelection(cfg.field)}>
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="md:col-span-2 rounded-xl border border-[#08677a]/20 bg-[#08677a]/5 p-4">
