@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 /**
  * RegisterParticipantsModal
@@ -322,6 +323,19 @@ export default function RegisterParticipantsModal({
       if (!res.ok) {
         throw new Error(json?.error || json?.message || `Error ${res.status}`);
       }
+
+      if (typeof json?.created === "number" && json.created <= 0) {
+        throw new Error("La inscripción no reportó registros creados");
+      }
+
+      const registrosCreados =
+        typeof json?.created === "number" && json.created > 0
+          ? json.created
+          : modalidad === "EQUIPO"
+            ? selectedTeam.length
+            : selectedIndividuals.length;
+
+      toast.success(`Registro de disciplina completado correctamente (${registrosCreados})`);
 
       // éxito: refrescar vista principal si se necesita
       if (onRegistered) await onRegistered();

@@ -146,7 +146,7 @@ export default function DisciplinaCard({
         <div className={disciplina.modalidad === "EQUIPO" ? "" : "col-span-2"}>
           <div className="text-sm text-slate-500">Participantes</div>
           <div className="text-2xl font-bold text-slate-900">
-            {(disciplina.totalParticipantes ?? 0) + (disciplina.totalApoyos ?? 0)}
+            {disciplina.totalParticipantes ?? 0}
           </div>
         </div>
       </div>

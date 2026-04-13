@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ParticipantsTable from "@/components/ParticipantsTable";
 import TeamMembersModal from "@/components/TeamMembersModal";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -215,9 +216,10 @@ export default function ParticipantesPage() {
       }
       // borrar localmente
       setRowsTeams((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Equipo eliminado correctamente");
     } catch (err) {
       console.error("Error borrando equipo:", err);
-      alert("No se pudo eliminar el equipo (revisa consola).");
+      toast.error("No se pudo eliminar el equipo");
     }
   }
 
@@ -231,9 +233,10 @@ export default function ParticipantesPage() {
       }
 
       setRowsIndividuals((prev) => prev.filter((p) => p.inscripcionId !== inscripcionId));
+      toast.success("Registro de participante eliminado correctamente");
     } catch (err) {
       console.error("Error eliminando inscripción:", err);
-      alert("Error eliminando (revisa consola).");
+      toast.error("No se pudo eliminar el registro del participante");
     }
   }
 
@@ -247,9 +250,10 @@ export default function ParticipantesPage() {
       }
 
       setRowsApoyo((prev) => prev.filter((p) => p.asignacionId !== asignacionId));
+      toast.success("Registro de personal de apoyo eliminado correctamente");
     } catch (err) {
       console.error("Error eliminando asignación de apoyo:", err);
-      alert("Error eliminando (revisa consola).");
+      toast.error("No se pudo eliminar el registro de personal de apoyo");
     }
   }
 

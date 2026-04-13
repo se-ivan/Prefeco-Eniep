@@ -38,8 +38,9 @@ export async function GET(req: Request) {
     }
 
     if (q) {
+      const baseWhere = { ...where };
       where.AND = [
-        where,
+        baseWhere,
         {
           personal: {
             OR: [

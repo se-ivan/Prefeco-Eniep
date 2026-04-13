@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 /* -------------------- Tipos -------------------- */
 
@@ -311,6 +312,8 @@ export default function NuevoParticipanteModal({
 
     setSubmitting(true);
     try {
+      let registrosCreados = 0;
+
       if (tipo === "ALUMNO") {
         const payload: any = {
           disciplinaId: Number(disciplina.id),
@@ -328,11 +331,26 @@ export default function NuevoParticipanteModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
+        const json = await res.json().catch(() => null);
         if (!res.ok) {
-          const msg = await getApiErrorMessage(res, "Error en la inscripción");
+          const msg =
+            (typeof json?.error === "string" && json.error) ||
+            (typeof json?.message === "string" && json.message) ||
+            `Error en la inscripción (HTTP ${res.status})`;
           throw new Error(msg);
         }
+
+        if (typeof json?.created === "number" && json.created <= 0) {
+          throw new Error("La inscripción no reportó registros creados");
+        }
+
+        registrosCreados =
+          typeof json?.created === "number" && json.created > 0
+            ? json.created
+            : seleccionados.length;
       } else {
+        let creadosApoyo = 0;
         for (const s of seleccionados) {
           const res = await fetch("/api/asignacion-apoyo", {
             method: "POST",
@@ -347,8 +365,17 @@ export default function NuevoParticipanteModal({
             const msg = await getApiErrorMessage(res, "Error al asignar personal de apoyo");
             throw new Error(msg);
           }
+          creadosApoyo++;
         }
+
+        if (creadosApoyo <= 0) {
+          throw new Error("No se creó ninguna asignación de personal de apoyo");
+        }
+        registrosCreados = creadosApoyo;
       }
+
+      toast.success(`Registro de disciplina completado correctamente (${registrosCreados})`);
+
       await onSuccess();
       onClose();
     } catch (err: any) {

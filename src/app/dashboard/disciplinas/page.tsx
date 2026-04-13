@@ -256,7 +256,6 @@ export default function DisciplinasPage() {
           onClose={() => setNuevoParticipanteOpen(false)}
           disciplina={disciplinaSeleccionada}
           onSuccess={async () => {
-            setNuevoParticipanteOpen(false);
             await handleAfterCreate();
           }}
         />
