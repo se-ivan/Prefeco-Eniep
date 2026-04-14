@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import { Download, Users, Briefcase, Loader2, Filter } from "lucide-react";
 
-type Institucion = { id: number; nombre: string };
+type Institucion = { id: number; nombre: string; cct: string };
 type Disciplina = { id: number; nombre: string; rama: string };
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -264,7 +264,7 @@ export default function ReportesPage() {
               >
                 <option value="">Todas las instituciones</option>
                 {instituciones?.map((inst) => (
-                  <option key={inst.id} value={inst.id}>{inst.nombre}</option>
+                  <option key={inst.id} value={inst.id}>{inst.nombre} - {inst.cct}</option>
                 ))}
               </select>
             </div>
