@@ -99,6 +99,25 @@ type ParticipantDocumentCategory =
   | "historial-medico"
   | "acta-nacimiento";
 
+type Categoria = {
+  id: number;
+  nombre: string;
+  disciplinaId: number;
+};
+
+type DisciplinaInscripcion = {
+  id: number;
+  nombre: string;
+  rama: "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
+  modalidad: "EQUIPO" | "INDIVIDUAL";
+  equipos: string[];
+  categorias: Categoria[];
+};
+
+type InscripcionesData = {
+  disciplinas: DisciplinaInscripcion[];
+};
+
 const DOCUMENT_UPLOAD_CONFIG: Array<{
   field: ParticipantDocumentField;
   boolField: "docComprobanteEstudios" | "docCartaResponsiva" | "docCertificadoMedico" | "docCurp";
@@ -218,6 +237,8 @@ export default function ListaParticipantesPage() {
   });
   const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [autoEditHandled, setAutoEditHandled] = useState(false);
+  const [previewInscripciones, setPreviewInscripciones] = useState<InscripcionesData | null>(null);
+  const [loadingPreviewInscripciones, setLoadingPreviewInscripciones] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -288,7 +309,29 @@ export default function ListaParticipantesPage() {
 
   const closePreviewModal = () => {
     setPreviewItem(null);
+    setPreviewInscripciones(null);
+    setLoadingPreviewInscripciones(false);
   };
+
+  const loadPreviewInscripciones = async (participanteId: number) => {
+    setLoadingPreviewInscripciones(true);
+    try {
+      const res = await fetch(`/api/participantes/${participanteId}/inscripciones`);
+      if (!res.ok) throw new Error();
+      const data: InscripcionesData = await res.json();
+      setPreviewInscripciones(data);
+    } catch {
+      setPreviewInscripciones({ disciplinas: [] });
+    } finally {
+      setLoadingPreviewInscripciones(false);
+    }
+  };
+
+  useEffect(() => {
+    if (previewItem) {
+      loadPreviewInscripciones(previewItem.id);
+    }
+  }, [previewItem]);
 
   useEffect(() => {
     if (autoEditHandled) return;
@@ -725,6 +768,54 @@ export default function ListaParticipantesPage() {
                     <PreviewCheck label="Certificado médico" checked={previewItem.docCertificadoMedico} />
                     
                   </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">Inscripciones a disciplinas</h3>
+                  {loadingPreviewInscripciones ? (
+                    <div className="mt-3 flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                    </div>
+                  ) : previewInscripciones?.disciplinas && previewInscripciones.disciplinas.length > 0 ? (
+                    <div className="mt-3 space-y-3">
+                      {previewInscripciones.disciplinas.map((disciplina) => (
+                        <div key={disciplina.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex-1">
+                              <p className="font-semibold text-slate-800">{disciplina.nombre}</p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                Rama: <span className="font-medium">{disciplina.rama}</span>
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Modalidad: <span className="font-medium">{disciplina.modalidad}</span>
+                              </p>
+                              {(disciplina.modalidad === "EQUIPO" || disciplina.equipos.length > 0) && (
+                                <p className="text-xs text-slate-500">
+                                  Equipo: <span className="font-medium">{disciplina.equipos.length > 0 ? disciplina.equipos.join(", ") : "--"}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            <p className="text-xs text-slate-500 mt-1" >Categorías:</p>
+                            {disciplina.categorias && disciplina.categorias.length > 0 ? (
+                              disciplina.categorias.map((cat) => (
+                                <span key={cat.id} className="inline-flex items-center rounded-full bg-[#0b697d]/10 px-2.5 py-0.5 text-xs font-medium text-[#0b697d]">
+                                  {cat.nombre}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-400">Sin categorías asignadas</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-center py-4">
+                      <p className="text-sm text-slate-500">--</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
