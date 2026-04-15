@@ -750,41 +750,6 @@ export default function ListaParticipantesPage() {
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="text-sm font-semibold text-slate-800">Salud y emergencia</h3>
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <PreviewField label="Alergias" value={previewItem.alergias || "N/A"} />
-                    <PreviewField label="Padecimientos" value={previewItem.padecimientos || "N/A"} />
-                    <PreviewField label="Medicamentos" value={previewItem.medicamentos || "N/A"} />
-                    <PreviewField label="Contacto de emergencia" value={previewItem.contactoEmergenciaNombre || "N/A"} />
-                    <PreviewField label="Tel. emergencia" value={previewItem.contactoEmergenciaTelefono || "N/A"} />
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="text-sm font-semibold text-slate-800">Tutor legal</h3>
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <PreviewField label="Nombre" value={previewItem.tutor?.nombreCompleto || "N/A"} />
-                    <PreviewField label="Parentesco" value={previewItem.tutor?.parentesco || "N/A"} />
-                    <PreviewField label="Teléfono" value={previewItem.tutor?.telefono || "N/A"} />
-                    <PreviewField label="Email" value={previewItem.tutor?.email || "N/A"} />
-                    <div className="sm:col-span-2">
-                      <PreviewField label="Dirección" value={previewItem.tutor?.direccion || "N/A"} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="text-sm font-semibold text-slate-800">Documentación</h3>
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <PreviewCheck label="CURP" checked={previewItem.docCurp} />
-                    <PreviewCheck label="Comprobante estudios" checked={previewItem.docComprobanteEstudios} />
-                    <PreviewCheck label="Carta responsiva" checked={previewItem.docCartaResponsiva} />
-                    <PreviewCheck label="Certificado médico" checked={previewItem.docCertificadoMedico} />
-                    
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 p-4">
                   <h3 className="text-sm font-semibold text-slate-800">Inscripciones a disciplinas</h3>
                   {loadingPreviewInscripciones ? (
                     <div className="mt-3 flex items-center justify-center py-4">
@@ -830,6 +795,41 @@ export default function ListaParticipantesPage() {
                       <p className="text-sm text-slate-500">--</p>
                     </div>
                   )}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">Salud y emergencia</h3>
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <PreviewField label="Alergias" value={previewItem.alergias || "N/A"} />
+                    <PreviewField label="Padecimientos" value={previewItem.padecimientos || "N/A"} />
+                    <PreviewField label="Medicamentos" value={previewItem.medicamentos || "N/A"} />
+                    <PreviewField label="Contacto de emergencia" value={previewItem.contactoEmergenciaNombre || "N/A"} />
+                    <PreviewField label="Tel. emergencia" value={previewItem.contactoEmergenciaTelefono || "N/A"} />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">Tutor legal</h3>
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <PreviewField label="Nombre" value={previewItem.tutor?.nombreCompleto || "N/A"} />
+                    <PreviewField label="Parentesco" value={previewItem.tutor?.parentesco || "N/A"} />
+                    <PreviewField label="Teléfono" value={previewItem.tutor?.telefono || "N/A"} />
+                    <PreviewField label="Email" value={previewItem.tutor?.email || "N/A"} />
+                    <div className="sm:col-span-2">
+                      <PreviewField label="Dirección" value={previewItem.tutor?.direccion || "N/A"} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">Documentación</h3>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <PreviewCheck label="CURP" checked={previewItem.docCurp} />
+                    <PreviewCheck label="Comprobante estudios" checked={previewItem.docComprobanteEstudios} />
+                    <PreviewCheck label="Carta responsiva" checked={previewItem.docCartaResponsiva} />
+                    <PreviewCheck label="Certificado médico" checked={previewItem.docCertificadoMedico} />
+                    
+                  </div>
                 </div>
               </div>
             </div>
