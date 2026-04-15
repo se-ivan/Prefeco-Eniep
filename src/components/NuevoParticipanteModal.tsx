@@ -480,7 +480,10 @@ export default function NuevoParticipanteModal({
                         key={t}
                         onClick={() => {
                           if (esSoloApoyo && t === "ALUMNO") return;
-                          setTipo(t);
+                          if (tipo !== t) {
+                            setTipo(t);
+                            setSeleccionados([]);
+                          }
                         }}
                         disabled={esSoloApoyo && t === "ALUMNO"}
                         className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${

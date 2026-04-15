@@ -52,7 +52,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       !matricula ||
       !nombres ||
       !apellidoPaterno ||
-      !apellidoMaterno ||
       !fechaNacimiento ||
       !genero ||
       !estatus

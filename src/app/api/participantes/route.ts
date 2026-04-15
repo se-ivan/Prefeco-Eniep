@@ -106,7 +106,6 @@ export async function POST(req: NextRequest) {
       !matricula ||
       !nombres ||
       !apellidoPaterno ||
-      !apellidoMaterno ||
       !fechaNacimiento ||
       !genero ||
       !estatus

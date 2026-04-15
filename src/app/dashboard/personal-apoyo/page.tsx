@@ -142,7 +142,7 @@ export default function RegistrarPersonalApoyoPage() {
     if (!formData.fotoUrl) return "La fotografía es obligatoria.";
     if (!formData.nombres.trim()) return "El nombre es obligatorio.";
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
-    if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
+    // Apellido materno opcional (algunas personas solo tienen un apellido)
     if (!formData.curp.trim()) return "La CURP es obligatoria.";
     if (!formData.puesto.trim()) return "El puesto es obligatorio.";
     if (!formData.telefono.trim()) return "El teléfono es obligatorio.";
@@ -378,7 +378,7 @@ export default function RegistrarPersonalApoyoPage() {
                 </div>
 
                 <div className="group">
-                  <label className="text-sm font-semibold text-gray-800">Apellido Materno <span className="text-[#08677a]">*</span></label>
+                  <label className="text-sm font-semibold text-gray-800">Apellido Materno</label>
                   <input
                     type="text"
                     name="apellidoMaterno"

@@ -230,7 +230,7 @@ export default function RegistrarAlumnoPage() {
     if (!formData.fotoUrl) return "La fotografía es obligatoria.";
     if (!formData.nombres.trim()) return "El nombre es obligatorio.";
     if (!formData.apellidoPaterno.trim()) return "El apellido paterno es obligatorio.";
-    if (!formData.apellidoMaterno.trim()) return "El apellido materno es obligatorio.";
+    // Apellido materno: opcional (algunas personas solo tienen un apellido)
     if (!formData.matricula.trim()) return "La matrícula es obligatoria.";
     if (!formData.semestre.trim()) return "El semestre es obligatorio.";
     if (!Number.isInteger(Number(formData.semestre)) || Number(formData.semestre) < 1 || Number(formData.semestre) > 20) {

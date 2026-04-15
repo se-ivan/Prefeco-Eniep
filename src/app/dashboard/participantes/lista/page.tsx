@@ -240,6 +240,21 @@ export default function ListaParticipantesPage() {
   const [previewInscripciones, setPreviewInscripciones] = useState<InscripcionesData | null>(null);
   const [loadingPreviewInscripciones, setLoadingPreviewInscripciones] = useState(false);
 
+  function booleanFieldForUrl(urlField: string) {
+    switch (urlField) {
+      case "docCredencialUrl":
+        return "docComprobanteEstudios";
+      case "docCartaResponsivaTutorUrl":
+        return "docCartaResponsiva";
+      case "docHistorialMedicoUrl":
+        return "docCertificadoMedico";
+      case "docActaNacimientoUrl":
+        return "docCurp";
+      default:
+        return null;
+    }
+  }
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -376,34 +391,7 @@ export default function ListaParticipantesPage() {
     setEditForm((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const clearDocumentSelection = (
-    field: ParticipantDocumentField,
-    boolField: "docComprobanteEstudios" | "docCartaResponsiva" | "docCertificadoMedico" | "docCurp"
-  ) => {
-    setEditForm((prev) => ({ ...prev, [field]: "", [boolField]: false }));
-  };
-
-  const handleDocumentUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: ParticipantDocumentField,
-    boolField: "docComprobanteEstudios" | "docCartaResponsiva" | "docCertificadoMedico" | "docCurp",
-    category: ParticipantDocumentCategory
-  ) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
-    try {
-      const { url } = await uploadParticipantDocumentToFirebase(selectedFile, category);
-      setEditForm((prev) => ({ ...prev, [field]: url, [boolField]: true }));
-      toast.success(`${selectedFile.name} subido correctamente`);
-    } catch (error: any) {
-      toast.error(error?.message || "No se pudo subir el documento");
-    } finally {
-      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
-      e.target.value = "";
-    }
-  };
+  
 
   const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -426,13 +414,39 @@ export default function ListaParticipantesPage() {
     }
   };
 
+  const clearDocumentSelection = (field: string) => {
+    const booleanField = booleanFieldForUrl(field);
+    setEditForm((prev) => ({ ...prev, [field]: "", ...(booleanField ? { [booleanField]: false } : {}) } as any));
+  };
+
+  const handleEditDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: string,
+    category: "credencial" | "carta-responsiva-tutor" | "historial-medico" | "acta-nacimiento"
+  ) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadingDocuments((prev) => ({ ...prev, [field]: true }));
+    try {
+      const { url } = await uploadParticipantDocumentToFirebase(selectedFile, category);
+      const booleanField = booleanFieldForUrl(field) as string | null;
+      setEditForm((prev) => ({ ...prev, [field]: url, ...(booleanField ? { [booleanField]: true } : {}) } as any));
+      toast.success(`${selectedFile.name} subido correctamente`);
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo subir el documento");
+    } finally {
+      setUploadingDocuments((prev) => ({ ...prev, [field]: false }));
+      e.target.value = "";
+    }
+  };
+
   const handleSave = async () => {
     if (!editingItem) return;
 
     const nextErrors: Record<string, string> = {};
     if (!editForm.nombres.trim()) nextErrors.nombres = "El nombre es obligatorio";
     if (!editForm.apellidoPaterno.trim()) nextErrors.apellidoPaterno = "El apellido paterno es obligatorio";
-    if (!editForm.apellidoMaterno.trim()) nextErrors.apellidoMaterno = "El apellido materno es obligatorio";
     if (!editForm.curp.trim()) nextErrors.curp = "La CURP es obligatoria";
     if (!editForm.matricula.trim()) nextErrors.matricula = "La matrícula es obligatoria";
     if (!editForm.semestre.trim()) nextErrors.semestre = "El semestre es obligatorio";
@@ -888,7 +902,7 @@ export default function ListaParticipantesPage() {
 
               <Field label="Nombre(s) *" name="nombres" value={editForm.nombres} onChange={handleEditInputChange} error={formErrors.nombres} />
               <Field label="Apellido paterno *" name="apellidoPaterno" value={editForm.apellidoPaterno} onChange={handleEditInputChange} error={formErrors.apellidoPaterno} />
-              <Field label="Apellido materno *" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
+              <Field label="Apellido materno" name="apellidoMaterno" value={editForm.apellidoMaterno} onChange={handleEditInputChange} error={formErrors.apellidoMaterno} />
               <Field label="CURP *" name="curp" value={editForm.curp} onChange={handleEditInputChange} error={formErrors.curp} />
               <Field label="Matrícula *" name="matricula" value={editForm.matricula} onChange={handleEditInputChange} error={formErrors.matricula} />
               <Field label="Semestre *" name="semestre" value={editForm.semestre} onChange={handleEditInputChange} type="number" error={formErrors.semestre} />
@@ -954,7 +968,7 @@ export default function ListaParticipantesPage() {
                             type="file"
                             accept="application/pdf,image/jpeg,image/png,image/webp"
                             className="hidden"
-                            onChange={(e) => handleDocumentUpload(e, doc.field, doc.boolField, doc.category)}
+                            onChange={(e) => handleEditDocumentUpload(e, doc.field, doc.category)}
                             disabled={isUploading}
                           />
                         </label>
@@ -971,7 +985,7 @@ export default function ListaParticipantesPage() {
                             </a>
                             <button
                               type="button"
-                              onClick={() => clearDocumentSelection(doc.field, doc.boolField)}
+                              onClick={() => clearDocumentSelection(doc.field)}
                               className="text-xs text-red-600 hover:underline"
                             >
                               Quitar
@@ -982,6 +996,37 @@ export default function ListaParticipantesPage() {
                     </div>
                   );
                 })}
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 gap-3 mt-3">
+                <p className="text-xs font-semibold text-gray-600">Subir documentos (opcional)</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {DOCUMENT_UPLOAD_CONFIG.map((cfg) => (
+                    <div key={cfg.field} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 p-3">
+                      <div className="truncate">
+                        <p className="text-sm font-medium">{cfg.label}</p>
+                        <p className="text-xs text-gray-500 truncate">{(editForm as any)[cfg.field] ? String((editForm as any)[cfg.field]).slice(0, 80) : "No subido"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex items-center gap-2 rounded bg-[#08677a] px-3 py-2 text-white cursor-pointer">
+                          {uploadingDocuments[cfg.field] ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          <span className="text-sm">{uploadingDocuments[cfg.field] ? "Subiendo" : "Subir"}</span>
+                          <input
+                            type="file"
+                            accept="application/pdf,image/*"
+                            className="hidden"
+                            onChange={(e) => handleEditDocumentUpload(e, cfg.field, cfg.category)}
+                          />
+                        </label>
+                        {(editForm as any)[cfg.field] && (
+                          <button className="text-sm text-red-600" onClick={() => clearDocumentSelection(cfg.field)}>
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="md:col-span-2 rounded-xl border border-[#08677a]/20 bg-[#08677a]/5 p-4">
