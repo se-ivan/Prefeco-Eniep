@@ -20,51 +20,75 @@ export async function GET(req: Request) {
     const filterInstitucionId = searchParams.get("institucionId");
     const filterDisciplinaId = searchParams.get("disciplinaId");
 
-    const whereClause: any = {};
+    const whereParticipante: any = {};
 
     if (!admin) {
-      whereClause.participante = { institucionId: userInstitucionId };
+      whereParticipante.institucionId = userInstitucionId;
     } else if (filterInstitucionId) {
-      whereClause.participante = { institucionId: parseInt(filterInstitucionId) };
+      whereParticipante.institucionId = parseInt(filterInstitucionId);
     }
 
-    if (filterDisciplinaId) {
-      whereClause.disciplinaId = parseInt(filterDisciplinaId);
-    }
+    const disciplinaId = filterDisciplinaId ? parseInt(filterDisciplinaId) : undefined;
 
-    const inscripciones = await prisma.inscripcion.findMany({
-      where: whereClause,
+    const participantes = await prisma.participante.findMany({
+      where: whereParticipante,
       include: {
-        participante: {
+        institucion: true,
+        inscripciones: {
+          where: disciplinaId ? { disciplinaId } : undefined,
           include: {
-            institucion: true,
-          }
+            disciplina: true,
+            categoria: true,
+            equipo: true,
+          },
+          orderBy: {
+            disciplina: { nombre: "asc" },
+          },
         },
-        disciplina: true,
-        categoria: true,
-        equipo: true,
       },
       orderBy: [
-        { disciplina: { nombre: 'asc' } },
-        { participante: { institucion: { nombre: 'asc' } } }
+        { institucion: { nombre: "asc" } },
+        { apellidoPaterno: "asc" },
+        { apellidoMaterno: "asc" },
+        { nombres: "asc" },
       ]
     });
 
-    const data = inscripciones.map(i => ({
-      "Institución": i.participante.institucion.nombre,
-      "CCT": i.participante.institucion.cct,
-      "Estado": i.participante.institucion.estado,
-      "Apellido Paterno": i.participante.apellidoPaterno,
-      "Apellido Materno": i.participante.apellidoMaterno,
-      "Nombres": i.participante.nombres,
-      "CURP": i.participante.curp,
-      "Matrícula": i.participante.matricula,
-      "Rama": i.disciplina.rama,
-      "Modalidad": i.disciplina.modalidad,
-      "Disciplina": i.disciplina.nombre,
-      "Categoría": i.categoria?.nombre || "—",
-      "Equipo": i.equipo?.nombreEquipo || "—"
-    }));
+    const data = participantes.flatMap((p) => {
+      if (!p.inscripciones.length) {
+        return [{
+          "Institución": p.institucion.nombre,
+          "CCT": p.institucion.cct,
+          "Estado": p.institucion.estado,
+          "Apellido Paterno": p.apellidoPaterno,
+          "Apellido Materno": p.apellidoMaterno,
+          "Nombres": p.nombres,
+          "CURP": p.curp,
+          "Matrícula": p.matricula,
+          "Rama": "—",
+          "Modalidad": "—",
+          "Disciplina": "SIN INSCRIPCION",
+          "Categoría": "—",
+          "Equipo": "—"
+        }];
+      }
+
+      return p.inscripciones.map((i) => ({
+        "Institución": p.institucion.nombre,
+        "CCT": p.institucion.cct,
+        "Estado": p.institucion.estado,
+        "Apellido Paterno": p.apellidoPaterno,
+        "Apellido Materno": p.apellidoMaterno,
+        "Nombres": p.nombres,
+        "CURP": p.curp,
+        "Matrícula": p.matricula,
+        "Rama": i.disciplina.rama,
+        "Modalidad": i.disciplina.modalidad,
+        "Disciplina": i.disciplina.nombre,
+        "Categoría": i.categoria?.nombre || "—",
+        "Equipo": i.equipo?.nombreEquipo || "—"
+      }));
+    });
 
     return NextResponse.json(data);
   } catch (error) {

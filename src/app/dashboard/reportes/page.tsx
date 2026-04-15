@@ -257,7 +257,7 @@ export default function ReportesPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-800">Participantes</h2>
               <p className="text-sm text-slate-500 max-w-sm mt-2">
-                Descarga una lista consolidada de todos los alumnos inscritos, en una sola corrida.
+                Descarga una lista consolidada de todos los alumnos, esten inscritos o no, en una sola corrida.
               </p>
             </div>
             <button
