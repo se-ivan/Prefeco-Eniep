@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { isTaekwondoDisciplina, TAEKWONDO_CINTAS } from "@/lib/taekwondo";
 
 /* -------------------- Tipos -------------------- */
 
@@ -56,6 +57,7 @@ type Disciplina = {
   id: number;
   nombre: string;
   tipo?: string | null;
+  disciplinaBaseId?: number | null;
   disciplinaBaseNombre?: string | null;
   modalidad: "INDIVIDUAL" | "EQUIPO";
   categorias?: Categoria[];
@@ -83,6 +85,10 @@ export default function NuevoParticipanteModal({
   const esSoloApoyo =
     String(disciplina.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
     String(disciplina.disciplinaBaseNombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
+  const esTaekwondo = isTaekwondoDisciplina({
+    disciplinaBaseId: disciplina.disciplinaBaseId,
+    disciplinaBaseNombre: disciplina.disciplinaBaseNombre,
+  });
 
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState<ParticipanteApi[] | PersonalApi[]>([]);
@@ -97,6 +103,7 @@ export default function NuevoParticipanteModal({
   const [tipo, setTipo] = useState<"ALUMNO" | "APOYO" | "">("");
   const [categoriaId, setCategoriaId] = useState<number | "">("");
   const [nombreEquipo, setNombreEquipo] = useState("");
+  const [cintaTaekwondo, setCintaTaekwondo] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [isResponsable, setIsResponsable] = useState(false);
@@ -111,6 +118,7 @@ export default function NuevoParticipanteModal({
       setCategoriaId("");
       setTipo(esSoloApoyo ? "APOYO" : "");
       setNombreEquipo("");
+      setCintaTaekwondo("");
       if (!isResponsable) {
         setInstitucionId("");
       }
@@ -294,6 +302,11 @@ export default function NuevoParticipanteModal({
       return;
     }
 
+    if (tipo === "ALUMNO" && esTaekwondo && !cintaTaekwondo) {
+      setSearchError("Selecciona la cinta de Taekwondo.");
+      return;
+    }
+
     if (tipo === "ALUMNO" && disciplina.modalidad === "EQUIPO") {
       const minIntegrantes = disciplina.minIntegrantes ?? 0;
       const maxIntegrantesPermitidos = disciplina.maxIntegrantes ?? maxIntegrantes ?? Infinity;
@@ -320,6 +333,7 @@ export default function NuevoParticipanteModal({
           modalidad: disciplina.modalidad,
           institucionId: Number(institucionId),
           categoriaId: Number(categoriaId),
+          cintaTaekwondo: esTaekwondo ? cintaTaekwondo : null,
           personalIds: [],
           participantes: seleccionados.map((s) => ({ participanteId: s.participanteId })),
         };
@@ -410,7 +424,7 @@ export default function NuevoParticipanteModal({
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
         
         {/* Header (Estatico) */}
-        <header className="bg-[#08677a] px-6 py-4 text-white flex justify-between items-center flex-shrink-0">
+        <header className="bg-[#08677a] px-6 py-4 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <UsersIcon size={20} />
             <div>
@@ -436,7 +450,7 @@ export default function NuevoParticipanteModal({
           {/* COLUMNA IZQUIERDA: Búsqueda y Resultados */}
           <div className="flex-[1.4] border-r border-gray-100 flex flex-col min-h-0 bg-gray-50/30">
             {/* Controles fijos arriba */}
-            <div className="p-6 pb-2 flex-shrink-0 space-y-4">
+            <div className="p-6 pb-2 shrink-0 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {!isResponsable && (
                   <div>
@@ -534,6 +548,30 @@ export default function NuevoParticipanteModal({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {tipo === "ALUMNO" && esTaekwondo && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Cinta Taekwondo</label>
+                    <Select
+                      value={cintaTaekwondo || "none-belt"}
+                      onValueChange={(value) => setCintaTaekwondo(value === "none-belt" ? "" : value)}
+                    >
+                      <SelectTrigger className="w-full border border-gray-200 bg-white text-sm font-normal text-gray-700 data-placeholder:text-gray-500 focus:ring-2 focus:ring-[#08677a]/20">
+                        <SelectValue placeholder="Selecciona cinta" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-48 w-[min(92vw,24rem)] bg-white text-gray-700">
+                        <SelectItem value="none-belt" className="text-sm font-normal text-gray-700">
+                          Selecciona cinta
+                        </SelectItem>
+                        {TAEKWONDO_CINTAS.map((cinta) => (
+                          <SelectItem key={cinta.value} value={cinta.value} className="text-sm font-normal text-gray-700">
+                            {cinta.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="relative">
@@ -589,7 +627,7 @@ export default function NuevoParticipanteModal({
 
           {/* COLUMNA DERECHA: Resumen */}
           <div className="flex-1 flex flex-col min-h-0 bg-white">
-            <div className="p-6 pb-2 flex-shrink-0">
+            <div className="p-6 pb-2 shrink-0">
               <h4 className="font-black text-xs uppercase tracking-widest text-gray-400 mb-4">Resumen de selección</h4>
             </div>
 
@@ -636,7 +674,7 @@ export default function NuevoParticipanteModal({
             </div>
 
             {/* Footer Fijo en la derecha */}
-            <div className="p-6 border-t border-gray-50 flex-shrink-0 space-y-3">
+            <div className="p-6 border-t border-gray-50 shrink-0 space-y-3">
               {searchError && (
                 <div className="p-3 bg-red-50 text-red-600 rounded-lg text-xs flex items-center gap-2 animate-pulse">
                   <AlertCircle size={14} /> {searchError}
@@ -652,7 +690,7 @@ export default function NuevoParticipanteModal({
                 <button
                   onClick={confirmarAltas}
                   disabled={submitting}
-                  className="flex-[2] py-2.5 bg-[#ffb041] hover:bg-[#f0a030] text-[#08677a] rounded-xl text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-200 cursor-pointer"
+                  className="flex-2 py-2.5 bg-[#ffb041] hover:bg-[#f0a030] text-[#08677a] rounded-xl text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-200 cursor-pointer"
                 >
                   {submitting ? "Guardando..." : `Confirmar Selección`}
                 </button>

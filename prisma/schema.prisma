@@ -200,6 +200,7 @@ model Inscripcion {
   disciplinaId   Int          @map("id_disciplina")
   equipoId       Int?         @map("id_equipo")
   categoriaId    Int          @map("id_categoria")
+  cintaTaekwondo CintaTaekwondo? @map("cinta_taekwondo")
   fechaRegistro  DateTime     @default(now()) @map("fecha_registro")
   categoria      Categoria    @relation(fields: [categoriaId], references: [id])
   disciplina     Disciplina   @relation(fields: [disciplinaId], references: [id])
@@ -300,4 +301,15 @@ enum Rama {
   FEMENIL
   UNICA
   MIXTO
+}
+
+enum CintaTaekwondo {
+  CINTA_BLANCA
+  CINTA_AMARILLA
+  CINTA_NARANJA
+  CINTA_VERDE
+  CINTA_AZUL
+  CINTA_ROJA
+  CINTA_NEGRA
+  CINTA_ROJINEGRA
 }

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isResponsable } from "@/lib/rbac";
+import { isTaekwondoDisciplina, normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
       nombreEquipo,
       institucionId: bodyInstitucionId,
       categoriaId,
+      cintaTaekwondo,
       personalIds,
       participantes,
     } = body ?? {};
@@ -64,10 +66,19 @@ export async function POST(req: Request) {
         where: { id: Number(disciplinaId), deletedAt: null },
         include: {
           categorias: { where: { deletedAt: null } },
-          disciplinaBase: { select: { nombre: true } },
+          disciplinaBase: { select: { id: true, nombre: true } },
         },
       });
       if (!disciplina) throw { status: 404, message: "Disciplina no encontrada" };
+
+      const esTaekwondo = isTaekwondoDisciplina({
+        disciplinaBaseId: disciplina.disciplinaBaseId,
+        disciplinaBaseNombre: disciplina.disciplinaBase?.nombre,
+      });
+      const cintaTaekwondoNormalizada = normalizeTaekwondoCinta(cintaTaekwondo);
+      if (esTaekwondo && !cintaTaekwondoNormalizada) {
+        throw { status: 400, message: "cintaTaekwondo es requerida para Taekwondo" };
+      }
 
       const esSoloApoyo =
         String(disciplina.tipo ?? "").toUpperCase() === "COORDINACION_DEPORTIVA" ||
@@ -247,6 +258,7 @@ export async function POST(req: Request) {
           equipoId: equipo.id,
           disciplinaId: Number(disciplinaId),
           categoriaId: Number(categoriaId),
+          cintaTaekwondo: esTaekwondo ? cintaTaekwondoNormalizada : null,
           fechaRegistro: new Date(),
         }));
 
@@ -365,6 +377,7 @@ export async function POST(req: Request) {
           participanteId: p.id,
           disciplinaId: Number(disciplinaId),
           categoriaId: Number(categoriaId),
+          cintaTaekwondo: esTaekwondo ? cintaTaekwondoNormalizada : null,
           fechaRegistro: new Date(),
         }));
 

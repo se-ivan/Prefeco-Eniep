@@ -1,6 +1,7 @@
 // src/app/api/equipos/[id]/participantes/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 /**
  * GET /api/equipos/:id/participantes
@@ -26,7 +27,9 @@ export async function GET(
         inscripciones: {
           orderBy: { id: "asc" },
           select: {
+            id: true,
             participanteId: true,
+            cintaTaekwondo: true,
             participante: {
               select: {
                 nombres: true,
@@ -47,11 +50,13 @@ export async function GET(
     }
 
     const mapped = equipo.inscripciones.map((ins: any) => ({
+      inscripcionId: ins.id,
       participanteId: ins.participanteId,
       nombreCompleto: `${ins.participante.apellidoPaterno} ${ins.participante.apellidoMaterno} ${ins.participante.nombres}`,
       matricula: ins.participante.matricula,
       fechaNacimiento: ins.participante.fechaNacimiento,
       genero: ins.participante.genero,
+      cintaTaekwondo: normalizeTaekwondoCinta(ins.cintaTaekwondo),
     }));
 
     return NextResponse.json(mapped);

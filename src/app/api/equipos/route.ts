@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isResponsable } from "@/lib/rbac";
+import { normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 export async function POST(req: Request) {
   try {
@@ -81,7 +82,10 @@ export async function GET(req: Request) {
         institucion: { select: { id: true, nombre: true } },
         inscripciones: {
           where: { categoria: { deletedAt: null } },
-          select: { categoria: { select: { id: true, nombre: true } } },
+          select: {
+            categoria: { select: { id: true, nombre: true } },
+            cintaTaekwondo: true,
+          },
         },
       },
       orderBy: { id: "asc" },
@@ -94,6 +98,9 @@ export async function GET(req: Request) {
       disciplinaId: e.disciplinaId,
       institucion: e.institucion,
       categoria: e.inscripciones[0]?.categoria ?? null,
+      cintaTaekwondo: normalizeTaekwondoCinta(
+        e.inscripciones.find((ins: any) => !!ins?.cintaTaekwondo)?.cintaTaekwondo
+      ),
       integrantesCount: e.inscripciones.length,
     }));
 

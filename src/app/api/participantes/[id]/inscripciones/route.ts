@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isTaekwondoDisciplina, normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 export async function GET(
   request: NextRequest,
@@ -33,7 +34,10 @@ export async function GET(
       where: {
         participanteId,
       },
-      include: {
+      select: {
+        id: true,
+        disciplinaId: true,
+        categoriaId: true,
         equipo: {
           select: {
             nombreEquipo: true,
@@ -45,6 +49,12 @@ export async function GET(
             nombre: true,
             rama: true,
             modalidad: true,
+            disciplinaBaseId: true,
+            disciplinaBase: {
+              select: {
+                nombre: true,
+              },
+            },
           },
         },
         categoria: {
@@ -91,12 +101,15 @@ export async function GET(
         nombre: string;
         rama: string;
         modalidad: string;
+        esTaekwondo: boolean;
+        cintaTaekwondo: string | null;
         equipos: string[];
         categorias: { id: number; nombre: string; disciplinaId: number }[];
       }
     >();
 
     for (const inscripcion of inscripciones) {
+      const cintaTaekwondo = normalizeTaekwondoCinta((inscripcion as any).cintaTaekwondo);
       const disciplinaId = inscripcion.disciplina.id;
 
       if (!disciplinasMap.has(disciplinaId)) {
@@ -105,12 +118,20 @@ export async function GET(
           nombre: inscripcion.disciplina.nombre,
           rama: inscripcion.disciplina.rama,
           modalidad: inscripcion.disciplina.modalidad,
+          esTaekwondo: isTaekwondoDisciplina({
+            disciplinaBaseId: inscripcion.disciplina.disciplinaBaseId,
+            disciplinaBaseNombre: inscripcion.disciplina.disciplinaBase?.nombre,
+          }),
+          cintaTaekwondo,
           equipos: [],
           categorias: [],
         });
       }
 
       const disciplina = disciplinasMap.get(disciplinaId)!;
+      if (disciplina.esTaekwondo && !disciplina.cintaTaekwondo && cintaTaekwondo) {
+        disciplina.cintaTaekwondo = cintaTaekwondo;
+      }
       const teamName =
         inscripcion.equipo?.nombreEquipo ??
         equipoFallbackByInscripcion.get(inscripcion.id);
