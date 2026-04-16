@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
+import { isTaekwondoDisciplina, normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 function calcularEdadEnFecha(fechaNacimiento: Date, referencia: Date) {
   let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
@@ -37,7 +38,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const body = await req.json();
-    const { nombreEquipo, participantes: participantesRaw, categoriaId } = body ?? {};
+    const { nombreEquipo, participantes: participantesRaw, categoriaId, cintaTaekwondo } = body ?? {};
 
     if (!nombreEquipo || !String(nombreEquipo).trim()) {
       return NextResponse.json({ error: "nombreEquipo is required" }, { status: 400 });
@@ -97,6 +98,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           status: 409,
           message: "Esta disciplina solo permite inscripción de personal de apoyo",
         };
+      }
+
+      const esTaekwondo = isTaekwondoDisciplina({
+        disciplinaBaseId: equipo.disciplina?.disciplinaBaseId,
+        disciplinaBaseNombre: equipo.disciplina?.disciplinaBase?.nombre,
+      });
+      const cintaTaekwondoNormalizada = normalizeTaekwondoCinta(cintaTaekwondo);
+      if (esTaekwondo && !cintaTaekwondoNormalizada) {
+        throw { status: 400, message: "cintaTaekwondo is required for Taekwondo" };
       }
 
       const categoria = await tx.categoria.findFirst({
@@ -278,6 +288,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           equipoId,
           disciplinaId: equipo.disciplinaId,
           categoriaId: Number(categoriaId),
+          cintaTaekwondo: esTaekwondo ? cintaTaekwondoNormalizada : null,
           fechaRegistro: new Date(),
         }));
 
@@ -290,6 +301,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
       if (toCreate.length > 0) {
         await tx.inscripcion.createMany({ data: toCreate });
+      }
+
+      if (esTaekwondo) {
+        await tx.inscripcion.updateMany({
+          where: { equipoId },
+          data: { cintaTaekwondo: cintaTaekwondoNormalizada },
+        });
       }
 
       await tx.equipo.update({

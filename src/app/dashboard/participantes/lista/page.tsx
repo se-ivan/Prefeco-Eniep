@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
 import { uploadParticipantDocumentToFirebase } from "@/lib/document-upload";
+import { formatTaekwondoCintaLabel } from "@/lib/taekwondo";
 
 type Institucion = {
   id: number;
@@ -110,6 +111,8 @@ type DisciplinaInscripcion = {
   nombre: string;
   rama: "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
   modalidad: "EQUIPO" | "INDIVIDUAL";
+  esTaekwondo?: boolean;
+  cintaTaekwondo?: string | null;
   equipos: string[];
   categorias: Categoria[];
 };
@@ -787,6 +790,11 @@ export default function ListaParticipantesPage() {
                               <span className="text-xs text-slate-400">Sin categorías asignadas</span>
                             )}
                           </div>
+                          {disciplina.esTaekwondo && (
+                            <p className="text-xs text-slate-500 mt-2">
+                              Cinta: <span className="font-medium">{formatTaekwondoCintaLabel(disciplina.cintaTaekwondo)}</span>
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

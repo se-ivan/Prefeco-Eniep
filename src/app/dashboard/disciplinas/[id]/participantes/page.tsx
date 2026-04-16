@@ -12,6 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  formatTaekwondoCintaLabel,
+  isTaekwondoDisciplina,
+  TAEKWONDO_CINTAS,
+} from "@/lib/taekwondo";
 
 /* ---------- Tipos locales (compatibles con tus componentes) ---------- */
 
@@ -19,6 +24,8 @@ type PageDisciplina = {
   id: number;
   nombre: string;
   rama?: string | null;
+  disciplinaBaseId?: number | null;
+  disciplinaBase?: { nombre?: string | null } | null;
   modalidad: "INDIVIDUAL" | "EQUIPO";
   categorias?: { id: number; nombre: string }[] | null;
   minIntegrantes?: number | null;
@@ -32,6 +39,7 @@ type Equipo = {
   disciplinaId: number;
   institucion: { id: number; nombre: string };
   categoria?: { id: number; nombre: string } | null;
+  cintaTaekwondo?: string | null;
   integrantesCount?: number | null;
 };
 
@@ -42,6 +50,7 @@ type ParticipanteRow = {
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno?: string | null;
+  cintaTaekwondo?: string | null;
   institucion: { id: number; nombre: string };
   categoria?: { id: number; nombre: string } | null;
 };
@@ -75,6 +84,10 @@ export default function ParticipantesPage() {
   // Team viewer modal
   const [openTeamModal, setOpenTeamModal] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Equipo | null>(null);
+  const [openBeltModal, setOpenBeltModal] = useState(false);
+  const [currentIndividual, setCurrentIndividual] = useState<ParticipanteRow | null>(null);
+  const [currentBelt, setCurrentBelt] = useState("");
+  const [savingBelt, setSavingBelt] = useState(false);
 
   // --- cargar disciplina y instituciones al montar ---
   useEffect(() => {
@@ -161,6 +174,7 @@ export default function ParticipantesPage() {
               nombres: i.nombres,
               apellidoPaterno: i.apellidoPaterno,
               apellidoMaterno: i.apellidoMaterno ?? null,
+              cintaTaekwondo: i.cintaTaekwondo ?? null,
               institucion: i.institucion ?? { id: 0, nombre: "—" },
               categoria: i.categoria ?? null,
             }));
@@ -257,8 +271,20 @@ export default function ParticipantesPage() {
     }
   }
 
-  function handleEditParticipantFromList(participantId: number) {
-    router.push(`/dashboard/participantes/lista?editId=${participantId}`);
+  const esTaekwondoDisciplinaActual = isTaekwondoDisciplina({
+    disciplinaBaseId: disciplina?.disciplinaBaseId,
+    disciplinaBaseNombre: disciplina?.disciplinaBase?.nombre,
+  });
+
+  function handleEditParticipantFromList(participant: ParticipanteRow) {
+    if (!esTaekwondoDisciplinaActual || !participant.inscripcionId) {
+      router.push(`/dashboard/participantes/lista?editId=${participant.id}`);
+      return;
+    }
+
+    setCurrentIndividual(participant);
+    setCurrentBelt(participant.cintaTaekwondo ?? "");
+    setOpenBeltModal(true);
   }
 
   function handleEditApoyoFromList(personalId: number) {
@@ -306,6 +332,55 @@ export default function ParticipantesPage() {
   const teamsForTable = matchesRama ? rowsTeams : [];
   const individualsForTable = matchesRama ? rowsIndividualsFilteredByName : [];
   const apoyosForTable = matchesRama ? rowsApoyoFilteredByName : [];
+
+  async function handleSaveIndividualBelt() {
+    if (!currentIndividual?.inscripcionId) return;
+    if (!currentBelt) {
+      toast.error("Selecciona una cinta de Taekwondo");
+      return;
+    }
+
+    setSavingBelt(true);
+    try {
+      const res = await fetch(`/api/inscripciones/${currentIndividual.inscripcionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cintaTaekwondo: currentBelt }),
+      });
+      
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const errorMessage = body?.error || "No se pudo actualizar la cinta";
+        
+        // Mapear errores del servidor a mensajes amigables sin revelar detalles internos
+        const userFriendlyError = (() => {
+          if (errorMessage.includes("No autenticado")) return "Tu sesión expiró. Por favor, recarga la página.";
+          if (errorMessage.includes("No autorizado")) return "No tienes permisos para actualizar esta cinta.";
+          if (errorMessage.includes("no encontrada")) return "El registro del participante no existe.";
+          if (errorMessage.includes("Taekwondo")) return "Esta acción solo aplica para Taekwondo.";
+          if (errorMessage.includes("requerida")) return "Debes seleccionar una cinta válida.";
+          return "No se pudo guardar los cambios. Intenta de nuevo.";
+        })();
+        
+        throw new Error(userFriendlyError);
+      }
+
+      setRowsIndividuals((prev) =>
+        prev.map((row) =>
+          row.inscripcionId === currentIndividual.inscripcionId
+            ? { ...row, cintaTaekwondo: currentBelt }
+            : row
+        )
+      );
+      toast.success("Cinta actualizada correctamente");
+      setOpenBeltModal(false);
+      setCurrentIndividual(null);
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo actualizar la cinta");
+    } finally {
+      setSavingBelt(false);
+    }
+  }
 
   return (
     <main className="p-6">
@@ -456,6 +531,7 @@ export default function ParticipantesPage() {
           individuals={individualsForTable}
           apoyos={apoyosForTable}
           selectedCategoriaId={selectedCategoriaId}
+          isTaekwondo={esTaekwondoDisciplinaActual}
           onViewTeam={handleOpenTeam}
           onDeleteTeam={(id) => handleDeleteTeamLocally(id)}
           onEditParticipant={(id) => handleEditParticipantFromList(id)}
@@ -465,12 +541,65 @@ export default function ParticipantesPage() {
         />
       </div>
 
+        {openBeltModal && currentIndividual && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+            <div className="w-full max-w-md rounded-xl bg-white border p-5 shadow-2xl">
+              <h3 className="text-lg font-bold text-slate-900">Editar cinta</h3>
+              <p className="text-sm text-slate-600 mt-1">
+                {`${currentIndividual.nombres} ${currentIndividual.apellidoPaterno} ${currentIndividual.apellidoMaterno ?? ""}`.trim()}
+              </p>
+
+              <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                <p className="text-[11px] text-slate-500">Cinta actual</p>
+                <p className="text-sm font-medium text-slate-900">{formatTaekwondoCintaLabel(currentIndividual.cintaTaekwondo)}</p>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-xs text-slate-600 mb-1">Cinta Taekwondo</label>
+                <select
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={currentBelt}
+                  onChange={(e) => setCurrentBelt(e.target.value)}
+                >
+                  <option value="">Selecciona cinta</option>
+                  {TAEKWONDO_CINTAS.map((cinta) => (
+                    <option key={cinta.value} value={cinta.value}>
+                      {cinta.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setOpenBeltModal(false);
+                    setCurrentIndividual(null);
+                  }}
+                  disabled={savingBelt}
+                  className="px-3 py-2 border rounded text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveIndividualBelt}
+                  disabled={savingBelt}
+                  className="px-3 py-2 bg-[#08677a] text-white rounded text-sm disabled:opacity-60"
+                >
+                  {savingBelt ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* Team modal */}
       <TeamMembersModal
         open={openTeamModal}
         onClose={() => setOpenTeamModal(false)}
         equipo={currentTeam}
         disciplina={disciplina ? { minIntegrantes: disciplina.minIntegrantes, maxIntegrantes: disciplina.maxIntegrantes } : undefined}
+          isTaekwondo={esTaekwondoDisciplinaActual}
         categoriaId={currentTeam?.categoria?.id}
         onSuccess={async () => {
           // Recargar la lista de equipos

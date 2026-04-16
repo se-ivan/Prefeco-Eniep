@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isResponsable } from "@/lib/rbac";
+import { normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 /**
  * GET /api/participantes-inscritos
@@ -102,6 +103,7 @@ export async function GET(req: Request) {
       institucion: participante?.institucion,
       disciplina: i.disciplina ?? null,
       categoria: i.categoria ?? null,
+      cintaTaekwondo: normalizeTaekwondoCinta(i.cintaTaekwondo),
       fechaRegistro: i.fechaRegistro,
       disciplinaId: i.disciplinaId,
       };

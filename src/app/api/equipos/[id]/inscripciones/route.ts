@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserScope, isAdmin, isResponsable } from "@/lib/rbac";
+import { isTaekwondoDisciplina, normalizeTaekwondoCinta } from "@/lib/taekwondo";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,7 +21,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const body = await req.json();
-      const { participantes: participantesRaw, categoriaId } = body ?? {};
+      const { participantes: participantesRaw, categoriaId, cintaTaekwondo } = body ?? {};
     
       if (!Array.isArray(participantesRaw) || participantesRaw.length === 0) {
       return NextResponse.json({ error: "participants array is required" }, { status: 400 });
@@ -60,6 +61,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           status: 409,
           message: "Esta disciplina solo permite inscripción de personal de apoyo",
         };
+      }
+
+      const esTaekwondo = isTaekwondoDisciplina({
+        disciplinaBaseId: equipo.disciplina?.disciplinaBaseId,
+        disciplinaBaseNombre: equipo.disciplina?.disciplinaBase?.nombre,
+      });
+      const cintaTaekwondoNormalizada = normalizeTaekwondoCinta(cintaTaekwondo);
+      if (esTaekwondo && !cintaTaekwondoNormalizada) {
+        throw { status: 400, message: "cintaTaekwondo is required for Taekwondo" };
       }
 
       const categoria = await tx.categoria.findFirst({
@@ -139,6 +149,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         equipoId: equipoId,
         disciplinaId: equipo.disciplinaId,
         categoriaId: Number(categoriaId),
+        cintaTaekwondo: esTaekwondo ? cintaTaekwondoNormalizada : null,
         fechaRegistro: now,
       }));
 
