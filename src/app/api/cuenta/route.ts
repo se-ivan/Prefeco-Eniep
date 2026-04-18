@@ -44,13 +44,68 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No hay datos para actualizar" }, { status: 400 });
     }
 
-    if (
-      (telefono !== undefined ||
-        urlLogo !== undefined ||
-        avalPresidenciaUrl !== undefined ||
-        liberacionAdeudosUrl !== undefined) &&
-      scope.institucionId
-    ) {
+    const wantsInstitutionUpdate =
+      telefono !== undefined ||
+      urlLogo !== undefined ||
+      avalPresidenciaUrl !== undefined ||
+      liberacionAdeudosUrl !== undefined;
+
+    let targetInstitucionId = scope.institucionId ?? null;
+
+    // Recuperación para cuentas de responsables que quedaron huérfanas tras eliminar/recrear plantel.
+    if (wantsInstitutionUpdate && !targetInstitucionId && scope.role === "RESPONSABLE_INSTITUCION") {
+      const usernameAsCct = scope.username?.trim().toUpperCase();
+
+      if (usernameAsCct) {
+        const byCct = await prisma.institucion.findUnique({
+          where: { cct: usernameAsCct },
+          select: { id: true },
+        });
+
+        if (byCct) {
+          await prisma.user.update({
+            where: { id: scope.id },
+            data: { institucionId: byCct.id },
+          });
+          targetInstitucionId = byCct.id;
+        }
+      }
+
+      if (!targetInstitucionId) {
+        const unassignedInstitutions = await prisma.institucion.findMany({
+          where: {
+            usuariosResponsables: {
+              none: {
+                role: "RESPONSABLE_INSTITUCION",
+              },
+            },
+          },
+          select: { id: true },
+          take: 2,
+        });
+
+        if (unassignedInstitutions.length === 1) {
+          const single = unassignedInstitutions[0];
+          await prisma.user.update({
+            where: { id: scope.id },
+            data: { institucionId: single.id },
+          });
+          targetInstitucionId = single.id;
+        }
+      }
+    }
+
+    if (wantsInstitutionUpdate && !targetInstitucionId) {
+      return NextResponse.json(
+        {
+          error:
+            "Tu cuenta no está vinculada a una institución. Pide a un administrador reasignar tu usuario al plantel.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (wantsInstitutionUpdate && targetInstitucionId) {
       const instData: any = {};
       if (telefono !== undefined) instData.telefono = telefono ? String(telefono).trim() : null;
       if (urlLogo !== undefined) instData.urlLogo = urlLogo ? String(urlLogo).trim() : null;
@@ -59,7 +114,7 @@ export async function PATCH(req: NextRequest) {
 
       if (Object.keys(instData).length > 0) {
         await prisma.institucion.update({
-          where: { id: scope.institucionId },
+          where: { id: targetInstitucionId },
           data: instData,
         });
       }

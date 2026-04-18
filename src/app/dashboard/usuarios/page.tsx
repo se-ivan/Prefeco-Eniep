@@ -158,6 +158,11 @@ export default function UsuariosPage() {
       return;
     }
 
+    if (newUser.password.length < 8) {
+      toast.error("La contraseña temporal debe tener al menos 8 caracteres");
+      return;
+    }
+
     if (!newUser.role) {
       toast.error("Debes seleccionar un cargo (rol)");
       return;
@@ -315,7 +320,10 @@ export default function UsuariosPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FieldInput value={newUser.name} onChange={(v) => setNewUser((p) => ({ ...p, name: v }))} placeholder="Nombre completo" />
             <FieldInput value={newUser.username} onChange={(v) => setNewUser((p) => ({ ...p, username: v }))} placeholder="username_unico" type="text" />
-            <FieldInput value={newUser.password} onChange={(v) => setNewUser((p) => ({ ...p, password: v }))} placeholder="Contraseña temporal" type="password" />
+            <div className="space-y-1">
+              <FieldInput value={newUser.password} onChange={(v) => setNewUser((p) => ({ ...p, password: v }))} placeholder="Contraseña temporal" type="password" />
+              <p className="text-xs text-gray-500">Mínimo 8 caracteres.</p>
+            </div>
             <select
               value={newUser.role}
               onChange={(e) => {

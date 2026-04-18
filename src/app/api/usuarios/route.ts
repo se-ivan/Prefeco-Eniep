@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedUsername = String(username).trim().toLowerCase();
+    const normalizedPassword = String(password);
 
     if (!/^[a-zA-Z0-9_]{3,30}$/.test(normalizedUsername)) {
       return NextResponse.json(
@@ -132,34 +133,76 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (normalizedPassword.length < 8) {
+      return NextResponse.json(
+        { error: "La contraseña debe tener al menos 8 caracteres" },
+        { status: 400 }
+      );
+    }
+
     const internalEmail = `${normalizedUsername}@local.eniep`;
 
-    await (auth.api as any).signUpEmail({
-      body: {
-        name: String(name).trim(),
-        email: internalEmail,
-        password: String(password),
-        username: normalizedUsername,
-      },
-      headers: req.headers,
-    });
+    const signUpAndAssign = async () => {
+      await (auth.api as any).signUpEmail({
+        body: {
+          name: String(name).trim(),
+          email: internalEmail,
+          password: normalizedPassword,
+          username: normalizedUsername,
+        },
+        headers: req.headers,
+      });
 
-    const updated = await prisma.user.update({
-      where: { username: normalizedUsername },
-      data: {
-        role: normalizedRole,
-        institucionId: normalizedRole === "RESPONSABLE_INSTITUCION" ? Number(institucionId) : null,
-      },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        email: true,
-        role: true,
-        institucionId: true,
-        institucion: { select: { id: true, nombre: true, cct: true } },
-      },
-    });
+      return prisma.user.update({
+        where: { username: normalizedUsername },
+        data: {
+          role: normalizedRole,
+          institucionId: normalizedRole === "RESPONSABLE_INSTITUCION" ? Number(institucionId) : null,
+        },
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          email: true,
+          role: true,
+          institucionId: true,
+          institucion: { select: { id: true, nombre: true, cct: true } },
+        },
+      });
+    };
+
+    let updated;
+    try {
+      updated = await signUpAndAssign();
+    } catch (error: any) {
+      const message = error?.message || "";
+      const isDuplicateError =
+        /existing email|already exists|already been taken|duplicate|P2002|username is already taken/i.test(
+          message
+        );
+
+      if (!isDuplicateError) throw error;
+
+      // Si el plantel fue eliminado antes, puede quedar un usuario responsable huérfano.
+      // En ese caso, recreamos la cuenta para permitir el re-registro con el mismo username.
+      const orphanUser = await prisma.user.findUnique({
+        where: { username: normalizedUsername },
+        select: { id: true, role: true, institucionId: true },
+      });
+
+      const canRecycleAccount =
+        orphanUser?.role === "RESPONSABLE_INSTITUCION" && orphanUser.institucionId === null;
+
+      if (!canRecycleAccount) {
+        return NextResponse.json(
+          { error: "El username ya existe" },
+          { status: 409 }
+        );
+      }
+
+      await prisma.user.delete({ where: { id: orphanUser.id } });
+      updated = await signUpAndAssign();
+    }
 
     return NextResponse.json(updated, { status: 201 });
   } catch (error: any) {
@@ -168,6 +211,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Base de datos no disponible temporalmente" }, { status: 503 });
     }
     const message = error?.message || "Error interno";
+    if (/password|minimo|mínimo|at least|8/i.test(message)) {
+      return NextResponse.json(
+        { error: "La contraseña debe tener al menos 8 caracteres" },
+        { status: 400 }
+      );
+    }
     if (/existing email|already exists|already been taken|duplicate|P2002|username is already taken/i.test(message)) {
       return NextResponse.json({ error: "El username ya existe" }, { status: 409 });
     }

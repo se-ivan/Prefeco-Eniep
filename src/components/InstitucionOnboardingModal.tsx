@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, ArrowLeft, Mail, ShieldCheck, CheckCircle2, Lock, Upload, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -12,7 +12,7 @@ import { uploadImageToFirebase } from "@/lib/photo-upload";
 import { uploadInstitucionDocumentToFirebase } from "@/lib/document-upload";
 import { PhotoCropperModal } from "./PhotoCropperModal";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then((res) => res.json());
 
 export function InstitucionOnboardingModal() {
   const router = useRouter();
@@ -183,6 +183,8 @@ export function InstitucionOnboardingModal() {
         }
       }
 
+      await mutate();
+
       toast.success("Logo guardado. Continúa con los documentos obligatorios.");
       setStep("documents");
 
@@ -224,6 +226,8 @@ export function InstitucionOnboardingModal() {
         throw new Error(errData.error || "No se pudieron guardar los documentos en la base de datos");
       }
 
+      await mutate();
+
       toast.success("Documentos guardados correctamente");
       setStep("success");
       setTimeout(() => {
@@ -241,6 +245,9 @@ export function InstitucionOnboardingModal() {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-0 shadow-2xl [&>button]:hidden bg-transparent">
+        <DialogTitle className="sr-only">
+          Completar primer acceso de institucion
+        </DialogTitle>
         <div className="bg-card dark:bg-card text-card-foreground p-8 relative flex flex-col items-center text-center">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0b697d] via-[#2eb4cc] to-[#ffa52d]" />
           
