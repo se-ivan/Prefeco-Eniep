@@ -8,6 +8,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para editar" }, { status: 403 });
+    }
     if (!isAdmin(scope) && !isResponsable(scope)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
@@ -76,6 +79,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para eliminar" }, { status: 403 });
+    }
     if (!isAdmin(scope) && !isResponsable(scope)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }

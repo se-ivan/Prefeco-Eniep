@@ -13,6 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   formatTaekwondoCintaLabel,
   isTaekwondoDisciplina,
   TAEKWONDO_CINTAS,
@@ -55,6 +65,11 @@ type ParticipanteRow = {
   categoria?: { id: number; nombre: string } | null;
 };
 
+type DeleteTarget = {
+  type: "team" | "inscripcion" | "apoyo";
+  id: number;
+};
+
 /* ------------------ Componente principal ------------------ */
 
 export default function ParticipantesPage() {
@@ -88,6 +103,8 @@ export default function ParticipantesPage() {
   const [currentIndividual, setCurrentIndividual] = useState<ParticipanteRow | null>(null);
   const [currentBelt, setCurrentBelt] = useState("");
   const [savingBelt, setSavingBelt] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // --- cargar disciplina y instituciones al montar ---
   useEffect(() => {
@@ -216,58 +233,96 @@ export default function ParticipantesPage() {
 
   // --- acciones UI / CRUD local + llamadas a endpoints ---
   function handleOpenTeam(team: Equipo | any) {
+    if (isResponsable) {
+      toast.error("Las fechas de Inscripciones terminaron");
+      return;
+    }
     setCurrentTeam(team as Equipo);
     setOpenTeamModal(true);
   }
 
-  async function handleDeleteTeamLocally(id: number) {
-    if (!confirm("¿Eliminar equipo? Esta acción borra todas las inscripciones del equipo.")) return;
-    try {
-      const res = await fetch(`/api/equipos/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error || `HTTP ${res.status}`);
-      }
-      // borrar localmente
-      setRowsTeams((prev) => prev.filter((t) => t.id !== id));
-      toast.success("Equipo eliminado correctamente");
-    } catch (err) {
-      console.error("Error borrando equipo:", err);
-      toast.error("No se pudo eliminar el equipo");
+  function requestDeleteTeam(id: number) {
+    if (isResponsable) {
+      toast.error("No tienes permitido eliminar");
+      return;
     }
+    setDeleteTarget({ type: "team", id });
   }
 
-  async function handleDeleteInscripcionLocally(inscripcionId: number) {
-    if (!confirm("¿Eliminar?")) return;
-    try {
-      const res = await fetch(`/api/inscripciones/${inscripcionId}`, { method: "DELETE" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error || `HTTP ${res.status}`);
-      }
-
-      setRowsIndividuals((prev) => prev.filter((p) => p.inscripcionId !== inscripcionId));
-      toast.success("Registro de participante eliminado correctamente");
-    } catch (err) {
-      console.error("Error eliminando inscripción:", err);
-      toast.error("No se pudo eliminar el registro del participante");
+  function requestDeleteInscripcion(inscripcionId: number) {
+    if (isResponsable) {
+      toast.error("No tienes permitido eliminar");
+      return;
     }
+    setDeleteTarget({ type: "inscripcion", id: inscripcionId });
   }
 
-  async function handleDeleteApoyoLocally(asignacionId: number) {
-    if (!confirm("¿Eliminar?")) return;
+  function requestDeleteApoyo(asignacionId: number) {
+    if (isResponsable) {
+      toast.error("No tienes permitido eliminar");
+      return;
+    }
+    setDeleteTarget({ type: "apoyo", id: asignacionId });
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+
+    if (deleteTarget.type === "team") {
+      try {
+        const res = await fetch(`/api/equipos/${deleteTarget.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error || `HTTP ${res.status}`);
+        }
+        setRowsTeams((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+        toast.success("Equipo eliminado correctamente");
+        setDeleteTarget(null);
+      } catch (err) {
+        console.error("Error borrando equipo:", err);
+        toast.error("No se pudo eliminar el equipo");
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    if (deleteTarget.type === "inscripcion") {
+      try {
+        const res = await fetch(`/api/inscripciones/${deleteTarget.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error || `HTTP ${res.status}`);
+        }
+
+        setRowsIndividuals((prev) => prev.filter((p) => p.inscripcionId !== deleteTarget.id));
+        toast.success("Registro de participante eliminado correctamente");
+        setDeleteTarget(null);
+      } catch (err) {
+        console.error("Error eliminando inscripción:", err);
+        toast.error("No se pudo eliminar el registro del participante");
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/asignacion-apoyo/${asignacionId}`, { method: "DELETE" });
+      const res = await fetch(`/api/asignacion-apoyo/${deleteTarget.id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(body?.error || `HTTP ${res.status}`);
       }
 
-      setRowsApoyo((prev) => prev.filter((p) => p.asignacionId !== asignacionId));
+      setRowsApoyo((prev) => prev.filter((p) => p.asignacionId !== deleteTarget.id));
       toast.success("Registro de personal de apoyo eliminado correctamente");
+      setDeleteTarget(null);
     } catch (err) {
       console.error("Error eliminando asignación de apoyo:", err);
       toast.error("No se pudo eliminar el registro de personal de apoyo");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -533,13 +588,38 @@ export default function ParticipantesPage() {
           selectedCategoriaId={selectedCategoriaId}
           isTaekwondo={esTaekwondoDisciplinaActual}
           onViewTeam={handleOpenTeam}
-          onDeleteTeam={(id) => handleDeleteTeamLocally(id)}
+          onDeleteTeam={(id) => requestDeleteTeam(id)}
           onEditParticipant={(id) => handleEditParticipantFromList(id)}
-          onDeleteParticipant={(id) => handleDeleteInscripcionLocally(id)}
+          onDeleteParticipant={(id) => requestDeleteInscripcion(id)}
           onEditApoyo={(id) => handleEditApoyoFromList(id)}
-          onDeleteApoyo={(id) => handleDeleteApoyoLocally(id)}
+          onDeleteApoyo={(id) => requestDeleteApoyo(id)}
         />
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteTarget?.type === "team" ? "Eliminar equipo" : "Eliminar registro"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.type === "team"
+                ? "Esta acción eliminará el equipo y sus inscripciones. No se puede deshacer."
+                : "Esta acción eliminará el registro seleccionado. No se puede deshacer."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleting}
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
         {openBeltModal && currentIndividual && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">

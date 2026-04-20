@@ -122,6 +122,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para eliminar" }, { status: 403 });
+    }
     if (scope.role === "DIRECTIVO") return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     const { id } = await params;
@@ -137,10 +140,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     if (!existing) {
       return NextResponse.json({ error: "Personal de apoyo no encontrado" }, { status: 404 });
-    }
-
-    if (isResponsable(scope) && existing.institucionId !== scope.institucionId) {
-      return NextResponse.json({ error: "No autorizado para eliminar este registro" }, { status: 403 });
     }
 
     await prisma.personalApoyo.delete({ where: { id: personalId } });

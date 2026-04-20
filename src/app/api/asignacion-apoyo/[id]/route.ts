@@ -11,6 +11,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para eliminar" }, { status: 403 });
+    }
 
     const { id } = await params;
     const asignId = Number(id);
