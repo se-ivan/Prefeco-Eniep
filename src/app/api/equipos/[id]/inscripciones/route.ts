@@ -12,6 +12,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para registrar" }, { status: 403 });
+    }
     if (!isAdmin(scope) && !isResponsable(scope)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }

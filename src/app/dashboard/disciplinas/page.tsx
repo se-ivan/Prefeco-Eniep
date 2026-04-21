@@ -5,6 +5,7 @@ import CrearDisciplinaModal from "@/components/CrearDisciplinaModal";
 import DisciplinaCard from "@/components/DisciplinaCard";
 import NuevoParticipanteModal from "@/components/NuevoParticipanteModal";
 import DisciplinaModalEditar from "@/components/DisciplinaModalEditar";
+import { toast } from "sonner";
 
 /**
  * Página de Disciplinas (dashboard)
@@ -50,6 +51,7 @@ export default function DisciplinasPage() {
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
   const [isDirectivo, setIsDirectivo] = useState(false);
+  const [isResponsable, setIsResponsable] = useState(false);
 
   // Filtros - iniciados con valores por defecto
   const [filtroTipo, setFiltroTipo] = useState<string>("TODAS");
@@ -90,6 +92,7 @@ export default function DisciplinasPage() {
         const me = await res.json();
         setIsAdmin(me?.role === "ADMIN");
         setIsDirectivo(me?.role === "DIRECTIVO");
+        setIsResponsable(me?.role === "RESPONSABLE_INSTITUCION");
       } catch {
         // ignore
       }
@@ -242,6 +245,10 @@ export default function DisciplinasPage() {
             onEditDisciplina={(disc) => handleOpenEditDisciplina(disc as Disciplina)}
             onDeleteDisciplina={(disc) => handleDeleteDisciplina(disc as Disciplina)}
             onCreateTeam={(disc) => {
+              if (isResponsable) {
+                toast.error("Las fechas de Inscripciones terminaron");
+                return;
+              }
               setDisciplinaSeleccionada(disc as Disciplina);
               setNuevoParticipanteOpen(true);
             }}

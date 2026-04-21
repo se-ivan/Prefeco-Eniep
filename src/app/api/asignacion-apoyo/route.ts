@@ -7,6 +7,9 @@ export async function POST(req: Request) {
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para asignar" }, { status: 403 });
+    }
 
     const body = await req.json();
     const { personalId, disciplinaId, categoriaId, rol } = body ?? {};

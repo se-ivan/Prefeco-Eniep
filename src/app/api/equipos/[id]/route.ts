@@ -11,6 +11,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const scope = await getUserScope(req.headers);
     if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (isResponsable(scope)) {
+      return NextResponse.json({ error: "No tienes permiso para eliminar" }, { status: 403 });
+    }
     if (!isAdmin(scope) && !isResponsable(scope)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
@@ -19,21 +22,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const equipoId = Number(id);
     if (!Number.isInteger(equipoId)) {
       return NextResponse.json({ error: "equipo id inválido" }, { status: 400 });
-    }
-
-    if (isResponsable(scope)) {
-      if (!scope.institucionId) {
-        return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
-      }
-
-      const equipo = await prisma.equipo.findUnique({ where: { id: equipoId }, select: { institucionId: true } });
-      if (!equipo) {
-        return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 });
-      }
-
-      if (equipo.institucionId !== scope.institucionId) {
-        return NextResponse.json({ error: "No autorizado para eliminar este equipo" }, { status: 403 });
-      }
     }
 
     // transacción: borrar inscripciones (si existen) y el equipo

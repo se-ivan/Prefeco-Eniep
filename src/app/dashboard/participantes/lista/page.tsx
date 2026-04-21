@@ -288,6 +288,14 @@ export default function ListaParticipantesPage() {
     }
   };
 
+  const requestDelete = (part: Participante) => {
+    if (scope?.role === "RESPONSABLE_INSTITUCION") {
+      toast.error("No tienes permitido eliminar");
+      return;
+    }
+    setDeleteTarget(part);
+  };
+
   const openEditModal = (part: Participante) => {
     setEditingItem(part);
     setFormErrors({});
@@ -682,7 +690,7 @@ export default function ListaParticipantesPage() {
                           className="h-8 px-2 text-red-600 hover:bg-red-50 hover:text-red-700 w-full"
                           onClick={(e) => {
                             e.preventDefault();
-                            setDeleteTarget(part);
+                            requestDelete(part);
                           }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
