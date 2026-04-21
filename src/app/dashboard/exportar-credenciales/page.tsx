@@ -212,7 +212,7 @@ export default function ExportarPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-slate-500">
-                    {tipoCredencial === 'ALUMNO' ? 'Participantes' : 'Personal de apoyo'}
+                    {tipoCredencial === 'ALUMNO' ? 'Inscripciones de participantes' : 'Asignaciones de personal'}
                   </CardTitle>
                   <div className="p-2 bg-emerald-50 rounded-md">
                     {tipoCredencial === 'ALUMNO' ? (
@@ -224,7 +224,7 @@ export default function ExportarPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{registrosFiltradosPorCheckboxes.length}</div>
-                  <p className="text-xs text-slate-500 mt-1">Listos para exportar</p>
+                  <p className="text-xs text-slate-500 mt-1">Listos para exportar (aplica filtros de rama y modalidad)</p>
                 </CardContent>
               </Card>
             </>

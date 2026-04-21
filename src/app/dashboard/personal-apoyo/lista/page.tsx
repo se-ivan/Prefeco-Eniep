@@ -35,7 +35,12 @@ type PersonalApoyo = {
     id: number;
     nombre: string;
   };
+  _count?: {
+    asignacionesApoyo: number;
+  };
 };
+
+type DisciplinaFilter = "TODOS" | "CON_DISCIPLINA" | "SIN_DISCIPLINA";
 
 type UserScope = {
   role: "ADMIN" | "RESPONSABLE_INSTITUCION" | "DIRECTIVO";
@@ -85,6 +90,7 @@ export default function ListaPersonalApoyoPage() {
   const [items, setItems] = useState<PersonalApoyo[]>([]);
   const [instituciones, setInstituciones] = useState<Institucion[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [disciplinaFilter, setDisciplinaFilter] = useState<DisciplinaFilter>("TODOS");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -146,18 +152,24 @@ export default function ListaPersonalApoyoPage() {
 
   const filteredItems = useMemo(() => {
     const value = searchTerm.trim().toLowerCase();
-    if (!value) return items;
-
     return items.filter((item) => {
       const fullName = `${item.nombres} ${item.apellidoPaterno} ${item.apellidoMaterno}`.toLowerCase();
-      return (
+      const matchesSearch =
+        !value ||
         fullName.includes(value) ||
         item.curp.toLowerCase().includes(value) ||
         item.puesto.toLowerCase().includes(value) ||
-        item.institucion.nombre.toLowerCase().includes(value)
-      );
+        item.institucion.nombre.toLowerCase().includes(value);
+
+      const hasDisciplina = (item._count?.asignacionesApoyo ?? 0) > 0;
+      const matchesDisciplinaFilter =
+        disciplinaFilter === "TODOS" ||
+        (disciplinaFilter === "CON_DISCIPLINA" && hasDisciplina) ||
+        (disciplinaFilter === "SIN_DISCIPLINA" && !hasDisciplina);
+
+      return matchesSearch && matchesDisciplinaFilter;
     });
-  }, [items, searchTerm]);
+  }, [disciplinaFilter, items, searchTerm]);
 
   const openEditModal = (item: PersonalApoyo) => {
     setEditingItem(item);
@@ -343,14 +355,25 @@ export default function ListaPersonalApoyoPage() {
         )}
       </div>
 
-      <div className="relative w-full md:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-        <input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar por nombre, CURP, puesto o institución"
-          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#08677a]"
-        />
+      <div className="flex w-full flex-col gap-3 md:max-w-2xl md:flex-row">
+        <div className="relative w-full md:flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nombre, CURP, puesto o institución"
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#08677a]"
+          />
+        </div>
+        <select
+          value={disciplinaFilter}
+          onChange={(e) => setDisciplinaFilter(e.target.value as DisciplinaFilter)}
+          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#08677a] md:w-64"
+        >
+          <option value="TODOS">Todos</option>
+          <option value="CON_DISCIPLINA">Con disciplina</option>
+          <option value="SIN_DISCIPLINA">Sin disciplina</option>
+        </select>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
@@ -645,7 +668,7 @@ function PreviewField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500">{label}</p>
-      <p className="mt-1 text-sm text-gray-800 break-words">{value || "-"}</p>
+      <p className="mt-1 text-sm text-gray-800 wrap-break-word">{value || "-"}</p>
     </div>
   );
 }

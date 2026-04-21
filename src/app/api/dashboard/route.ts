@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserScope, isAdmin, isResponsable, hasAdminViewAccess } from "@/lib/rbac";
+import { getUserScope, isResponsable, hasAdminViewAccess } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
     const scope = await getUserScope(request.headers);
@@ -9,12 +9,44 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const whereClause = isResponsable(scope) ? { institucionId: scope.institucionId ?? -1 } : {};
-        const totalStudents = await prisma.participante.count({ where: whereClause });
-        
-        const maleStudents = await prisma.participante.count({ where: { ...whereClause, genero: "MASCULINO" } });
-        const femaleStudents = await prisma.participante.count({ where: { ...whereClause, genero: "FEMENINO" } });
-        const supportStaff = await prisma.personalApoyo.count({ where: whereClause });
+        const inscripcionesWhere: any = {
+            disciplina: { deletedAt: null },
+            categoria: { deletedAt: null },
+        };
+        const asignacionesWhere: any = {
+            disciplina: { deletedAt: null },
+            categoria: { deletedAt: null },
+        };
+
+        if (isResponsable(scope)) {
+            const institucionId = scope.institucionId ?? -1;
+            inscripcionesWhere.participante = { institucionId };
+            asignacionesWhere.personal = { institucionId };
+        }
+
+        const totalStudents = await prisma.inscripcion.count({ where: inscripcionesWhere });
+
+        const maleStudents = await prisma.inscripcion.count({
+            where: {
+                ...inscripcionesWhere,
+                participante: {
+                    ...(inscripcionesWhere.participante ?? {}),
+                    genero: "MASCULINO",
+                },
+            },
+        });
+
+        const femaleStudents = await prisma.inscripcion.count({
+            where: {
+                ...inscripcionesWhere,
+                participante: {
+                    ...(inscripcionesWhere.participante ?? {}),
+                    genero: "FEMENINO",
+                },
+            },
+        });
+
+        const supportStaff = await prisma.asignacionApoyo.count({ where: asignacionesWhere });
 
         const activeDisciplines = await prisma.disciplina.count();
 

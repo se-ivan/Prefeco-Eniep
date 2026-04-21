@@ -20,11 +20,11 @@ const DemographicsChart = dynamic(
         <CardHeader className="flex flex-row items-center gap-2">
           <PieChartIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           <div>
-            <CardTitle className="text-lg dark:text-slate-100">Distribución de Participantes</CardTitle>
+            <CardTitle className="text-lg dark:text-slate-100">Distribución de Inscripciones y Asignaciones</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+          <div className="h-75 w-full flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
             Cargando gráfico...
           </div>
         </CardContent>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              Total Alumnos Inscritos
+              Total Inscripciones de Alumnos
             </CardTitle>
             <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-md">
               <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" />
@@ -81,7 +81,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{dashboardData?.totalStudents}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Alumnos Registrados</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Inscripciones vigentes</p>
           </CardContent>
         </Card>
 

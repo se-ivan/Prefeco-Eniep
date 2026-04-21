@@ -85,7 +85,12 @@ type Participante = {
   docActaNacimientoUrl?: string | null;
   tutor: Tutor;
   institucion: Institucion;
+  _count?: {
+    inscripciones: number;
+  };
 };
+
+type DisciplinaFilter = "TODOS" | "CON_DISCIPLINA" | "SIN_DISCIPLINA";
 
 type ParticipantDocumentField =
   | "docCredencialUrl"
@@ -202,6 +207,7 @@ export default function ListaParticipantesPage() {
   const { data: participantes = [], isLoading, mutate } = useSWR<Participante[]>("/api/participantes");
   const { data: instituciones = [] } = useSWR<Institucion[]>("/api/instituciones");
   const [searchTerm, setSearchTerm] = useState("");
+  const [disciplinaFilter, setDisciplinaFilter] = useState<DisciplinaFilter>("TODOS");
   const [scope, setScope] = useState<UserScope | null>(null);
   const [previewItem, setPreviewItem] = useState<Participante | null>(null);
   const [editingItem, setEditingItem] = useState<Participante | null>(null);
@@ -491,16 +497,27 @@ export default function ListaParticipantesPage() {
     }
   };
 
-  const filteredParticipantes = useMemo(
-    () => participantes.filter((part) => {
+  const filteredParticipantes = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    return participantes.filter((part) => {
       const name = `${part.nombres} ${part.apellidoPaterno} ${part.apellidoMaterno}`.toLowerCase();
-      return name.includes(searchTerm.toLowerCase()) ||
-      part.curp.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      part.matricula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      part.institucion?.nombre.toLowerCase().includes(searchTerm.toLowerCase());
-    }),
-    [participantes, searchTerm]
-  );
+      const matchesSearch =
+        !term ||
+        name.includes(term) ||
+        part.curp.toLowerCase().includes(term) ||
+        part.matricula.toLowerCase().includes(term) ||
+        part.institucion?.nombre.toLowerCase().includes(term);
+
+      const hasDisciplina = (part._count?.inscripciones ?? 0) > 0;
+      const matchesDisciplinaFilter =
+        disciplinaFilter === "TODOS" ||
+        (disciplinaFilter === "CON_DISCIPLINA" && hasDisciplina) ||
+        (disciplinaFilter === "SIN_DISCIPLINA" && !hasDisciplina);
+
+      return matchesSearch && matchesDisciplinaFilter;
+    });
+  }, [disciplinaFilter, participantes, searchTerm]);
 
   return (
     <div className="min-h-screen">
@@ -515,14 +532,25 @@ export default function ListaParticipantesPage() {
       <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {/* Actions Bar */}
         <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar por nombre, CURP, matrícula o institución..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
-            />
+          <div className="flex w-full flex-col gap-3 sm:max-w-2xl sm:flex-row">
+            <div className="relative w-full sm:flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar por nombre, CURP, matrícula o institución..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
+              />
+            </div>
+            <select
+              value={disciplinaFilter}
+              onChange={(e) => setDisciplinaFilter(e.target.value as DisciplinaFilter)}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-[#0b697d] sm:w-64"
+            >
+              <option value="TODOS">Todos</option>
+              <option value="CON_DISCIPLINA">Con disciplina</option>
+              <option value="SIN_DISCIPLINA">Sin disciplina</option>
+            </select>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="bg-[#0b697d]/5 px-4 py-2 rounded-xl text-sm font-semibold text-[#0b697d] text-center border border-[#0b697d]/10 flex-1 sm:flex-none">

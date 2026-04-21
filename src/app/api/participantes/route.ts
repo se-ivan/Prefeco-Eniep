@@ -53,6 +53,11 @@ export async function GET(req: NextRequest) {
             direccion: true,
           },
         },
+        _count: {
+          select: {
+            inscripciones: true,
+          },
+        },
       },
     });
 

@@ -43,6 +43,11 @@ export async function GET(req: NextRequest) {
         institucion: {
           select: { id: true, nombre: true },
         },
+        _count: {
+          select: {
+            asignacionesApoyo: true,
+          },
+        },
       },
     });
 
