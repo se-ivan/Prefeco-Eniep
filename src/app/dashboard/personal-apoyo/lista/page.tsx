@@ -47,6 +47,24 @@ type UserScope = {
   institucionId: number | null;
 };
 
+type CategoriaAsignada = {
+  id: number;
+  nombre: string;
+  disciplinaId: number;
+};
+
+type DisciplinaAsignada = {
+  id: number;
+  nombre: string;
+  rama: "VARONIL" | "FEMENIL" | "UNICA" | "MIXTO";
+  modalidad: "EQUIPO" | "INDIVIDUAL";
+  categorias: CategoriaAsignada[];
+};
+
+type AsignacionesData = {
+  disciplinas: DisciplinaAsignada[];
+};
+
 type EditForm = {
   institucionId: string;
   curp: string;
@@ -97,6 +115,8 @@ export default function ListaPersonalApoyoPage() {
   const [photoToCrop, setPhotoToCrop] = useState<File | null>(null);
   const [scope, setScope] = useState<UserScope | null>(null);
   const [previewItem, setPreviewItem] = useState<PersonalApoyo | null>(null);
+  const [previewAsignaciones, setPreviewAsignaciones] = useState<AsignacionesData | null>(null);
+  const [loadingPreviewAsignaciones, setLoadingPreviewAsignaciones] = useState(false);
   const [editingItem, setEditingItem] = useState<PersonalApoyo | null>(null);
   const [editForm, setEditForm] = useState<EditForm>(initialEditForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -229,7 +249,29 @@ export default function ListaPersonalApoyoPage() {
 
   const closePreviewModal = () => {
     setPreviewItem(null);
+    setPreviewAsignaciones(null);
+    setLoadingPreviewAsignaciones(false);
   };
+
+  const loadPreviewAsignaciones = async (personalId: number) => {
+    setLoadingPreviewAsignaciones(true);
+    try {
+      const res = await fetch(`/api/personal-apoyo/${personalId}/asignaciones`);
+      if (!res.ok) throw new Error();
+      const data: AsignacionesData = await res.json();
+      setPreviewAsignaciones(data);
+    } catch {
+      setPreviewAsignaciones({ disciplinas: [] });
+    } finally {
+      setLoadingPreviewAsignaciones(false);
+    }
+  };
+
+  useEffect(() => {
+    if (previewItem) {
+      loadPreviewAsignaciones(previewItem.id);
+    }
+  }, [previewItem]);
 
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -470,6 +512,45 @@ export default function ListaPersonalApoyoPage() {
                     <PreviewField label="Email" value={previewItem.email || "N/A"} />
                     <PreviewField label="Estatus" value={previewItem.estatus} />
                   </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">Disciplinas asignadas</h3>
+                  {loadingPreviewAsignaciones ? (
+                    <div className="mt-3 flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                    </div>
+                  ) : previewAsignaciones?.disciplinas && previewAsignaciones.disciplinas.length > 0 ? (
+                    <div className="mt-3 space-y-3">
+                      {previewAsignaciones.disciplinas.map((disciplina) => (
+                        <div key={disciplina.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                          <p className="font-semibold text-slate-800">{disciplina.nombre}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Rama: <span className="font-medium">{disciplina.rama}</span>
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Modalidad: <span className="font-medium">{disciplina.modalidad}</span>
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            <p className="text-xs text-slate-500 mt-1">Categorías:</p>
+                            {disciplina.categorias && disciplina.categorias.length > 0 ? (
+                              disciplina.categorias.map((cat) => (
+                                <span key={cat.id} className="inline-flex items-center rounded-full bg-[#0b697d]/10 px-2.5 py-0.5 text-xs font-medium text-[#0b697d]">
+                                  {cat.nombre}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-400">Sin categorías asignadas</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-center py-4">
+                      <p className="text-sm text-slate-500">--</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-4">
