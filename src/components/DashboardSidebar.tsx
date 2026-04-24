@@ -13,6 +13,7 @@ import {
   IdCard,
   FileText,
   Volleyball,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -105,6 +106,7 @@ export default function DashboardSidebar({
       title: "Evento",
       items: [
         { name: "Disciplinas", icon: Volleyball, href: "/dashboard/disciplinas" },
+        ...(isAdmin ? [{ name: "Resultados", icon: Trophy, href: "/dashboard/resultados" }] : []),
         ...(!isDirectivo ? [{ name: "Generar Credenciales", icon: IdCard, href: "/dashboard/exportar-credenciales" }] : []),
         { name: "Reportes Excel", icon: FileText, href: "/dashboard/reportes" },
       ],

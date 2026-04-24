@@ -87,6 +87,7 @@ model Institucion {
   equipos              Equipo[]
   personalApoyo        PersonalApoyo[]
   usuariosResponsables User[]
+  resultados           Resultado[]
 
   @@map("instituciones")
 }
@@ -153,6 +154,7 @@ model Disciplina {
   disciplinaBase             DisciplinaBase?   @relation(fields: [disciplinaBaseId], references: [id])
   equipos                    Equipo[]
   inscripciones              Inscripcion[]
+  resultados                 Resultado[]
 
   @@index([deletedAt])
   @@map("disciplinas")
@@ -176,6 +178,7 @@ model Categoria {
   asignacionesApoyo AsignacionApoyo[]
   disciplina        Disciplina        @relation(fields: [disciplinaId], references: [id])
   inscripciones     Inscripcion[]
+  resultados        Resultado[]
 
   @@index([deletedAt])
   @@map("categorias")
@@ -261,6 +264,22 @@ model Bitacora {
   createdAt     DateTime     @default(now())
   institucion   Institucion? @relation(fields: [institucionId], references: [id])
   usuario       User?        @relation(fields: [usuarioId], references: [id])
+}
+
+model Resultado {
+  id            Int         @id @default(autoincrement())
+  disciplinaId  Int         @map("id_disciplina")
+  categoriaId   Int         @map("id_categoria")
+  institucionId Int         @map("id_institucion")
+  lugar         Int         // 1, 2, 3
+  fechaRegistro DateTime    @default(now()) @map("fecha_registro")
+
+  disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
+  categoria     Categoria   @relation(fields: [categoriaId], references: [id])
+  institucion   Institucion @relation(fields: [institucionId], references: [id])
+
+  @@unique([disciplinaId, categoriaId, lugar])
+  @@map("resultados")
 }
 
 /// ENUMS
