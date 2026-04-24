@@ -70,9 +70,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         disciplinaBaseId: equipo.disciplina?.disciplinaBaseId,
         disciplinaBaseNombre: equipo.disciplina?.disciplinaBase?.nombre,
       });
-      const cintaTaekwondoNormalizada = normalizeTaekwondoCinta(cintaTaekwondo);
+      let cintaTaekwondoNormalizada = normalizeTaekwondoCinta(cintaTaekwondo);
       if (esTaekwondo && !cintaTaekwondoNormalizada) {
-        throw { status: 400, message: "cintaTaekwondo is required for Taekwondo" };
+        const existingTeamInscription = await tx.inscripcion.findFirst({
+          where: {
+            equipoId,
+            categoriaId: Number(categoriaId),
+          },
+          select: { cintaTaekwondo: true },
+        });
+
+        if (existingTeamInscription?.cintaTaekwondo) {
+          cintaTaekwondoNormalizada = normalizeTaekwondoCinta(existingTeamInscription.cintaTaekwondo);
+        }
+
+        if (!cintaTaekwondoNormalizada) {
+          throw {
+            status: 400,
+            message: "cintaTaekwondo is required for Taekwondo when team has no prior belt assignment",
+          };
+        }
       }
 
       const categoria = await tx.categoria.findFirst({

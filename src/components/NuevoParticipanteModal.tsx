@@ -50,6 +50,7 @@ type Categoria = { id: number; nombre: string };
 type InstitucionOption = {
   id: number;
   nombre: string;
+  cct?: string | null;
   municipio?: string | null;
 };
 
@@ -466,7 +467,7 @@ export default function NuevoParticipanteModal({
                         <SelectItem value="none" className="text-sm font-normal text-gray-700">Selecciona institución</SelectItem>
                         {instituciones.map((ins) => (
                           <SelectItem key={ins.id} value={String(ins.id)} className="text-sm font-normal text-gray-700">
-                            {ins.nombre}
+                            {ins.cct ? `${ins.nombre} - ${ins.cct}` : ins.nombre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -477,7 +478,11 @@ export default function NuevoParticipanteModal({
                   <div>
                     <label className="text-[11px] font-bold uppercase text-gray-500 mb-1 block">Institución</label>
                     <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-600">
-                      {instituciones.find((ins) => ins.id === userInstitucionId)?.nombre || "Cargando..."}
+                      {(() => {
+                        const institucion = instituciones.find((ins) => ins.id === userInstitucionId);
+                        if (!institucion) return "Cargando...";
+                        return institucion.cct ? `${institucion.nombre} - ${institucion.cct}` : institucion.nombre;
+                      })()}
                     </div>
                   </div>
                 )}
