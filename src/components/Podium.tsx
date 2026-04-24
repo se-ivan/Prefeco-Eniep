@@ -2,11 +2,9 @@
 
 import useSWR from "swr";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Medal, Award, Star } from "lucide-react";
+import { Trophy, Medal, Award, Star, Building2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/components/ui/utils";
 
 interface PodiumData {
   id: number;
@@ -22,22 +20,57 @@ interface PodiumData {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+function InstitutionLogo({ src, alt, size = "md" }: { src: string | null; alt: string; size?: "sm" | "md" | "lg" }) {
+  const sizeClasses = {
+    sm: "h-8 w-8",
+    md: "h-16 w-16 md:h-20 md:w-20",
+    lg: "h-20 w-20 md:h-28 md:w-28",
+  };
+
+  if (src) {
+    return (
+      <div className={`${sizeClasses[size]} rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden`}>
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-contain p-1.5"
+          onError={(e) => {
+            // Hide broken image, show fallback
+            (e.target as HTMLImageElement).style.display = "none";
+            const fallback = (e.target as HTMLImageElement).nextElementSibling;
+            if (fallback) (fallback as HTMLElement).style.display = "flex";
+          }}
+        />
+        <div className="hidden items-center justify-center h-full w-full">
+          <Building2 className="h-1/2 w-1/2 text-slate-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${sizeClasses[size]} rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center`}>
+      <Building2 className="h-1/2 w-1/2 text-slate-400 dark:text-slate-500" />
+    </div>
+  );
+}
+
 export function Podium() {
   const { data: podiumData, isLoading, error } = useSWR<PodiumData[]>("/api/podium", fetcher, {
-    refreshInterval: 30000, // actualiza cada 30s
+    refreshInterval: 30000,
   });
 
   if (isLoading) {
     return (
       <Card className="w-full animate-pulse border-slate-200 dark:border-slate-800">
         <CardHeader>
-          <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded"></div>
+          <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-end gap-4 h-64">
-            <div className="w-24 h-32 bg-slate-200 dark:bg-slate-800 rounded-t-lg"></div>
+          <div className="flex justify-center items-end gap-6 py-8">
+            <div className="w-28 h-36 bg-slate-200 dark:bg-slate-800 rounded-t-lg"></div>
             <div className="w-32 h-48 bg-slate-200 dark:bg-slate-800 rounded-t-lg"></div>
-            <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-t-lg"></div>
+            <div className="w-28 h-28 bg-slate-200 dark:bg-slate-800 rounded-t-lg"></div>
           </div>
         </CardContent>
       </Card>
@@ -59,11 +92,11 @@ export function Podium() {
   // LOGICA MOCK: Si no hay ganadores registrados aún, mostramos instituciones de prueba
   if (sortedData.length === 0 && podiumData.length > 0) {
     sortedData = [...podiumData];
-    // Buscar Melchor Ocampo
-    const melchorIndex = sortedData.findIndex(i => i.nombre.toLowerCase().includes("melchor ocampo"));
-    if (melchorIndex !== -1) {
-      const [melchor] = sortedData.splice(melchorIndex, 1);
-      sortedData.unshift(melchor); // Forzar a primer lugar
+    // Poner a 16SBC2016J en primer lugar
+    const targetIndex = sortedData.findIndex(i => i.cct === "16SBC2016J");
+    if (targetIndex !== -1) {
+      const [target] = sortedData.splice(targetIndex, 1);
+      sortedData.unshift(target); // Forzar a primer lugar
     }
   }
 
@@ -87,105 +120,104 @@ export function Podium() {
   const thirdPlace = sortedData[2];
   const rest = sortedData.slice(3);
 
-  const getAvatarFallback = (name: string) => name.substring(0, 2).toUpperCase();
-
   return (
-    <Card className="w-full overflow-hidden border-slate-200 dark:border-slate-800 bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900 shadow-sm">
-      <CardHeader className="text-center pb-6">
-        <CardTitle className="text-2xl md:text-3xl font-extrabold flex items-center justify-center gap-3 text-slate-900 dark:text-white">
-          <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-md" />
+    <Card className="w-full overflow-hidden border-slate-200 dark:border-slate-800 bg-gradient-to-b from-white to-slate-50/80 dark:from-slate-950 dark:to-slate-900 shadow-sm">
+      <CardHeader className="text-center pb-4 px-4 md:px-6">
+        <CardTitle className="text-xl md:text-2xl font-extrabold flex items-center justify-center gap-3 text-slate-900 dark:text-white">
+          <Trophy className="w-7 h-7 text-yellow-500 drop-shadow-md" />
           Clasificación General
-          <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-md" />
+          <Trophy className="w-7 h-7 text-yellow-500 drop-shadow-md" />
         </CardTitle>
-        <CardDescription className="text-base mt-2">
+        <CardDescription className="text-sm mt-1">
           Las mejores instituciones según los resultados obtenidos en las disciplinas.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-2 sm:px-4 md:px-6 pb-6">
         {/* PODIUM VISUAL */}
-        <div className="flex flex-col sm:flex-row justify-center items-end gap-2 sm:gap-4 md:gap-8 h-auto sm:h-80 mb-12 pt-8">
+        <div className="flex justify-center items-end gap-3 sm:gap-6 md:gap-10 pt-6 pb-4 max-w-3xl mx-auto">
           
           {/* SECOND PLACE */}
           {secondPlace && (
-            <div className="flex flex-col items-center group w-full sm:w-1/3 order-2 sm:order-1 transition-transform hover:-translate-y-2 duration-300">
-              <div className="relative mb-4">
-                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-slate-300 dark:border-slate-500 shadow-lg ring-4 ring-slate-100 dark:ring-slate-800 bg-white dark:bg-slate-900">
-                  <AvatarImage src={secondPlace.urlLogo || ""} alt={secondPlace.nombre} className="object-contain p-2" />
-                  <AvatarFallback className="text-xl font-bold text-slate-500 bg-slate-100">{getAvatarFallback(secondPlace.nombre)}</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-3 -right-3 bg-slate-200 dark:bg-slate-700 p-2 rounded-full shadow-md border border-slate-300 dark:border-slate-600">
-                  <Medal className="w-6 h-6 text-slate-500 dark:text-slate-300" />
+            <div className="flex flex-col items-center w-1/3 max-w-[200px] group transition-transform hover:-translate-y-1 duration-300">
+              {/* Avatar + Badge */}
+              <div className="relative mb-3">
+                <div className="rounded-full border-4 border-slate-300 dark:border-slate-500 shadow-lg ring-2 ring-slate-100 dark:ring-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                  <InstitutionLogo src={secondPlace.urlLogo} alt={secondPlace.nombre} size="md" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-slate-200 dark:bg-slate-700 p-1.5 rounded-full shadow-md border border-slate-300 dark:border-slate-600">
+                  <Medal className="w-4 h-4 text-slate-500 dark:text-slate-300" />
                 </div>
               </div>
-              <div className="text-center mb-2 px-2">
-                <p className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-200 line-clamp-2">{secondPlace.nombre}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{secondPlace.cct}</p>
-                <Badge variant="secondary" className="mt-2 flex items-center gap-1.5 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <span>🥇 {secondPlace.oro}</span>
-                  <span>🥈 {secondPlace.plata}</span>
-                  <span>🥉 {secondPlace.bronce}</span>
+              {/* Info */}
+              <div className="text-center mb-2 w-full px-1">
+                <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight">{secondPlace.nombre}</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{secondPlace.cct}</p>
+                <Badge variant="secondary" className="mt-1.5 text-[10px] sm:text-xs px-2 py-0.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  🥇{secondPlace.oro} 🥈{secondPlace.plata} 🥉{secondPlace.bronce}
                 </Badge>
               </div>
-              <div className="w-full h-24 sm:h-32 bg-gradient-to-t from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-t-xl border-x border-t border-slate-300 dark:border-slate-600 shadow-inner flex justify-center pt-4">
-                <span className="text-4xl font-black text-slate-400 dark:text-slate-500 opacity-50">2</span>
+              {/* Pedestal */}
+              <div className="w-full h-20 sm:h-28 bg-gradient-to-t from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-t-xl border-x border-t border-slate-300 dark:border-slate-600 shadow-inner flex items-start justify-center pt-3">
+                <span className="text-3xl sm:text-4xl font-black text-slate-400 dark:text-slate-500 opacity-40">2</span>
               </div>
             </div>
           )}
 
           {/* FIRST PLACE */}
           {firstPlace && (
-            <div className="flex flex-col items-center group w-full sm:w-1/3 order-1 sm:order-2 z-10 transition-transform hover:-translate-y-2 duration-300 sm:-mt-8">
-              <div className="relative mb-4">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-                  <Star className="w-8 h-8 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse" />
+            <div className="flex flex-col items-center w-1/3 max-w-[220px] group z-10 transition-transform hover:-translate-y-1 duration-300">
+              {/* Star */}
+              <div className="mb-1">
+                <Star className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse mx-auto" />
+              </div>
+              {/* Avatar + Badge */}
+              <div className="relative mb-3">
+                <div className="rounded-full border-4 border-yellow-400 dark:border-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.4)] ring-2 ring-yellow-50 dark:ring-yellow-900/30 overflow-hidden bg-white dark:bg-slate-900">
+                  <InstitutionLogo src={firstPlace.urlLogo} alt={firstPlace.nombre} size="lg" />
                 </div>
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-yellow-400 dark:border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.5)] ring-4 ring-yellow-50 dark:ring-yellow-900/30 bg-white dark:bg-slate-900">
-                  <AvatarImage src={firstPlace.urlLogo || ""} alt={firstPlace.nombre} className="object-contain p-2" />
-                  <AvatarFallback className="text-2xl font-bold text-yellow-600 bg-yellow-50">{getAvatarFallback(firstPlace.nombre)}</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-3 -right-3 bg-yellow-100 dark:bg-yellow-900/50 p-2.5 rounded-full shadow-lg border border-yellow-300 dark:border-yellow-600">
-                  <Trophy className="w-7 h-7 text-yellow-600 dark:text-yellow-400" />
+                <div className="absolute -bottom-2 -right-2 bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full shadow-lg border border-yellow-300 dark:border-yellow-600">
+                  <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
-              <div className="text-center mb-2 px-2">
-                <p className="font-extrabold text-base md:text-lg text-slate-900 dark:text-white line-clamp-2">{firstPlace.nombre}</p>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{firstPlace.cct}</p>
-                <Badge className="mt-2 flex items-center gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-white border-none shadow-md">
-                  <span>🥇 {firstPlace.oro}</span>
-                  <span>🥈 {firstPlace.plata}</span>
-                  <span>🥉 {firstPlace.bronce}</span>
+              {/* Info */}
+              <div className="text-center mb-2 w-full px-1">
+                <p className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white line-clamp-2 leading-tight">{firstPlace.nombre}</p>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{firstPlace.cct}</p>
+                <Badge className="mt-1.5 text-[10px] sm:text-xs px-2 py-0.5 bg-yellow-500 hover:bg-yellow-600 text-white border-none shadow-md">
+                  🥇{firstPlace.oro} 🥈{firstPlace.plata} 🥉{firstPlace.bronce}
                 </Badge>
               </div>
-              <div className="w-full h-32 sm:h-44 bg-gradient-to-t from-yellow-200 to-yellow-100 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-t-xl border-x border-t border-yellow-300 dark:border-yellow-700/50 shadow-inner flex justify-center pt-4">
-                <span className="text-5xl font-black text-yellow-600/50 dark:text-yellow-500/30">1</span>
+              {/* Pedestal */}
+              <div className="w-full h-28 sm:h-40 bg-gradient-to-t from-yellow-200 to-yellow-100 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-t-xl border-x border-t border-yellow-300 dark:border-yellow-700/50 shadow-inner flex items-start justify-center pt-3">
+                <span className="text-4xl sm:text-5xl font-black text-yellow-600/40 dark:text-yellow-500/30">1</span>
               </div>
             </div>
           )}
 
           {/* THIRD PLACE */}
           {thirdPlace && (
-            <div className="flex flex-col items-center group w-full sm:w-1/3 order-3 sm:order-3 transition-transform hover:-translate-y-2 duration-300">
-              <div className="relative mb-4">
-                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-amber-600/60 shadow-lg ring-4 ring-amber-50 dark:ring-amber-900/20 bg-white dark:bg-slate-900">
-                  <AvatarImage src={thirdPlace.urlLogo || ""} alt={thirdPlace.nombre} className="object-contain p-2" />
-                  <AvatarFallback className="text-xl font-bold text-amber-700 bg-amber-50">{getAvatarFallback(thirdPlace.nombre)}</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-3 -right-3 bg-amber-100 dark:bg-amber-900/40 p-2 rounded-full shadow-md border border-amber-300 dark:border-amber-700">
-                  <Award className="w-6 h-6 text-amber-700 dark:text-amber-500" />
+            <div className="flex flex-col items-center w-1/3 max-w-[200px] group transition-transform hover:-translate-y-1 duration-300">
+              {/* Avatar + Badge */}
+              <div className="relative mb-3">
+                <div className="rounded-full border-4 border-amber-500/60 dark:border-amber-600/60 shadow-lg ring-2 ring-amber-50 dark:ring-amber-900/20 overflow-hidden bg-white dark:bg-slate-900">
+                  <InstitutionLogo src={thirdPlace.urlLogo} alt={thirdPlace.nombre} size="md" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-amber-100 dark:bg-amber-900/40 p-1.5 rounded-full shadow-md border border-amber-300 dark:border-amber-700">
+                  <Award className="w-4 h-4 text-amber-700 dark:text-amber-500" />
                 </div>
               </div>
-              <div className="text-center mb-2 px-2">
-                <p className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-200 line-clamp-2">{thirdPlace.nombre}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{thirdPlace.cct}</p>
-                <Badge variant="outline" className="mt-2 flex items-center gap-1.5 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/50">
-                  <span>🥇 {thirdPlace.oro}</span>
-                  <span>🥈 {thirdPlace.plata}</span>
-                  <span>🥉 {thirdPlace.bronce}</span>
+              {/* Info */}
+              <div className="text-center mb-2 w-full px-1">
+                <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight">{thirdPlace.nombre}</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{thirdPlace.cct}</p>
+                <Badge variant="outline" className="mt-1.5 text-[10px] sm:text-xs px-2 py-0.5 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/50">
+                  🥇{thirdPlace.oro} 🥈{thirdPlace.plata} 🥉{thirdPlace.bronce}
                 </Badge>
               </div>
-              <div className="w-full h-20 sm:h-24 bg-gradient-to-t from-amber-200/50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/30 rounded-t-xl border-x border-t border-amber-300/50 dark:border-amber-700/40 shadow-inner flex justify-center pt-4">
-                <span className="text-4xl font-black text-amber-600/40 dark:text-amber-500/30">3</span>
+              {/* Pedestal */}
+              <div className="w-full h-16 sm:h-20 bg-gradient-to-t from-amber-200/50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/30 rounded-t-xl border-x border-t border-amber-300/50 dark:border-amber-700/40 shadow-inner flex items-start justify-center pt-3">
+                <span className="text-3xl sm:text-4xl font-black text-amber-600/30 dark:text-amber-500/25">3</span>
               </div>
             </div>
           )}
@@ -193,33 +225,39 @@ export function Podium() {
 
         {/* REST OF LEADERBOARD */}
         {rest.length > 0 && (
-          <div className="mt-12">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 px-2">Otras Instituciones</h3>
+          <div className="mt-8">
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-3 px-1">Otras Instituciones</h3>
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm">
               <Table>
                 <TableHeader className="bg-slate-50 dark:bg-slate-900">
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-16 text-center">Pos</TableHead>
+                    <TableHead className="w-14 text-center">Pos</TableHead>
                     <TableHead>Institución</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Oro (1º)</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Plata (2º)</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Bronce (3º)</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-center hidden md:table-cell">Oro</TableHead>
+                    <TableHead className="text-center hidden md:table-cell">Plata</TableHead>
+                    <TableHead className="text-center hidden md:table-cell">Bronce</TableHead>
+                    <TableHead className="text-right w-20">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rest.map((inst, index) => (
-                    <TableRow key={inst.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                    <TableRow key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                       <TableCell className="text-center font-medium text-slate-500 dark:text-slate-400">
                         {index + 4}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <AvatarImage src={inst.urlLogo || ""} className="object-contain p-1" />
-                            <AvatarFallback className="rounded-md text-xs">{getAvatarFallback(inst.nombre)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium text-slate-700 dark:text-slate-200">{inst.nombre}</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-7 w-7 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                            {inst.urlLogo ? (
+                              <img src={inst.urlLogo} alt={inst.nombre} className="h-full w-full object-contain p-0.5" />
+                            ) : (
+                              <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-medium text-sm text-slate-700 dark:text-slate-200 truncate block">{inst.nombre}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{inst.cct}</span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center hidden md:table-cell">

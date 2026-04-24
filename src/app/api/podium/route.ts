@@ -8,40 +8,51 @@ export async function GET() {
     const instituciones = await prisma.institucion.findMany({
       include: {
         resultados: true,
+        _count: {
+          select: {
+            participantes: true,
+            usuariosResponsables: true,
+          },
+        },
       },
     });
 
-    const podiumData = instituciones.map((inst) => {
-      let oro = 0;
-      let plata = 0;
-      let bronce = 0;
-      let puntos = 0;
+    const podiumData = instituciones
+      // Filtrar: solo instituciones que tengan al menos 1 participante registrado
+      // O que tengan al menos 1 usuario responsable (es decir, alguien inició sesión)
+      .filter((inst) => inst._count.participantes > 0 || inst._count.usuariosResponsables > 0)
+      .map((inst) => {
+        let oro = 0;
+        let plata = 0;
+        let bronce = 0;
+        let puntos = 0;
 
-      inst.resultados.forEach((res) => {
-        if (res.lugar === 1) {
-          oro++;
-          puntos += 3;
-        } else if (res.lugar === 2) {
-          plata++;
-          puntos += 2;
-        } else if (res.lugar === 3) {
-          bronce++;
-          puntos += 1;
-        }
+        inst.resultados.forEach((res) => {
+          if (res.lugar === 1) {
+            oro++;
+            puntos += 3;
+          } else if (res.lugar === 2) {
+            plata++;
+            puntos += 2;
+          } else if (res.lugar === 3) {
+            bronce++;
+            puntos += 1;
+          }
+        });
+
+        return {
+          id: inst.id,
+          nombre: inst.nombre,
+          cct: inst.cct,
+          urlLogo: inst.urlLogo,
+          oro,
+          plata,
+          bronce,
+          puntos,
+          totalMedallas: oro + plata + bronce,
+          totalParticipantes: inst._count.participantes,
+        };
       });
-
-      return {
-        id: inst.id,
-        nombre: inst.nombre,
-        cct: inst.cct,
-        urlLogo: inst.urlLogo,
-        oro,
-        plata,
-        bronce,
-        puntos,
-        totalMedallas: oro + plata + bronce,
-      };
-    });
 
     // Ordenar con el Sistema Olímpico:
     // 1. Más medallas de oro
@@ -54,8 +65,6 @@ export async function GET() {
       return a.nombre.localeCompare(b.nombre);
     });
 
-    // Filtramos los que no tienen puntos (opcional) pero para un podio general es bueno mostrarlos todos o solo los que tienen puntos
-    // Dejaremos todos para que la tabla de posiciones muestre a todas las escuelas
     return NextResponse.json(podiumData);
   } catch (error: any) {
     console.error("GET /api/podium error:", error);
