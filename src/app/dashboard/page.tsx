@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { PieChart as PieChartIcon } from "lucide-react";
+import { Podium } from "@/components/Podium";
 
 const DemographicsChart = dynamic(
   () => import("@/components/DemographicsChart").then(mod => mod.DemographicsChart),
@@ -69,6 +70,10 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 space-y-6">
+      
+      {/* SECCIÓN PODIO */}
+      <Podium />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
