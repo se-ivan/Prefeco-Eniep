@@ -54,8 +54,19 @@ export function Podium() {
     );
   }
 
-  const sortedData = [...podiumData].filter((inst) => inst.puntos > 0 || inst.totalMedallas > 0);
+  let sortedData = [...podiumData].filter((inst) => inst.puntos > 0 || inst.totalMedallas > 0);
   
+  // LOGICA MOCK: Si no hay ganadores registrados aún, mostramos instituciones de prueba
+  if (sortedData.length === 0 && podiumData.length > 0) {
+    sortedData = [...podiumData];
+    // Buscar Melchor Ocampo
+    const melchorIndex = sortedData.findIndex(i => i.nombre.toLowerCase().includes("melchor ocampo"));
+    if (melchorIndex !== -1) {
+      const [melchor] = sortedData.splice(melchorIndex, 1);
+      sortedData.unshift(melchor); // Forzar a primer lugar
+    }
+  }
+
   if (sortedData.length === 0) {
     return (
       <Card className="w-full overflow-hidden border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">
@@ -65,7 +76,7 @@ export function Podium() {
             Podio de Instituciones
             <Trophy className="w-6 h-6 text-yellow-500" />
           </CardTitle>
-          <CardDescription>Aún no hay resultados registrados en las competencias.</CardDescription>
+          <CardDescription>Aún no hay instituciones registradas.</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -109,6 +120,7 @@ export function Podium() {
               </div>
               <div className="text-center mb-2 px-2">
                 <p className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-200 line-clamp-2">{secondPlace.nombre}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{secondPlace.cct}</p>
                 <Badge variant="secondary" className="mt-2 flex items-center gap-1.5 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   <span>🥇 {secondPlace.oro}</span>
                   <span>🥈 {secondPlace.plata}</span>
@@ -138,6 +150,7 @@ export function Podium() {
               </div>
               <div className="text-center mb-2 px-2">
                 <p className="font-extrabold text-base md:text-lg text-slate-900 dark:text-white line-clamp-2">{firstPlace.nombre}</p>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{firstPlace.cct}</p>
                 <Badge className="mt-2 flex items-center gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-white border-none shadow-md">
                   <span>🥇 {firstPlace.oro}</span>
                   <span>🥈 {firstPlace.plata}</span>
@@ -164,6 +177,7 @@ export function Podium() {
               </div>
               <div className="text-center mb-2 px-2">
                 <p className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-200 line-clamp-2">{thirdPlace.nombre}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{thirdPlace.cct}</p>
                 <Badge variant="outline" className="mt-2 flex items-center gap-1.5 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/50">
                   <span>🥇 {thirdPlace.oro}</span>
                   <span>🥈 {thirdPlace.plata}</span>
