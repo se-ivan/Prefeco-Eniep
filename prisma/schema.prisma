@@ -205,7 +205,6 @@ model Inscripcion {
   categoriaId    Int          @map("id_categoria")
   cintaTaekwondo CintaTaekwondo? @map("cinta_taekwondo")
   fechaRegistro  DateTime     @default(now()) @map("fecha_registro")
-  cintaTaekwondo String?      @map("cinta_taekwondo")
   categoria      Categoria    @relation(fields: [categoriaId], references: [id])
   disciplina     Disciplina   @relation(fields: [disciplinaId], references: [id])
   equipo         Equipo?      @relation(fields: [equipoId], references: [id])
