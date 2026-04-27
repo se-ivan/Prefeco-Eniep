@@ -35,6 +35,7 @@ type Institucion = {
 type TipoCredencial = 'ALUMNO' | 'PERSONAL';
 
 type MeScope = {
+  role?: string;
   institucion: {
     urlLogo?: string | null;
   } | null;
@@ -43,6 +44,7 @@ type MeScope = {
 export default function ExportarPage() {
   const { data: instituciones = [], isLoading } = useSWR<Institucion[]>('/api/instituciones');
   const { data: meScope } = useSWR<MeScope>('/api/me');
+  const isAdminUser = meScope?.role === 'ADMIN';
   const [registros, setRegistros] = useState<any[]>([]);
   const [institucionSeleccionada, setInstitucionSeleccionada] = useState<Institucion | null>(null);
   const [loadingDatos, setLoadingDatos] = useState(false);
@@ -156,21 +158,23 @@ export default function ExportarPage() {
       <main className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         
         {/* Header con estadísticas */}
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">
-                Total Instituciones
-              </CardTitle>
-              <div className="p-2 bg-[#0b697d]/10 rounded-md">
-                <Building2 className="h-4 w-4 text-[#0b697d]" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{instituciones.length}</div>
-              <p className="text-xs text-slate-500 mt-1">Registradas en el sistema</p>
-            </CardContent>
-          </Card>
+        <div className={`mb-8 grid gap-4 ${isAdminUser ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+          {isAdminUser && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-500">
+                  Total Instituciones
+                </CardTitle>
+                <div className="p-2 bg-[#0b697d]/10 rounded-md">
+                  <Building2 className="h-4 w-4 text-[#0b697d]" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{instituciones.length}</div>
+                <p className="text-xs text-slate-500 mt-1">Registradas en el sistema</p>
+              </CardContent>
+            </Card>
+          )}
 
           {institucionSeleccionada && (
             <>
@@ -212,16 +216,18 @@ export default function ExportarPage() {
         </div>
 
         {/* Barra de búsqueda y acciones */}
-        <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar por CCT, nombre o estado..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
-            />
-          </div>
+        <div className={`mb-8 flex flex-col sm:flex-row items-center ${isAdminUser ? 'justify-between' : 'justify-end'} gap-4`}>
+          {isAdminUser && (
+            <div className="relative w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar por CCT, nombre o estado..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
+              />
+            </div>
+          )}
 
           <div className="flex w-full sm:w-auto items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             <Button
@@ -316,25 +322,26 @@ export default function ExportarPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#0b697d]">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <p className="mt-4 font-medium">Cargando instituciones...</p>
+            <p className="mt-4 font-medium">Cargando...</p>
           </div>
-        ) : filteredInstituciones.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <Building2 className="h-12 w-12 mb-4 text-slate-300" />
-            <p className="text-lg font-medium text-slate-600">
-              No se encontraron instituciones
-            </p>
-            {searchTerm ? (
-              <p className="text-sm">Intenta con otros términos de búsqueda.</p>
-            ) : (
-              <p className="text-sm mt-1">No hay instituciones registradas en el sistema.</p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredInstituciones.map((inst) => (
-              <Card 
-                key={inst.id}
+        ) : isAdminUser ? (
+          filteredInstituciones.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <Building2 className="h-12 w-12 mb-4 text-slate-300" />
+              <p className="text-lg font-medium text-slate-600">
+                No se encontraron instituciones
+              </p>
+              {searchTerm ? (
+                <p className="text-sm">Intenta con otros términos de búsqueda.</p>
+              ) : (
+                <p className="text-sm mt-1">No hay instituciones registradas en el sistema.</p>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredInstituciones.map((inst) => (
+                <Card 
+                  key={inst.id}
                 className={`group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-[#0b697d] ${
                   institucionSeleccionada?.id === inst.id 
                     ? 'border-[#0b697d] border-2 bg-[#0b697d]/5' 
@@ -374,11 +381,12 @@ export default function ExportarPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
+            </div>
+          )
+        ) : null}
 
         {/* Instrucciones */}
-        {!institucionSeleccionada && !isLoading && filteredInstituciones.length > 0 && (
+        {!institucionSeleccionada && !isLoading && filteredInstituciones.length > 0 && isAdminUser && (
           <div className="mt-8 space-y-4">
             <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
               <div className="flex gap-3">
