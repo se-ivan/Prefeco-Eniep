@@ -7,14 +7,12 @@ import {
   Building2, 
   MapPin, 
   Search, 
-  Download, 
   Loader2,
   FileText,
   Users,
   CheckCircle2,
-  UserCog
 } from 'lucide-react';
-import { CredencialesPDF } from '@/components/pdf/CredencialesPDF';
+import { CedulaRegistroPDF } from '@/components/pdf/CedulaRegistroPDF';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,24 +30,14 @@ type Institucion = {
   urlLogo: string | null;
 };
 
-type TipoCredencial = 'ALUMNO' | 'PERSONAL';
-
-type MeScope = {
-  institucion: {
-    urlLogo?: string | null;
-  } | null;
-};
-
-export default function ExportarPage() {
+export default function GenerarCedulasPage() {
   const { data: instituciones = [], isLoading } = useSWR<Institucion[]>('/api/instituciones');
-  const { data: meScope } = useSWR<MeScope>('/api/me');
   const [registros, setRegistros] = useState<any[]>([]);
   const [institucionSeleccionada, setInstitucionSeleccionada] = useState<Institucion | null>(null);
   const [loadingDatos, setLoadingDatos] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [tipoCredencial, setTipoCredencial] = useState<TipoCredencial>('ALUMNO');
-  const [generandoCredenciales, setGenerandoCredenciales] = useState(false);
+  const [generandoCedula, setGenerandoCedula] = useState(false);
 
   const [selectedRamas, setSelectedRamas] = useState<string[]>([]);
   const [selectedModalidades, setSelectedModalidades] = useState<string[]>([]);
@@ -71,25 +59,19 @@ export default function ExportarPage() {
     if (!institucionSeleccionada && instituciones.length === 1) {
       const unica = instituciones[0];
       setInstitucionSeleccionada(unica);
-      fetchRegistros(unica.id, tipoCredencial);
+      fetchRegistros(unica.id);
     }
-  }, [instituciones, institucionSeleccionada, tipoCredencial]);
+  }, [instituciones, institucionSeleccionada]);
 
-  const fetchRegistros = async (institucionId: number, tipo: TipoCredencial) => {
+  const fetchRegistros = async (institucionId: number) => {
     setLoadingDatos(true);
     try {
-      const endpoint =
-        tipo === 'ALUMNO'
-          ? `/api/participantes-inscritos?institucionId=${institucionId}&includeEquipos=true`
-          : `/api/personal-apoyo-inscrito?institucionId=${institucionId}`;
-
+      const endpoint = `/api/participantes-inscritos?institucionId=${institucionId}&includeEquipos=true`;
       const res = await fetch(endpoint);
       if (!res.ok) throw new Error('Error al cargar registros');
       const data = await res.json();
       setRegistros(data);
-      toast.success(
-        `Se encontraron ${data.length} ${tipo === 'ALUMNO' ? 'participantes' : 'personas de apoyo'}`
-      );
+      toast.success(`Se encontraron ${data.length} participantes`);
     } catch (error) {
       console.error('Error cargando registros:', error);
       toast.error('Error al cargar registros');
@@ -101,14 +83,8 @@ export default function ExportarPage() {
 
   const handleSeleccionarInstitucion = (institucion: Institucion) => {
     setInstitucionSeleccionada(institucion);
-    fetchRegistros(institucion.id, tipoCredencial);
+    fetchRegistros(institucion.id);
   };
-
-  useEffect(() => {
-    if (institucionSeleccionada) {
-      fetchRegistros(institucionSeleccionada.id, tipoCredencial);
-    }
-  }, [tipoCredencial]);
 
   const filteredInstituciones = instituciones.filter(
     (inst) =>
@@ -128,28 +104,23 @@ export default function ExportarPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleDescargarCredenciales = useCallback(async () => {
+  const handleDescargarCedula = useCallback(async () => {
     if (!institucionSeleccionada || registrosFiltradosPorCheckboxes.length === 0) return;
-    setGenerandoCredenciales(true);
+    setGenerandoCedula(true);
     try {
-      const logoInstitucionGenerador = meScope?.institucion?.urlLogo ?? institucionSeleccionada.urlLogo ?? null;
       const blob = await pdf(
-        <CredencialesPDF
-          usuarios={registrosFiltradosPorCheckboxes}
-          tipo={tipoCredencial}
-          institucionLogoUrl={logoInstitucionGenerador}
-        />
+        <CedulaRegistroPDF participantes={registrosFiltradosPorCheckboxes} />
       ).toBlob();
-      const fileName = `credenciales_${tipoCredencial.toLowerCase()}_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `cedula_registro_${institucionSeleccionada.cct}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadBlob(blob, fileName);
-      toast.success('Credenciales descargadas correctamente');
+      toast.success('Cédula descargada correctamente');
     } catch (err) {
-      console.error('Error generando credenciales:', err);
-      toast.error('Error al generar las credenciales');
+      console.error('Error generando cédula:', err);
+      toast.error('Error al generar la cédula');
     } finally {
-      setGenerandoCredenciales(false);
+      setGenerandoCedula(false);
     }
-  }, [institucionSeleccionada, meScope?.institucion?.urlLogo, registrosFiltradosPorCheckboxes, tipoCredencial]);
+  }, [institucionSeleccionada, registrosFiltradosPorCheckboxes]);
 
   return (
     <div className="min-h-screen">
@@ -192,14 +163,10 @@ export default function ExportarPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-slate-500">
-                    {tipoCredencial === 'ALUMNO' ? 'Inscripciones de participantes' : 'Asignaciones de personal'}
+                    Inscripciones de participantes
                   </CardTitle>
                   <div className="p-2 bg-emerald-50 rounded-md">
-                    {tipoCredencial === 'ALUMNO' ? (
-                      <Users className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <UserCog className="h-4 w-4 text-emerald-500" />
-                    )}
+                    <Users className="h-4 w-4 text-emerald-500" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -222,47 +189,26 @@ export default function ExportarPage() {
               className="w-full pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#0b697d] focus:ring-[#0b697d]/20"
             />
           </div>
-
-          <div className="flex w-full sm:w-auto items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-            <Button
-              type="button"
-              variant={tipoCredencial === 'ALUMNO' ? 'default' : 'ghost'}
-              onClick={() => setTipoCredencial('ALUMNO')}
-              className={tipoCredencial === 'ALUMNO' ? 'bg-[#0b697d] text-white hover:bg-[#095667]' : ''}
-            >
-              Participantes
-            </Button>
-            <Button
-              type="button"
-              variant={tipoCredencial === 'PERSONAL' ? 'default' : 'ghost'}
-              onClick={() => setTipoCredencial('PERSONAL')}
-              className={tipoCredencial === 'PERSONAL' ? 'bg-[#ffa52d] text-white hover:bg-[#ea9222]' : ''}
-            >
-              Personal de apoyo
-            </Button>
-          </div>
           
           <div className="flex gap-3 w-full sm:w-auto">
             {institucionSeleccionada && registrosFiltradosPorCheckboxes.length > 0 && isClient && (
-              <>
-                <Button 
-                  className="w-full sm:w-auto h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-                  disabled={generandoCredenciales}
-                  onClick={handleDescargarCredenciales}
-                >
-                  {generandoCredenciales ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generando PDF...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Descargar Credenciales PDF
-                    </>
-                  )}
-                </Button>
-              </>
+              <Button
+                className="w-full sm:w-auto h-11 gap-2 bg-[#0b697d] text-white hover:bg-[#095667]"
+                disabled={generandoCedula}
+                onClick={handleDescargarCedula}
+              >
+                {generandoCedula ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generando Cédula...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Descargar Cédula PDF
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
@@ -388,8 +334,7 @@ export default function ExportarPage() {
                     Selecciona una institución
                   </h3>
                   <p className="text-sm text-blue-700">
-                    Haz clic en cualquier tarjeta para cargar los datos y exportar las credenciales.
-                    Puedes alternar entre participantes y personal de apoyo usando el selector superior.
+                    Haz clic en cualquier tarjeta para cargar los datos y exportar las cédulas de registro.
                   </p>
                 </div>
               </div>

@@ -13,7 +13,8 @@ const routeMap: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/participantes": { title: "Registrar Participante", subtitle: "Inscripción de nuevos participantes" },
   "/dashboard/personal-apoyo": { title: "Registrar Personal", subtitle: "Alta de staff y apoyo" },
   "/dashboard/personal-apoyo/lista": { title: "Personal de Apoyo", subtitle: "Lista de staff registrado" },
-  "/dashboard/exportar-credenciales": { title: "Generar Credenciales", subtitle: "Exportación de credenciales y cédulas" },
+  "/dashboard/exportar-credenciales": { title: "Generar Credenciales", subtitle: "Exportación de credenciales" },
+  "/dashboard/generar-cedulas": { title: "Generar Cédulas", subtitle: "Exportación de cédulas de registro" },
   "/dashboard/disciplinas": { title: "Disciplinas", subtitle: "Gestión de categorías deportivas y culturales" },
   "/dashboard/configuracion": { title: "Configuración", subtitle: "Ajustes de tu cuenta" },
 };

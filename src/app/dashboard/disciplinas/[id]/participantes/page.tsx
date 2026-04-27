@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import ParticipantsTable from "@/components/ParticipantsTable";
 import TeamMembersModal from "@/components/TeamMembersModal";
 import { toast } from "sonner";
@@ -77,9 +77,14 @@ export default function ParticipantesPage() {
   const router = useRouter();
   const disciplinaIdFromUrl = Number(params?.id ?? NaN);
 
+  const searchParams = useSearchParams();
+  const initInstitucionId = searchParams.get("institucionId");
+
   const [disciplina, setDisciplina] = useState<PageDisciplina | null>(null);
   const [instituciones, setInstituciones] = useState<{ id: number; nombre: string }[]>([]);
-  const [selectedInstitucionId, setSelectedInstitucionId] = useState<number | "">("");
+  const [selectedInstitucionId, setSelectedInstitucionId] = useState<number | "">(
+    initInstitucionId ? Number(initInstitucionId) : ""
+  );
   const [isResponsable, setIsResponsable] = useState(false);
 
   // solo ALUMNO / APOYO (default ALUMNO)

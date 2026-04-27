@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
+import InstitucionDisciplinasModal from "@/components/InstitucionDisciplinasModal";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,7 @@ export default function ListaInstitucionesPage() {
   const [documentsFilter, setDocumentsFilter] = useState<"all" | "uploaded" | "pending">("all");
   const [deleteTarget, setDeleteTarget] = useState<Institucion | null>(null);
   const [editTarget, setEditTarget] = useState<InstitucionEditForm | null>(null);
+  const [viewDisciplinasInst, setViewDisciplinasInst] = useState<Institucion | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -304,7 +306,8 @@ export default function ListaInstitucionesPage() {
             {filteredInstituciones.map((inst) => (
               <div
                 key={inst.id}
-                className="group relative flex flex-col bg-white rounded-2xl p-6 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-lg overflow-hidden"
+                className="group relative flex flex-col bg-white rounded-2xl p-6 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-lg overflow-hidden cursor-pointer"
+                onClick={() => setViewDisciplinasInst(inst)}
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#0b697d] to-[#ffa52d] opacity-80" />
 
@@ -328,7 +331,7 @@ export default function ListaInstitucionesPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-slate-400 hover:text-[#0b697d] hover:bg-[#0b697d]/10"
-                          onClick={() => openEdit(inst)}
+                          onClick={(e) => { e.stopPropagation(); openEdit(inst); }}
                           title="Editar institución"
                         >
                           <Pencil className="h-4 w-4" />
@@ -337,7 +340,7 @@ export default function ListaInstitucionesPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                          onClick={() => setDeleteTarget(inst)}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(inst); }}
                           title="Eliminar institución"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -389,7 +392,7 @@ export default function ListaInstitucionesPage() {
                   </span>
                 </div>
 
-                <div className="mt-4 border-t border-slate-100 pt-4 space-y-2">
+                <div className="mt-4 border-t border-slate-100 pt-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentos institucionales</p>
                   {inst.avalPresidenciaUrl ? (
                     <a
@@ -426,6 +429,11 @@ export default function ListaInstitucionesPage() {
           </div>
         )}
       </main>
+
+      <InstitucionDisciplinasModal 
+        institucion={viewDisciplinasInst} 
+        onClose={() => setViewDisciplinasInst(null)} 
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
