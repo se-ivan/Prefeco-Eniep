@@ -188,7 +188,7 @@ export const CredencialesPDF = ({
                         <Text style={styles.chevron}>{'>'}</Text>
                         <View style={styles.nameContainer}>
                           <Text style={[styles.firstName, { fontSize: nameFont }]}>{safeText(user?.nombres).toUpperCase()}</Text>
-                          <Text style={[styles.lastName, { fontSize: nameFont }]}>{safeText(user?.apellidoPaterno).toUpperCase()}</Text>
+                          <Text style={[styles.lastName, { fontSize: nameFont }]}>{`${user?.apellidoPaterno || ''} ${user?.apellidoMaterno || ''}`.trim().toUpperCase() || 'N/A'}</Text>
                         </View>
                       </View>
 

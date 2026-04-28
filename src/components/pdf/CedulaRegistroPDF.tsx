@@ -180,7 +180,10 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
             {pageData.map((p, i) => (
               <View key={i} style={styles.card}>
                 {(() => {
-                  const fullName = `${safeText(p?.nombres)} ${safeText(p?.apellidoPaterno)}`;
+                  const nombre = p?.nombres || '';
+                  const apPaterno = p?.apellidoPaterno || '';
+                  const apMaterno = p?.apellidoMaterno || '';
+                  const fullName = [nombre, apPaterno, apMaterno].filter(Boolean).join(' ') || 'N/A';
                   const institucionNombre = safeText(p?.institucion?.nombre);
                   const institucionEstado = safeText(p?.institucion?.estado);
                   const institucionClave = safeText(p?.institucion?.cct);
