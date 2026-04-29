@@ -94,6 +94,8 @@ const fitFontSize = (value: unknown, base: number, min: number, step = 14) => {
   return Math.max(min, reduced);
 };
 
+const normalizeGroupKey = (value: unknown) => safeText(value).trim().toUpperCase();
+
 // Cambiamos el límite de 18 a 10 participantes por página (2 columnas x 5 filas)
 const chunkArray = (arr: any[], size: number) => {
   const result = [];
@@ -102,9 +104,11 @@ const chunkArray = (arr: any[], size: number) => {
 };
 
 export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) => {
-  // Agrupamos participantes por disciplina para que cada página tenga solo una disciplina
+  // Agrupamos participantes por disciplina y rama para evitar mezclar varonil/femenil en la misma cédula
   const groupedByDisciplina = participantes.reduce((acc, p) => {
-    const disciplinaKey = p.disciplina?.nombre ?? 'Sin Disciplina';
+    const disciplinaId = p?.disciplina?.id ?? p?.disciplinaId ?? p?.disciplina?.nombre ?? 'Sin Disciplina';
+    const disciplinaRama = normalizeGroupKey(p?.disciplina?.rama);
+    const disciplinaKey = `${disciplinaId}::${disciplinaRama}`;
     if (!acc[disciplinaKey]) acc[disciplinaKey] = [];
     acc[disciplinaKey].push(p);
     return acc;
@@ -112,7 +116,7 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
 
   // Generamos páginas de 10 en 10 por cada disciplina
   const pages: any[][] = [];
-  for (const key in groupedByDisciplina) {
+  for (const key of Object.keys(groupedByDisciplina).sort()) {
     const chunks = chunkArray(groupedByDisciplina[key], 10);
     pages.push(...chunks);
   }
@@ -124,8 +128,10 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
           {(() => {
             const first = pageData?.[0] ?? {};
             const eventName = safeText(first?.disciplina?.nombre);
+            const eventRama = safeText(first?.disciplina?.rama);
             const campus = safeText(first?.institucion?.nombre);
             const sede = safeText(first?.institucion?.estado);
+            const eventLabel = eventRama === 'N/A' ? eventName : `${eventName} - ${eventRama}`;
             return (
               <>
           
@@ -151,7 +157,7 @@ export const CedulaRegistroPDF = ({ participantes }: { participantes: any[] }) =
               <Text style={styles.fieldHeaderText}>EVENTO / ACTIVIDAD</Text>
             </View>
             <View style={styles.fieldBody}>
-              <Text style={[styles.fieldBodyText, { fontSize: fitFontSize(eventName, 8, 6, 16) }]}>{eventName}</Text>
+              <Text style={[styles.fieldBodyText, { fontSize: fitFontSize(eventLabel, 8, 6, 16) }]}>{eventLabel}</Text>
             </View>
           </View>
 
