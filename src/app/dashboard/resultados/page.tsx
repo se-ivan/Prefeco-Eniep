@@ -172,7 +172,10 @@ export default function ResultadosAdminPage() {
                 <SelectContent>
                   {disciplinas?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id.toString()}>
-                      {d.nombre} ({d.rama})
+                      <div className="flex flex-col text-sm">
+                        <span className="truncate">{d.nombre} ({d.rama})</span>
+                        <span className="text-xs text-slate-500">{d.modalidad}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -205,13 +208,18 @@ export default function ResultadosAdminPage() {
                   <Trophy className="w-4 h-4 mr-2" /> 1º Lugar (Oro)
                 </label>
                 <Select value={oroInstitucion} onValueChange={setOroInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500">
+                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -222,13 +230,18 @@ export default function ResultadosAdminPage() {
                   <Medal className="w-4 h-4 mr-2" /> 2º Lugar (Plata)
                 </label>
                 <Select value={plataInstitucion} onValueChange={setPlataInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-slate-300 dark:border-slate-700">
+                  <SelectTrigger className="border-slate-300 dark:border-slate-700 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -239,13 +252,18 @@ export default function ResultadosAdminPage() {
                   <Award className="w-4 h-4 mr-2" /> 3º Lugar (Bronce)
                 </label>
                 <Select value={bronceInstitucion} onValueChange={setBronceInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-amber-200 dark:border-amber-900/50">
+                  <SelectTrigger className="border-amber-200 dark:border-amber-900/50 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -295,8 +313,12 @@ export default function ResultadosAdminPage() {
                           <div className="text-xs text-slate-500">
                             {r.categoria.nombre} • {r.disciplina.rama}
                           </div>
+                          <div className="text-xs text-slate-500">{r.disciplina.modalidad}</div>
                         </TableCell>
-                        <TableCell>{r.institucion.nombre}</TableCell>
+                        <TableCell>
+                          <div className="font-medium truncate">{r.institucion.nombre} - {r.institucion.cct}</div>
+                          <div className="text-xs text-slate-500">{r.institucion.estado}</div>
+                        </TableCell>
                         <TableCell className="text-center">
                           <Badge className={getBadgeColor(r.lugar)}>
                             {getLugarIcon(r.lugar)}
