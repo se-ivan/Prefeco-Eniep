@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus } from "lucide-react";
+import { Edit3, Eye, ImagePlus, Loader2, Search, UserPlus, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { PhotoCropperModal } from "@/components/PhotoCropperModal";
 import { uploadImageToFirebase } from "@/lib/photo-upload";
@@ -117,6 +117,15 @@ export default function ListaPersonalApoyoPage() {
   const [previewItem, setPreviewItem] = useState<PersonalApoyo | null>(null);
   const [previewAsignaciones, setPreviewAsignaciones] = useState<AsignacionesData | null>(null);
   const [loadingPreviewAsignaciones, setLoadingPreviewAsignaciones] = useState(false);
+  const [editAsignaciones, setEditAsignaciones] = useState<AsignacionesData | null>(null);
+  const [loadingEditAsignaciones, setLoadingEditAsignaciones] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{
+    disciplinaId: number;
+    categoriaId: number;
+    disciplinaName?: string;
+    categoriaName?: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [editingItem, setEditingItem] = useState<PersonalApoyo | null>(null);
   const [editForm, setEditForm] = useState<EditForm>(initialEditForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -212,6 +221,8 @@ export default function ListaPersonalApoyoPage() {
       docIdentificacionOficialUrl: item.docIdentificacionOficialUrl ?? "",
       estatus: item.estatus,
     });
+    // load asignaciones for edit modal
+    loadEditAsignaciones(item.id);
   };
 
   useEffect(() => {
@@ -264,6 +275,51 @@ export default function ListaPersonalApoyoPage() {
       setPreviewAsignaciones({ disciplinas: [] });
     } finally {
       setLoadingPreviewAsignaciones(false);
+    }
+  };
+
+  const loadEditAsignaciones = async (personalId: number) => {
+    setLoadingEditAsignaciones(true);
+    try {
+      const res = await fetch(`/api/personal-apoyo/${personalId}/asignaciones`);
+      if (!res.ok) throw new Error();
+      const data: AsignacionesData = await res.json();
+      setEditAsignaciones(data);
+    } catch (err) {
+      setEditAsignaciones({ disciplinas: [] });
+    } finally {
+      setLoadingEditAsignaciones(false);
+    }
+  };
+
+  const handleTriggerDelete = (disciplinaId: number, categoriaId: number, disciplinaName?: string, categoriaName?: string) => {
+    setPendingDelete({ disciplinaId, categoriaId, disciplinaName, categoriaName });
+  };
+
+  const performDelete = async (disciplinaId: number, categoriaId: number) => {
+    if (!editingItem) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/personal-apoyo/${editingItem.id}/asignaciones`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disciplinaId, categoriaId }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "No se pudo eliminar la asignación");
+      }
+
+      toast.success("Asignación eliminada");
+      await loadEditAsignaciones(editingItem.id);
+      await loadData();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || "Error al eliminar asignación");
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
     }
   };
 
@@ -639,6 +695,31 @@ export default function ListaPersonalApoyoPage() {
                   <img src={editForm.fotoUrl} alt="Foto personal de apoyo" className="mt-3 h-36 w-28 rounded-lg border object-cover" />
                 )}
               </div>
+          {pendingDelete && (
+            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
+              <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+                <h3 className="text-lg font-semibold text-gray-800">Confirmar eliminación</h3>
+                <p className="text-sm text-gray-500 mt-2">¿Eliminar la asignación <span className="font-medium">{pendingDelete.categoriaName}</span> de <span className="font-medium">{pendingDelete.disciplinaName}</span>?</p>
+                <div className="mt-4 flex justify-end gap-3">
+                  <button
+                    onClick={() => setPendingDelete(null)}
+                    disabled={deleting}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => pendingDelete && performDelete(pendingDelete.disciplinaId, pendingDelete.categoriaId)}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                  >
+                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash size={14} />}
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
               <Field label="Nombre(s) *" name="nombres" value={editForm.nombres} onChange={handleEditInputChange} error={formErrors.nombres} />
               <Field label="Apellido paterno *" name="apellidoPaterno" value={editForm.apellidoPaterno} onChange={handleEditInputChange} error={formErrors.apellidoPaterno} />
@@ -671,6 +752,66 @@ export default function ListaPersonalApoyoPage() {
                   <option value="ACTIVO">ACTIVO</option>
                   <option value="INACTIVO">INACTIVO</option>
                 </select>
+              </div>
+
+              <div className="md:col-span-2 rounded-xl border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-slate-800">Disciplinas asignadas</h3>
+                {loadingEditAsignaciones ? (
+                  <div className="mt-3 flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                  </div>
+                ) : editAsignaciones?.disciplinas && editAsignaciones.disciplinas.length > 0 ? (
+                    <div className="mt-3 space-y-3">
+                      {editAsignaciones.disciplinas.map((disciplina) => {
+                        const categoriaAsignada = disciplina.categorias?.[0];
+
+                      return (
+                      <div key={disciplina.id} className="relative rounded-lg border border-slate-200 bg-slate-50 p-3">
+        
+                        {/* --- BOTÓN DE ELIMINAR (Arriba a la derecha) --- */}
+                        {/* Si lo quieres abajo a la derecha, cambia "top-3" por "bottom-3" */}
+                      <button
+                        type="button"
+                        onClick={() => handleTriggerDelete(disciplina.id, categoriaAsignada?.id, disciplina.nombre, categoriaAsignada?.nombre)}
+                        className="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full flex items-center justify-center transition-colors shadow-sm"
+                        aria-label={`Eliminar asignación de ${disciplina.nombre}`}
+                      >
+                        <Trash size={14} />
+                      </button>
+
+                      {/* pr-12 (padding-right) evita que los textos se encimen con el botón flotante */}
+                      <div className="pr-12">
+                        <p className="font-semibold text-slate-800">{disciplina.nombre}</p>
+                        <p className="text-xs text-slate-500 mt-1">Rama: <span className="font-medium">{disciplina.rama}</span></p>
+                        <p className="text-xs text-slate-500">Modalidad: <span className="font-medium">{disciplina.modalidad}</span></p>
+          
+                      {/* Contenedor de Categorías (Ahora solo muestra los "tags" limpios) */}
+                        <div className="mt-2 flex flex-wrap gap-2 items-center">
+                          <p className="text-xs text-slate-500">Categorías:</p>
+                          {disciplina.categorias && disciplina.categorias.length > 0 ? (
+                            disciplina.categorias.map((cat) => (
+                              <span 
+                                key={cat.id} 
+                                className="inline-flex items-center rounded-full bg-[#0b697d]/10 px-2.5 py-0.5 text-xs font-medium text-[#0b697d]"
+                              >
+                                {cat.nombre}
+                              </span>
+                              ))
+                              ) : (
+                              <span className="text-xs text-slate-400">Sin categorías asignadas</span>
+                              )}
+                            </div>
+                              </div>
+
+                            </div>
+                            );
+                        })}
+              </div>
+                ) : (
+                  <div className="mt-3 text-center py-4">
+                    <p className="text-sm text-slate-500">--</p>
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-2 rounded-xl border border-[#08677a]/20 bg-[#08677a]/5 p-4">

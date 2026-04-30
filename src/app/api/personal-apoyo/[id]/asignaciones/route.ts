@@ -100,3 +100,48 @@ export async function GET(
     return NextResponse.json({ error: "Error al obtener asignaciones" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const scope = await getUserScope(req.headers);
+    if (!scope) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { id } = await params;
+    const personalId = Number(id);
+
+    if (!Number.isInteger(personalId)) {
+      return NextResponse.json({ error: "ID de personal inválido" }, { status: 400 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { disciplinaId, categoriaId } = body ?? {};
+
+    if (!disciplinaId || !categoriaId) {
+      return NextResponse.json({ error: "Faltan disciplinaId o categoriaId" }, { status: 400 });
+    }
+
+    const personal = await prisma.personalApoyo.findUnique({ where: { id: personalId }, select: { institucionId: true } });
+    if (!personal) return NextResponse.json({ error: "Personal de apoyo no encontrado" }, { status: 404 });
+
+    if (isResponsable(scope)) {
+      if (!scope.institucionId) return NextResponse.json({ error: "Tu usuario no tiene institución asignada" }, { status: 403 });
+      if (personal.institucionId !== scope.institucionId) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    const deleted = await prisma.asignacionApoyo.deleteMany({
+      where: { personalId, disciplinaId: Number(disciplinaId), categoriaId: Number(categoriaId) },
+    });
+
+    if (deleted.count === 0) {
+      return NextResponse.json({ error: "Asignación no encontrada" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error al eliminar asignación:", error);
+    return NextResponse.json({ error: "Error al eliminar asignación" }, { status: 500 });
+  }
+}
