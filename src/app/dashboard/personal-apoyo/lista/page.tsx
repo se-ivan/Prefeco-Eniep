@@ -119,6 +119,7 @@ export default function ListaPersonalApoyoPage() {
   const [loadingPreviewAsignaciones, setLoadingPreviewAsignaciones] = useState(false);
   const [editAsignaciones, setEditAsignaciones] = useState<AsignacionesData | null>(null);
   const [loadingEditAsignaciones, setLoadingEditAsignaciones] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PersonalApoyo | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{
     disciplinaId: number;
     categoriaId: number;
@@ -296,6 +297,10 @@ export default function ListaPersonalApoyoPage() {
     setPendingDelete({ disciplinaId, categoriaId, disciplinaName, categoriaName });
   };
 
+  const requestDelete = (item: PersonalApoyo) => {
+    setDeleteTarget(item);
+  };
+
   const performDelete = async (disciplinaId: number, categoriaId: number) => {
     if (!editingItem) return;
     setDeleting(true);
@@ -311,15 +316,44 @@ export default function ListaPersonalApoyoPage() {
         throw new Error(body?.error || "No se pudo eliminar la asignación");
       }
 
-      toast.success("Asignación eliminada");
+      toast.success(`Se eliminó la asignación de ${pendingDelete?.disciplinaName || "la disciplina"}`);
       await loadEditAsignaciones(editingItem.id);
       await loadData();
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.message || "Error al eliminar asignación");
+      toast.error(error?.message || "No se pudo eliminar la asignación");
     } finally {
       setDeleting(false);
       setPendingDelete(null);
+    }
+  };
+
+  const handleDeletePersonal = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/personal-apoyo/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "No se pudo eliminar el personal de apoyo");
+      }
+
+      toast.success(`Se eliminó a ${deleteTarget.nombres} ${deleteTarget.apellidoPaterno} ${deleteTarget.apellidoMaterno}`);
+      setDeleteTarget(null);
+      setPreviewItem(null);
+      setPreviewAsignaciones(null);
+      setEditingItem(null);
+      setEditAsignaciones(null);
+      await loadData();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || "No se pudo eliminar el personal de apoyo");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -504,7 +538,7 @@ export default function ListaPersonalApoyoPage() {
                   <p><span className="font-medium">CURP:</span> {item.curp}</p>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setPreviewItem(item)}
                     className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 ${scope?.role === "DIRECTIVO" ? "col-span-2" : ""}`}
@@ -513,13 +547,22 @@ export default function ListaPersonalApoyoPage() {
                     Ver
                   </button>
                   {scope?.role !== "DIRECTIVO" && (
-                  <button
-                    onClick={() => openEditModal(item)}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#08677a]/30 px-3 py-2 text-sm font-semibold text-[#08677a] hover:bg-[#08677a]/5"
-                  >
-                    <Edit3 size={14} />
-                    Editar
-                  </button>
+                    <>
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#08677a]/30 px-3 py-2 text-sm font-semibold text-[#08677a] hover:bg-[#08677a]/5"
+                      >
+                        <Edit3 size={14} />
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => requestDelete(item)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                      >
+                        <Trash size={14} />
+                        Eliminar
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -641,6 +684,34 @@ export default function ListaPersonalApoyoPage() {
                 Editar registro
               </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-gray-800">Confirmar eliminación</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              ¿Eliminar a <span className="font-medium text-gray-800">{deleteTarget.nombres} {deleteTarget.apellidoPaterno} {deleteTarget.apellidoMaterno}</span>?
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeletePersonal}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-70"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash size={14} />}
+                Eliminar
+              </button>
             </div>
           </div>
         </div>
