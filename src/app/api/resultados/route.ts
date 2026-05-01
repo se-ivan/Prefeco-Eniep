@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { disciplinaId, categoriaId, institucionId, lugar } = body ?? {};
+    const { disciplinaId, categoriaId, institucionId, lugar, cintaTaekwondo } = body ?? {};
 
     if (!disciplinaId || !categoriaId || !institucionId || !lugar) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
@@ -51,12 +51,14 @@ export async function POST(req: NextRequest) {
       },
       update: {
         institucionId: Number(institucionId),
+        ...(cintaTaekwondo && { cintaTaekwondo }),
       },
       create: {
         disciplinaId: Number(disciplinaId),
         categoriaId: Number(categoriaId),
         institucionId: Number(institucionId),
         lugar: Number(lugar),
+        ...(cintaTaekwondo && { cintaTaekwondo }),
       },
       include: {
         institucion: { select: { id: true, nombre: true, cct: true } },

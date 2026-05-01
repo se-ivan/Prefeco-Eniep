@@ -22,14 +22,33 @@ export default function ResultadosAdminPage() {
   const [oroInstitucion, setOroInstitucion] = useState<string>("");
   const [plataInstitucion, setPlataInstitucion] = useState<string>("");
   const [bronceInstitucion, setBronceInstitucion] = useState<string>("");
+  const [selectedCinta, setSelectedCinta] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentDisciplina = disciplinas?.find((d: any) => d.id === Number(selectedDisciplina));
   const categorias = currentDisciplina?.categorias || [];
+  
+  const isTaekwondo = currentDisciplina?.disciplinaBaseNombre === "TAEKWONDO";
+  
+  const cintasOptions = [
+    "CINTA_BLANCA",
+    "CINTA_AMARILLA",
+    "CINTA_NARANJA",
+    "CINTA_VERDE",
+    "CINTA_AZUL",
+    "CINTA_ROJA",
+    "CINTA_NEGRA",
+    "CINTA_ROJINEGRA",
+  ];
 
   const handleSave = async () => {
     if (!selectedDisciplina || !selectedCategoria) {
       toast.error("Selecciona una disciplina y una categoría");
+      return;
+    }
+
+    if (isTaekwondo && !selectedCinta) {
+      toast.error("Debes seleccionar una cinta de taekwondo");
       return;
     }
 
@@ -53,6 +72,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(oroInstitucion),
               lugar: 1,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -68,6 +88,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(plataInstitucion),
               lugar: 2,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -83,6 +104,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(bronceInstitucion),
               lugar: 3,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -99,6 +121,7 @@ export default function ResultadosAdminPage() {
         setOroInstitucion("");
         setPlataInstitucion("");
         setBronceInstitucion("");
+        setSelectedCinta("");
         
         // Refrescar datos
         mutate("/api/resultados");
@@ -202,6 +225,40 @@ export default function ResultadosAdminPage() {
               </Select>
             </div>
 
+            {isTaekwondo && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium ">
+                  Cinta de Taekwondo *
+                </label>
+                <Select value={selectedCinta} onValueChange={setSelectedCinta} disabled={!selectedDisciplina}>
+                  <SelectTrigger >
+                    <SelectValue placeholder="Selecciona una cinta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cintasOptions.map((cinta) => (
+                      <SelectItem key={cinta} value={cinta}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" 
+                            style={{
+                              backgroundColor: cinta === "CINTA_BLANCA" ? "#ffffff" : 
+                                             cinta === "CINTA_AMARILLA" ? "#eab308" :
+                                             cinta === "CINTA_NARANJA" ? "#f97316" :
+                                             cinta === "CINTA_VERDE" ? "#22c55e" :
+                                             cinta === "CINTA_AZUL" ? "#3b82f6" :
+                                             cinta === "CINTA_ROJA" ? "#ef4444" :
+                                             cinta === "CINTA_NEGRA" ? "#000000" :
+                                             cinta === "CINTA_ROJINEGRA" ? "#dc2626" : "#999999",
+                              border: cinta === "CINTA_BLANCA" ? "1px solid #ccc" : "none"
+                            }} />
+                          {cinta.replace("CINTA_", "").replace(/_/g, " ")}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center text-yellow-600 dark:text-yellow-500">
@@ -273,7 +330,7 @@ export default function ResultadosAdminPage() {
             <Button 
               className="w-full mt-4" 
               onClick={handleSave} 
-              disabled={isSubmitting || !selectedDisciplina || !selectedCategoria || (!oroInstitucion && !plataInstitucion && !bronceInstitucion)}
+              disabled={isSubmitting || !selectedDisciplina || !selectedCategoria || (isTaekwondo && !selectedCinta) || (!oroInstitucion && !plataInstitucion && !bronceInstitucion)}
             >
               {isSubmitting ? "Guardando..." : (
                 <><Save className="w-4 h-4 mr-2" /> Guardar Resultados</>
@@ -302,6 +359,7 @@ export default function ResultadosAdminPage() {
                       <TableHead>Disciplina y Categoría</TableHead>
                       <TableHead>Institución</TableHead>
                       <TableHead className="text-center">Lugar</TableHead>
+                      <TableHead className="text-center">Cinta</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -324,6 +382,15 @@ export default function ResultadosAdminPage() {
                             {getLugarIcon(r.lugar)}
                             {r.lugar}º Lugar
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {r.cintaTaekwondo ? (
+                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                              {r.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 
