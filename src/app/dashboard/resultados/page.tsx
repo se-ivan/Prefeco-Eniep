@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Save, Trophy, Medal, Award, Check, ChevronsUpDown, Search } from "lucide-react";
+import { Trash2, Save, Trophy, Medal, Award, Check, ChevronsUpDown, Search, Image as ImageIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/components/ui/utils";
+import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -308,12 +309,32 @@ export default function ResultadosAdminPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={openOro}
-                      className="w-full justify-between font-normal border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500"
+                      className="w-full justify-between font-normal border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500 h-auto py-2"
                       disabled={loadingInstituciones}
                     >
-                      {oroInstitucion && oroInstitucion !== "none"
-                        ? instituciones?.find((i: any) => i.id.toString() === oroInstitucion)?.nombre
-                        : "Sin asignar"}
+                      <div className="flex items-center gap-2 truncate">
+                        {oroInstitucion && oroInstitucion !== "none" ? (
+                          <>
+                            {instituciones?.find((i: any) => i.id.toString() === oroInstitucion)?.urlLogo ? (
+                              <div className="relative w-6 h-6 flex-shrink-0">
+                                <Image 
+                                  src={instituciones.find((i: any) => i.id.toString() === oroInstitucion).urlLogo} 
+                                  alt="Logo" 
+                                  fill 
+                                  className="object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-slate-300" />
+                            )}
+                            <span className="truncate">
+                              {instituciones?.find((i: any) => i.id.toString() === oroInstitucion)?.nombre}
+                            </span>
+                          </>
+                        ) : (
+                          "Sin asignar"
+                        )}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -348,15 +369,26 @@ export default function ResultadosAdminPage() {
                                 setOpenOro(false);
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  oroInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                              <div className="flex items-center gap-2 w-full">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    oroInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {i.urlLogo ? (
+                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                    <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                    <ImageIcon className="w-4 h-4 text-slate-400" />
+                                  </div>
                                 )}
-                              />
-                              <div className="flex flex-col text-sm w-full">
-                                <span className="truncate">{i.nombre} - {i.cct}</span>
-                                <span className="text-xs text-slate-500">{i.estado}</span>
+                                <div className="flex flex-col text-sm w-full truncate">
+                                  <span className="truncate font-medium">{i.nombre}</span>
+                                  <span className="text-xs text-slate-500">{i.estado} - {i.cct}</span>
+                                </div>
                               </div>
                             </CommandItem>
                           ))}
@@ -377,12 +409,32 @@ export default function ResultadosAdminPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={openPlata}
-                      className="w-full justify-between font-normal border-slate-300 dark:border-slate-700"
+                      className="w-full justify-between font-normal border-slate-300 dark:border-slate-700 h-auto py-2"
                       disabled={loadingInstituciones}
                     >
-                      {plataInstitucion && plataInstitucion !== "none"
-                        ? instituciones?.find((i: any) => i.id.toString() === plataInstitucion)?.nombre
-                        : "Sin asignar"}
+                      <div className="flex items-center gap-2 truncate">
+                        {plataInstitucion && plataInstitucion !== "none" ? (
+                          <>
+                            {instituciones?.find((i: any) => i.id.toString() === plataInstitucion)?.urlLogo ? (
+                              <div className="relative w-6 h-6 flex-shrink-0">
+                                <Image 
+                                  src={instituciones.find((i: any) => i.id.toString() === plataInstitucion).urlLogo} 
+                                  alt="Logo" 
+                                  fill 
+                                  className="object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-slate-300" />
+                            )}
+                            <span className="truncate">
+                              {instituciones?.find((i: any) => i.id.toString() === plataInstitucion)?.nombre}
+                            </span>
+                          </>
+                        ) : (
+                          "Sin asignar"
+                        )}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -417,15 +469,26 @@ export default function ResultadosAdminPage() {
                                 setOpenPlata(false);
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  plataInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                              <div className="flex items-center gap-2 w-full">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    plataInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {i.urlLogo ? (
+                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                    <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                    <ImageIcon className="w-4 h-4 text-slate-400" />
+                                  </div>
                                 )}
-                              />
-                              <div className="flex flex-col text-sm w-full">
-                                <span className="truncate">{i.nombre} - {i.cct}</span>
-                                <span className="text-xs text-slate-500">{i.estado}</span>
+                                <div className="flex flex-col text-sm w-full truncate">
+                                  <span className="truncate font-medium">{i.nombre}</span>
+                                  <span className="text-xs text-slate-500">{i.estado} - {i.cct}</span>
+                                </div>
                               </div>
                             </CommandItem>
                           ))}
@@ -446,12 +509,32 @@ export default function ResultadosAdminPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={openBronce}
-                      className="w-full justify-between font-normal border-amber-200 dark:border-amber-900/50"
+                      className="w-full justify-between font-normal border-amber-200 dark:border-amber-900/50 h-auto py-2"
                       disabled={loadingInstituciones}
                     >
-                      {bronceInstitucion && bronceInstitucion !== "none"
-                        ? instituciones?.find((i: any) => i.id.toString() === bronceInstitucion)?.nombre
-                        : "Sin asignar"}
+                      <div className="flex items-center gap-2 truncate">
+                        {bronceInstitucion && bronceInstitucion !== "none" ? (
+                          <>
+                            {instituciones?.find((i: any) => i.id.toString() === bronceInstitucion)?.urlLogo ? (
+                              <div className="relative w-6 h-6 flex-shrink-0">
+                                <Image 
+                                  src={instituciones.find((i: any) => i.id.toString() === bronceInstitucion).urlLogo} 
+                                  alt="Logo" 
+                                  fill 
+                                  className="object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-slate-300" />
+                            )}
+                            <span className="truncate">
+                              {instituciones?.find((i: any) => i.id.toString() === bronceInstitucion)?.nombre}
+                            </span>
+                          </>
+                        ) : (
+                          "Sin asignar"
+                        )}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -486,15 +569,26 @@ export default function ResultadosAdminPage() {
                                 setOpenBronce(false);
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  bronceInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                              <div className="flex items-center gap-2 w-full">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    bronceInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {i.urlLogo ? (
+                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                    <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                    <ImageIcon className="w-4 h-4 text-slate-400" />
+                                  </div>
                                 )}
-                              />
-                              <div className="flex flex-col text-sm w-full">
-                                <span className="truncate">{i.nombre} - {i.cct}</span>
-                                <span className="text-xs text-slate-500">{i.estado}</span>
+                                <div className="flex flex-col text-sm w-full truncate">
+                                  <span className="truncate font-medium">{i.nombre}</span>
+                                  <span className="text-xs text-slate-500">{i.estado} - {i.cct}</span>
+                                </div>
                               </div>
                             </CommandItem>
                           ))}
