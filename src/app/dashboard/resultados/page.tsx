@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Save, Trophy, Medal, Award } from "lucide-react";
+import { Trash2, Save, Trophy, Medal, Award, Check, ChevronsUpDown, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/components/ui/utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -24,6 +27,11 @@ export default function ResultadosAdminPage() {
   const [bronceInstitucion, setBronceInstitucion] = useState<string>("");
   const [selectedCinta, setSelectedCinta] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [openDisciplina, setOpenDisciplina] = useState(false);
+  const [openOro, setOpenOro] = useState(false);
+  const [openPlata, setOpenPlata] = useState(false);
+  const [openBronce, setOpenBronce] = useState(false);
 
   const currentDisciplina = disciplinas?.find((d: any) => d.id === Number(selectedDisciplina));
   const categorias = currentDisciplina?.categorias || [];
@@ -185,24 +193,54 @@ export default function ResultadosAdminPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Disciplina</label>
-              <Select value={selectedDisciplina} onValueChange={(val) => {
-                setSelectedDisciplina(val);
-                setSelectedCategoria("");
-              }} disabled={loadingDisciplinas}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una disciplina" />
-                </SelectTrigger>
-                <SelectContent>
-                  {disciplinas?.map((d: any) => (
-                    <SelectItem key={d.id} value={d.id.toString()}>
-                      <div className="flex flex-col text-sm">
-                        <span className="truncate">{d.nombre} ({d.rama})</span>
-                        <span className="text-xs text-slate-500">{d.modalidad}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openDisciplina} onOpenChange={setOpenDisciplina}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openDisciplina}
+                    className="w-full justify-between font-normal"
+                    disabled={loadingDisciplinas}
+                  >
+                    {selectedDisciplina
+                      ? disciplinas?.find((d: any) => d.id.toString() === selectedDisciplina)?.nombre + " (" + disciplinas?.find((d: any) => d.id.toString() === selectedDisciplina)?.rama + ")"
+                      : "Selecciona una disciplina"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar disciplina..." />
+                    <CommandList>
+                      <CommandEmpty>No se encontró la disciplina.</CommandEmpty>
+                      <CommandGroup>
+                        {disciplinas?.map((d: any) => (
+                          <CommandItem
+                            key={d.id}
+                            value={`${d.nombre} ${d.rama} ${d.modalidad}`}
+                            onSelect={() => {
+                              setSelectedDisciplina(d.id.toString());
+                              setSelectedCategoria("");
+                              setOpenDisciplina(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedDisciplina === d.id.toString() ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col text-sm">
+                              <span className="truncate">{d.nombre} ({d.rama})</span>
+                              <span className="text-xs text-slate-500">{d.modalidad}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
@@ -264,60 +302,208 @@ export default function ResultadosAdminPage() {
                 <label className="text-sm font-medium flex items-center text-yellow-600 dark:text-yellow-500">
                   <Trophy className="w-4 h-4 mr-2" /> 1º Lugar (Oro)
                 </label>
-                <Select value={oroInstitucion} onValueChange={setOroInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500 justify-between">
-                    <SelectValue placeholder="Sin asignar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
-                    {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>
-                        <div className="flex flex-col text-sm w-full">
-                          <span className="truncate">{i.nombre} - {i.cct}</span>
-                          <span className="text-xs text-slate-500">{i.estado}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openOro} onOpenChange={setOpenOro}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openOro}
+                      className="w-full justify-between font-normal border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500"
+                      disabled={loadingInstituciones}
+                    >
+                      {oroInstitucion && oroInstitucion !== "none"
+                        ? instituciones?.find((i: any) => i.id.toString() === oroInstitucion)?.nombre
+                        : "Sin asignar"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar institución..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontró la institución.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              setOroInstitucion("none");
+                              setOpenOro(false);
+                            }}
+                            className="text-slate-500 italic"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                oroInstitucion === "none" ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            Sin asignar
+                          </CommandItem>
+                          {instituciones?.map((i: any) => (
+                            <CommandItem
+                              key={i.id}
+                              value={`${i.nombre} ${i.cct} ${i.estado}`}
+                              onSelect={() => {
+                                setOroInstitucion(i.id.toString());
+                                setOpenOro(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  oroInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col text-sm w-full">
+                                <span className="truncate">{i.nombre} - {i.cct}</span>
+                                <span className="text-xs text-slate-500">{i.estado}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center text-slate-600 dark:text-slate-400">
                   <Medal className="w-4 h-4 mr-2" /> 2º Lugar (Plata)
                 </label>
-                <Select value={plataInstitucion} onValueChange={setPlataInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-slate-300 dark:border-slate-700 justify-between">
-                    <SelectValue placeholder="Sin asignar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
-                    {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>
-                        <div className="flex flex-col text-sm w-full">
-                          <span className="truncate">{i.nombre} - {i.cct}</span>
-                          <span className="text-xs text-slate-500">{i.estado}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openPlata} onOpenChange={setOpenPlata}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openPlata}
+                      className="w-full justify-between font-normal border-slate-300 dark:border-slate-700"
+                      disabled={loadingInstituciones}
+                    >
+                      {plataInstitucion && plataInstitucion !== "none"
+                        ? instituciones?.find((i: any) => i.id.toString() === plataInstitucion)?.nombre
+                        : "Sin asignar"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar institución..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontró la institución.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              setPlataInstitucion("none");
+                              setOpenPlata(false);
+                            }}
+                            className="text-slate-500 italic"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                plataInstitucion === "none" ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            Sin asignar
+                          </CommandItem>
+                          {instituciones?.map((i: any) => (
+                            <CommandItem
+                              key={i.id}
+                              value={`${i.nombre} ${i.cct} ${i.estado}`}
+                              onSelect={() => {
+                                setPlataInstitucion(i.id.toString());
+                                setOpenPlata(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  plataInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col text-sm w-full">
+                                <span className="truncate">{i.nombre} - {i.cct}</span>
+                                <span className="text-xs text-slate-500">{i.estado}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center text-amber-700 dark:text-amber-600">
                   <Award className="w-4 h-4 mr-2" /> 3º Lugar (Bronce)
                 </label>
-                <Select value={bronceInstitucion} onValueChange={setBronceInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-amber-200 dark:border-amber-900/50 justify-between">
-                    <SelectValue placeholder="Sin asignar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
-                    {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>
-                        <div className="flex flex-col text-sm w-full">
-                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                <Popover open={openBronce} onOpenChange={setOpenBronce}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openBronce}
+                      className="w-full justify-between font-normal border-amber-200 dark:border-amber-900/50"
+                      disabled={loadingInstituciones}
+                    >
+                      {bronceInstitucion && bronceInstitucion !== "none"
+                        ? instituciones?.find((i: any) => i.id.toString() === bronceInstitucion)?.nombre
+                        : "Sin asignar"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar institución..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontró la institución.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              setBronceInstitucion("none");
+                              setOpenBronce(false);
+                            }}
+                            className="text-slate-500 italic"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                bronceInstitucion === "none" ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            Sin asignar
+                          </CommandItem>
+                          {instituciones?.map((i: any) => (
+                            <CommandItem
+                              key={i.id}
+                              value={`${i.nombre} ${i.cct} ${i.estado}`}
+                              onSelect={() => {
+                                setBronceInstitucion(i.id.toString());
+                                setOpenBronce(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  bronceInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col text-sm w-full">
+                                <span className="truncate">{i.nombre} - {i.cct}</span>
+                                <span className="text-xs text-slate-500">{i.estado}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
                           <span className="text-xs text-slate-500">{i.estado}</span>
                         </div>
                       </SelectItem>
