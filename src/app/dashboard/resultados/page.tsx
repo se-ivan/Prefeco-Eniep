@@ -359,7 +359,6 @@ export default function ResultadosAdminPage() {
                       <TableHead>Disciplina y Categoría</TableHead>
                       <TableHead>Institución</TableHead>
                       <TableHead className="text-center">Lugar</TableHead>
-                      <TableHead className="text-center">Cinta</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -372,6 +371,11 @@ export default function ResultadosAdminPage() {
                             {r.categoria.nombre} • {r.disciplina.rama}
                           </div>
                           <div className="text-xs text-slate-500">{r.disciplina.modalidad}</div>
+                          {r.disciplina.disciplinaBaseNombre === "TAEKWONDO" && r.cintaTaekwondo ? (
+                            <div className="mt-1 text-[11px] font-medium">
+                              Cinta: {r.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium truncate">{r.institucion.nombre} - {r.institucion.cct}</div>
@@ -382,15 +386,6 @@ export default function ResultadosAdminPage() {
                             {getLugarIcon(r.lugar)}
                             {r.lugar}º Lugar
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {r.cintaTaekwondo ? (
-                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                              {r.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-400">-</span>
-                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 
