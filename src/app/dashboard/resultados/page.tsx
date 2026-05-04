@@ -316,7 +316,7 @@ export default function ResultadosAdminPage() {
                         {oroInstitucion && oroInstitucion !== "none" ? (
                           <>
                             {instituciones?.find((i: any) => i.id.toString() === oroInstitucion)?.urlLogo ? (
-                              <div className="relative w-6 h-6 flex-shrink-0">
+                              <div className="relative w-6 h-6 shrink-0">
                                 <Image 
                                   src={instituciones.find((i: any) => i.id.toString() === oroInstitucion).urlLogo} 
                                   alt="Logo" 
@@ -372,16 +372,16 @@ export default function ResultadosAdminPage() {
                               <div className="flex items-center gap-2 w-full">
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    "mr-2 h-4 w-4 shrink-0",
                                     oroInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 {i.urlLogo ? (
-                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                  <div className="relative w-8 h-8 shrink-0">
                                     <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
                                   </div>
                                 ) : (
-                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded shrink-0">
                                     <ImageIcon className="w-4 h-4 text-slate-400" />
                                   </div>
                                 )}
@@ -416,7 +416,7 @@ export default function ResultadosAdminPage() {
                         {plataInstitucion && plataInstitucion !== "none" ? (
                           <>
                             {instituciones?.find((i: any) => i.id.toString() === plataInstitucion)?.urlLogo ? (
-                              <div className="relative w-6 h-6 flex-shrink-0">
+                              <div className="relative w-6 h-6 shrink-0">
                                 <Image 
                                   src={instituciones.find((i: any) => i.id.toString() === plataInstitucion).urlLogo} 
                                   alt="Logo" 
@@ -472,16 +472,16 @@ export default function ResultadosAdminPage() {
                               <div className="flex items-center gap-2 w-full">
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    "mr-2 h-4 w-4 shrink-0",
                                     plataInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 {i.urlLogo ? (
-                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                  <div className="relative w-8 h-8 shrink-0">
                                     <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
                                   </div>
                                 ) : (
-                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded shrink-0">
                                     <ImageIcon className="w-4 h-4 text-slate-400" />
                                   </div>
                                 )}
@@ -516,7 +516,7 @@ export default function ResultadosAdminPage() {
                         {bronceInstitucion && bronceInstitucion !== "none" ? (
                           <>
                             {instituciones?.find((i: any) => i.id.toString() === bronceInstitucion)?.urlLogo ? (
-                              <div className="relative w-6 h-6 flex-shrink-0">
+                              <div className="relative w-6 h-6 shrink-0">
                                 <Image 
                                   src={instituciones.find((i: any) => i.id.toString() === bronceInstitucion).urlLogo} 
                                   alt="Logo" 
@@ -572,16 +572,16 @@ export default function ResultadosAdminPage() {
                               <div className="flex items-center gap-2 w-full">
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4 flex-shrink-0",
+                                    "mr-2 h-4 w-4 shrink-0",
                                     bronceInstitucion === i.id.toString() ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 {i.urlLogo ? (
-                                  <div className="relative w-8 h-8 flex-shrink-0">
+                                  <div className="relative w-8 h-8 shrink-0">
                                     <Image src={i.urlLogo} alt={i.nombre} fill className="object-contain" />
                                   </div>
                                 ) : (
-                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded flex-shrink-0">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded shrink-0">
                                     <ImageIcon className="w-4 h-4 text-slate-400" />
                                   </div>
                                 )}
