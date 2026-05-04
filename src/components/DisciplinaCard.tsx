@@ -19,6 +19,7 @@ type Disciplina = {
   totalApoyos?: number | null;
   categorias?: Categoria[] | null | undefined;
   deletedAt?: Date | null;
+  disciplinaBaseNombre?: string | null;
 };
 
 type Props = {
@@ -71,6 +72,9 @@ export default function DisciplinaCard({
   onDeleteDisciplina,
 }: Props) {
   const router = useRouter();
+
+  // Helper para identificar si es disciplina administrativa
+  const isAdministrativa = String(disciplina.disciplinaBaseNombre ?? "").trim().toUpperCase() === "ADMINISTRATIVA";
 
   const handleView = useCallback(
     (e?: React.MouseEvent) => {
@@ -136,23 +140,32 @@ export default function DisciplinaCard({
 
       {/* CONTADORES */}
       <div className="mt-4 grid grid-cols-2 gap-4">
-        {disciplina.modalidad === "EQUIPO" && (
+        {disciplina.modalidad === "EQUIPO" && !isAdministrativa && (
           <div>
             <div className="text-sm text-slate-500">Equipos</div>
             <div className="text-2xl font-bold text-slate-900">{disciplina.totalEquipos ?? 0}</div>
           </div>
         )}
 
-        <div className={disciplina.modalidad === "EQUIPO" ? "" : "col-span-2"}>
-          <div className="text-sm text-slate-500">Participantes</div>
-          <div className="text-2xl font-bold text-slate-900">
-            {disciplina.totalParticipantes ?? 0}
+        {isAdministrativa ? (
+          <div className={disciplina.modalidad === "EQUIPO" ? "" : "col-span-2"}>
+            <div className="text-sm text-slate-500">Personal de Apoyo</div>
+            <div className="text-2xl font-bold text-slate-900">
+              {disciplina.totalApoyos ?? 0}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className={disciplina.modalidad === "EQUIPO" ? "" : "col-span-2"}>
+            <div className="text-sm text-slate-500">Participantes</div>
+            <div className="text-2xl font-bold text-slate-900">
+              {disciplina.totalParticipantes ?? 0}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* INTEGRANTES: solo si es modalidad EQUIPO */}
-      {disciplina.modalidad === "EQUIPO" && (
+      {/* INTEGRANTES: solo si es modalidad EQUIPO y no es administrativa */}
+      {disciplina.modalidad === "EQUIPO" && !isAdministrativa && (
         <div className="mt-4 border-t pt-3">
           <div className="text-sm text-slate-500 mb-2">Integrantes por equipo</div>
 

@@ -22,14 +22,33 @@ export default function ResultadosAdminPage() {
   const [oroInstitucion, setOroInstitucion] = useState<string>("");
   const [plataInstitucion, setPlataInstitucion] = useState<string>("");
   const [bronceInstitucion, setBronceInstitucion] = useState<string>("");
+  const [selectedCinta, setSelectedCinta] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentDisciplina = disciplinas?.find((d: any) => d.id === Number(selectedDisciplina));
   const categorias = currentDisciplina?.categorias || [];
+  
+  const isTaekwondo = currentDisciplina?.disciplinaBaseNombre === "TAEKWONDO";
+  
+  const cintasOptions = [
+    "CINTA_BLANCA",
+    "CINTA_AMARILLA",
+    "CINTA_NARANJA",
+    "CINTA_VERDE",
+    "CINTA_AZUL",
+    "CINTA_ROJA",
+    "CINTA_NEGRA",
+    "CINTA_ROJINEGRA",
+  ];
 
   const handleSave = async () => {
     if (!selectedDisciplina || !selectedCategoria) {
       toast.error("Selecciona una disciplina y una categoría");
+      return;
+    }
+
+    if (isTaekwondo && !selectedCinta) {
+      toast.error("Debes seleccionar una cinta de taekwondo");
       return;
     }
 
@@ -53,6 +72,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(oroInstitucion),
               lugar: 1,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -68,6 +88,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(plataInstitucion),
               lugar: 2,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -83,6 +104,7 @@ export default function ResultadosAdminPage() {
               categoriaId: Number(selectedCategoria),
               institucionId: Number(bronceInstitucion),
               lugar: 3,
+              ...(isTaekwondo && { cintaTaekwondo: selectedCinta }),
             }),
           })
         );
@@ -99,6 +121,7 @@ export default function ResultadosAdminPage() {
         setOroInstitucion("");
         setPlataInstitucion("");
         setBronceInstitucion("");
+        setSelectedCinta("");
         
         // Refrescar datos
         mutate("/api/resultados");
@@ -172,7 +195,10 @@ export default function ResultadosAdminPage() {
                 <SelectContent>
                   {disciplinas?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id.toString()}>
-                      {d.nombre} ({d.rama})
+                      <div className="flex flex-col text-sm">
+                        <span className="truncate">{d.nombre} ({d.rama})</span>
+                        <span className="text-xs text-slate-500">{d.modalidad}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -199,19 +225,58 @@ export default function ResultadosAdminPage() {
               </Select>
             </div>
 
+            {isTaekwondo && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium ">
+                  Cinta de Taekwondo *
+                </label>
+                <Select value={selectedCinta} onValueChange={setSelectedCinta} disabled={!selectedDisciplina}>
+                  <SelectTrigger >
+                    <SelectValue placeholder="Selecciona una cinta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cintasOptions.map((cinta) => (
+                      <SelectItem key={cinta} value={cinta}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" 
+                            style={{
+                              backgroundColor: cinta === "CINTA_BLANCA" ? "#ffffff" : 
+                                             cinta === "CINTA_AMARILLA" ? "#eab308" :
+                                             cinta === "CINTA_NARANJA" ? "#f97316" :
+                                             cinta === "CINTA_VERDE" ? "#22c55e" :
+                                             cinta === "CINTA_AZUL" ? "#3b82f6" :
+                                             cinta === "CINTA_ROJA" ? "#ef4444" :
+                                             cinta === "CINTA_NEGRA" ? "#000000" :
+                                             cinta === "CINTA_ROJINEGRA" ? "#dc2626" : "#999999",
+                              border: cinta === "CINTA_BLANCA" ? "1px solid #ccc" : "none"
+                            }} />
+                          {cinta.replace("CINTA_", "").replace(/_/g, " ")}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center text-yellow-600 dark:text-yellow-500">
                   <Trophy className="w-4 h-4 mr-2" /> 1º Lugar (Oro)
                 </label>
                 <Select value={oroInstitucion} onValueChange={setOroInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500">
+                  <SelectTrigger className="border-yellow-200 dark:border-yellow-900 focus:ring-yellow-500 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -222,13 +287,18 @@ export default function ResultadosAdminPage() {
                   <Medal className="w-4 h-4 mr-2" /> 2º Lugar (Plata)
                 </label>
                 <Select value={plataInstitucion} onValueChange={setPlataInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-slate-300 dark:border-slate-700">
+                  <SelectTrigger className="border-slate-300 dark:border-slate-700 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -239,13 +309,18 @@ export default function ResultadosAdminPage() {
                   <Award className="w-4 h-4 mr-2" /> 3º Lugar (Bronce)
                 </label>
                 <Select value={bronceInstitucion} onValueChange={setBronceInstitucion} disabled={loadingInstituciones}>
-                  <SelectTrigger className="border-amber-200 dark:border-amber-900/50">
+                  <SelectTrigger className="border-amber-200 dark:border-amber-900/50 justify-between">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-slate-500 italic">Sin asignar</SelectItem>
                     {instituciones?.map((i: any) => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                      <SelectItem key={i.id} value={i.id.toString()}>
+                        <div className="flex flex-col text-sm w-full">
+                          <span className="truncate">{i.nombre} - {i.cct}</span>
+                          <span className="text-xs text-slate-500">{i.estado}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -255,7 +330,7 @@ export default function ResultadosAdminPage() {
             <Button 
               className="w-full mt-4" 
               onClick={handleSave} 
-              disabled={isSubmitting || !selectedDisciplina || !selectedCategoria || (!oroInstitucion && !plataInstitucion && !bronceInstitucion)}
+              disabled={isSubmitting || !selectedDisciplina || !selectedCategoria || (isTaekwondo && !selectedCinta) || (!oroInstitucion && !plataInstitucion && !bronceInstitucion)}
             >
               {isSubmitting ? "Guardando..." : (
                 <><Save className="w-4 h-4 mr-2" /> Guardar Resultados</>
@@ -284,6 +359,7 @@ export default function ResultadosAdminPage() {
                       <TableHead>Disciplina y Categoría</TableHead>
                       <TableHead>Institución</TableHead>
                       <TableHead className="text-center">Lugar</TableHead>
+                      <TableHead className="text-center">Cinta</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -295,13 +371,26 @@ export default function ResultadosAdminPage() {
                           <div className="text-xs text-slate-500">
                             {r.categoria.nombre} • {r.disciplina.rama}
                           </div>
+                          <div className="text-xs text-slate-500">{r.disciplina.modalidad}</div>
                         </TableCell>
-                        <TableCell>{r.institucion.nombre}</TableCell>
+                        <TableCell>
+                          <div className="font-medium truncate">{r.institucion.nombre} - {r.institucion.cct}</div>
+                          <div className="text-xs text-slate-500">{r.institucion.estado}</div>
+                        </TableCell>
                         <TableCell className="text-center">
                           <Badge className={getBadgeColor(r.lugar)}>
                             {getLugarIcon(r.lugar)}
                             {r.lugar}º Lugar
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {r.cintaTaekwondo ? (
+                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                              {r.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 

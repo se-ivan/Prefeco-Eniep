@@ -277,6 +277,7 @@ model Resultado {
   disciplina    Disciplina  @relation(fields: [disciplinaId], references: [id])
   categoria     Categoria   @relation(fields: [categoriaId], references: [id])
   institucion   Institucion @relation(fields: [institucionId], references: [id])
+  cintaTaekwondo CintaTaekwondo? @map("cinta_taekwondo")
 
   @@unique([disciplinaId, categoriaId, lugar])
   @@map("resultados")

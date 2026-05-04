@@ -5,6 +5,7 @@ import CrearDisciplinaModal from "@/components/CrearDisciplinaModal";
 import DisciplinaCard from "@/components/DisciplinaCard";
 import NuevoParticipanteModal from "@/components/NuevoParticipanteModal";
 import DisciplinaModalEditar from "@/components/DisciplinaModalEditar";
+import ConfirmModalDelete from "@/components/ConfirmModalDelete";
 import { toast } from "sonner";
 
 /**
@@ -21,6 +22,7 @@ type Disciplina = {
   maxIntegrantes?: number | null;
   maxParticipantesPorEscuela?: number | null;
   disciplinaBaseId?: number | null;
+  disciplinaBaseNombre?: string | null;
 
   categorias?: {
     id: number;
@@ -47,6 +49,10 @@ export default function DisciplinasPage() {
   const [crearDisciplinaOpen, setCrearDisciplinaOpen] = useState(false);
   const [editarDisciplinaOpen, setEditarDisciplinaOpen] = useState(false);
   const [disciplinaAEditar, setDisciplinaAEditar] = useState<Disciplina | null>(null);
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [disciplinaABorrar, setDisciplinaABorrar] = useState<Disciplina | null>(null);
+  const [deletingLoading, setDeletingLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
@@ -109,17 +115,28 @@ export default function DisciplinasPage() {
     setEditarDisciplinaOpen(true);
   }
 
-  async function handleDeleteDisciplina(d: Disciplina) {
-    if (!confirm(`¿Deseas borrar la disciplina ${d.nombre}?`)) return;
+  function handleDeleteDisciplina(d: Disciplina) {
+    setDisciplinaABorrar(d);
+    setConfirmDeleteOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!disciplinaABorrar) return;
+    setDeletingLoading(true);
     try {
-      const res = await fetch(`/api/disciplinas/${d.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/disciplinas/${disciplinaABorrar.id}`, { method: "DELETE" });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(json?.error || `HTTP ${res.status}`);
       }
+      toast.success(`Disciplina "${disciplinaABorrar.nombre}" eliminada correctamente`);
       await handleAfterCreate();
+      setConfirmDeleteOpen(false);
+      setDisciplinaABorrar(null);
     } catch (err: any) {
-      alert(err?.message || "No se pudo borrar la disciplina");
+      toast.error(err?.message || "No se pudo borrar la disciplina");
+    } finally {
+      setDeletingLoading(false);
     }
   }
 
@@ -295,6 +312,22 @@ export default function DisciplinasPage() {
           }}
         />
       )}
+
+      {/* Modal de confirmación para borrar disciplina */}
+      <ConfirmModalDelete
+        open={confirmDeleteOpen}
+        title="Borrar Disciplina"
+        message={`¿Estás seguro de que deseas borrar la disciplina "${disciplinaABorrar?.nombre}"?`}
+        confirmText="Borrar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        isLoading={deletingLoading}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setConfirmDeleteOpen(false);
+          setDisciplinaABorrar(null);
+        }}
+      />
     </main>
   );
 }
