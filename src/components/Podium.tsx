@@ -1,10 +1,13 @@
 "use client";
 
 import useSWR from "swr";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Trophy, Medal, Award, Star, Building2 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trophy, Medal, Award, Star, Building2, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/components/ui/utils";
 
 interface PodiumData {
   id: number;
@@ -65,6 +68,8 @@ export function Podium() {
     refreshInterval: 30000,
   });
 
+  const [displayCount, setDisplayCount] = useState<string>("10");
+
   if (isLoading) {
     return (
       <Card className="w-full animate-pulse border-slate-200 dark:border-slate-800">
@@ -123,7 +128,10 @@ export function Podium() {
   const firstPlace = sortedData[0];
   const secondPlace = sortedData[1];
   const thirdPlace = sortedData[2];
-  const rest = sortedData.slice(3);
+  
+  const institutionsToShow = displayCount === "all" 
+    ? sortedData 
+    : sortedData.slice(0, parseInt(displayCount));
 
   return (
     <Card className="w-full overflow-hidden border-slate-200 dark:border-slate-800 bg-gradient-to-b from-white to-slate-50/80 dark:from-slate-950 dark:to-slate-900 shadow-sm">
@@ -231,65 +239,87 @@ export function Podium() {
         {/* ALL INSTITUTIONS DETAILS */}
         {sortedData.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-3 px-1">Desglose de Medallas</h3>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 flex flex-col gap-0 shadow-sm overflow-hidden">
-              {sortedData.map((inst, index) => (
-                <div key={inst.id} className="border-b last:border-b-0 border-slate-200 dark:border-slate-800 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="font-bold text-slate-400 dark:text-slate-500 w-6 text-center text-lg">{index + 1}</div>
-                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                        {inst.urlLogo ? (
-                          <img src={inst.urlLogo} alt={inst.nombre} className="h-full w-full object-contain p-1" />
-                        ) : (
-                          <Building2 className="h-5 w-5 text-slate-400" />
-                        )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
+              <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Desglose de Medallas</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Mostrar:</span>
+                <Select value={displayCount} onValueChange={setDisplayCount}>
+                  <SelectTrigger className="w-[100px] h-8 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                    <SelectValue placeholder="Cantidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">Top 10</SelectItem>
+                    <SelectItem value="20">Top 20</SelectItem>
+                    <SelectItem value="50">Top 50</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <ScrollArea className={cn(
+              "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 shadow-sm",
+              institutionsToShow.length > 5 ? "h-[500px]" : "h-auto"
+            )}>
+              <div className="flex flex-col gap-0">
+                {institutionsToShow.map((inst, index) => (
+                  <div key={inst.id} className="border-b last:border-b-0 border-slate-200 dark:border-slate-800 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="font-bold text-slate-400 dark:text-slate-500 w-6 text-center text-lg">{index + 1}</div>
+                        <div className="h-10 w-10 md:h-12 md:w-12 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                          {inst.urlLogo ? (
+                            <img src={inst.urlLogo} alt={inst.nombre} className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <Building2 className="h-5 w-5 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-100 truncate block">{inst.nombre}</span>
+                          <span className="text-[10px] md:text-xs text-slate-500 font-mono block">{inst.cct}</span>
+                          
+                          {/* Medallas Detalle Inline Responsive */}
+                          {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+                              {inst.detallesMedallas.map((detalle, idx) => (
+                                <Badge key={idx} variant="outline" className="text-[9px] px-1 py-0 shadow-sm bg-white dark:bg-slate-900">
+                                  {detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'} {detalle.disciplinaNombre}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-100 truncate block">{inst.nombre}</span>
-                        <span className="text-[10px] md:text-xs text-slate-500 font-mono block">{inst.cct}</span>
-                        
-                        {/* Medallas Detalle Inline Responsive */}
-                        {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
-                            {inst.detallesMedallas.map((detalle, idx) => (
-                              <Badge key={idx} variant="outline" className="text-[9px] px-1 py-0 shadow-sm bg-white dark:bg-slate-900">
-                                {detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'} {detalle.disciplinaNombre}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                      
+                      {/* Estadísticas Derecha */}
+                      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                        <div className="hidden md:flex gap-2">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 shadow-sm text-sm font-bold">{inst.oro}</span>
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 shadow-sm text-sm font-bold">{inst.plata}</span>
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 shadow-sm text-sm font-bold">{inst.bronce}</span>
+                        </div>
+                        <div className="text-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 shrink-0">
+                          <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase leading-none">Total</div>
+                          <div className="text-lg md:text-xl font-black text-slate-800 dark:text-white leading-none mt-1">{inst.totalMedallas}</div>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Estadísticas Derecha */}
-                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                      <div className="hidden md:flex gap-2">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 shadow-sm text-sm font-bold">{inst.oro}</span>
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 shadow-sm text-sm font-bold">{inst.plata}</span>
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 shadow-sm text-sm font-bold">{inst.bronce}</span>
+                    {/* Detalles Desktop */}
+                    {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
+                      <div className="hidden md:flex flex-wrap gap-2 mt-3 ml-12 pl-4">
+                        {inst.detallesMedallas.map((detalle, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-800 font-medium px-2 py-0.5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <span className="mr-1">{detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'}</span>
+                            {detalle.disciplinaNombre} {detalle.categoriaNombre && `- ${detalle.categoriaNombre}`}
+                          </Badge>
+                        ))}
                       </div>
-                      <div className="text-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 shrink-0">
-                        <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase leading-none">Total</div>
-                        <div className="text-lg md:text-xl font-black text-slate-800 dark:text-white leading-none mt-1">{inst.totalMedallas}</div>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  
-                  {/* Detalles Desktop */}
-                  {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
-                    <div className="hidden md:flex flex-wrap gap-2 mt-3 ml-12 pl-4">
-                      {inst.detallesMedallas.map((detalle, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-800 font-medium px-2 py-0.5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                          <span className="mr-1">{detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'}</span>
-                          {detalle.disciplinaNombre} {detalle.categoriaNombre && `- ${detalle.categoriaNombre}`}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         )}
       </CardContent>
