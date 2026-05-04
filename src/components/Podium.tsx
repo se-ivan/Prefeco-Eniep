@@ -16,6 +16,11 @@ interface PodiumData {
   bronce: number;
   puntos: number;
   totalMedallas: number;
+  detallesMedallas?: {
+    lugar: number;
+    disciplinaNombre: string;
+    categoriaNombre: string;
+  }[];
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -223,65 +228,67 @@ export function Podium() {
           )}
         </div>
 
-        {/* REST OF LEADERBOARD */}
-        {rest.length > 0 && (
+        {/* ALL INSTITUTIONS DETAILS */}
+        {sortedData.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-3 px-1">Otras Instituciones</h3>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm">
-              <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-900">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-14 text-center">Pos</TableHead>
-                    <TableHead>Institución</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Oro</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Plata</TableHead>
-                    <TableHead className="text-center hidden md:table-cell">Bronce</TableHead>
-                    <TableHead className="text-right w-20">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rest.map((inst, index) => (
-                    <TableRow key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                      <TableCell className="text-center font-medium text-slate-500 dark:text-slate-400">
-                        {index + 4}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                            {inst.urlLogo ? (
-                              <img src={inst.urlLogo} alt={inst.nombre} className="h-full w-full object-contain p-0.5" />
-                            ) : (
-                              <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                            )}
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-3 px-1">Desglose de Medallas</h3>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 flex flex-col gap-0 shadow-sm overflow-hidden">
+              {sortedData.map((inst, index) => (
+                <div key={inst.id} className="border-b last:border-b-0 border-slate-200 dark:border-slate-800 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="font-bold text-slate-400 dark:text-slate-500 w-6 text-center text-lg">{index + 1}</div>
+                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                        {inst.urlLogo ? (
+                          <img src={inst.urlLogo} alt={inst.nombre} className="h-full w-full object-contain p-1" />
+                        ) : (
+                          <Building2 className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold text-sm md:text-base text-slate-800 dark:text-slate-100 truncate block">{inst.nombre}</span>
+                        <span className="text-[10px] md:text-xs text-slate-500 font-mono block">{inst.cct}</span>
+                        
+                        {/* Medallas Detalle Inline Responsive */}
+                        {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+                            {inst.detallesMedallas.map((detalle, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[9px] px-1 py-0 shadow-sm bg-white dark:bg-slate-900">
+                                {detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'} {detalle.disciplinaNombre}
+                              </Badge>
+                            ))}
                           </div>
-                          <div className="min-w-0">
-                            <span className="font-medium text-sm text-slate-700 dark:text-slate-200 truncate block">{inst.nombre}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{inst.cct}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center hidden md:table-cell">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500 text-xs font-bold">
-                          {inst.oro}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center hidden md:table-cell">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs font-bold">
-                          {inst.plata}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center hidden md:table-cell">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500 text-xs font-bold">
-                          {inst.bronce}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-slate-900 dark:text-white">
-                        {inst.totalMedallas}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Estadísticas Derecha */}
+                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                      <div className="hidden md:flex gap-2">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 shadow-sm text-sm font-bold">{inst.oro}</span>
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 shadow-sm text-sm font-bold">{inst.plata}</span>
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 shadow-sm text-sm font-bold">{inst.bronce}</span>
+                      </div>
+                      <div className="text-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 shrink-0">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase leading-none">Total</div>
+                        <div className="text-lg md:text-xl font-black text-slate-800 dark:text-white leading-none mt-1">{inst.totalMedallas}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Detalles Desktop */}
+                  {inst.detallesMedallas && inst.detallesMedallas.length > 0 && (
+                    <div className="hidden md:flex flex-wrap gap-2 mt-3 ml-12 pl-4">
+                      {inst.detallesMedallas.map((detalle, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-800 font-medium px-2 py-0.5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                          <span className="mr-1">{detalle.lugar === 1 ? '🥇' : detalle.lugar === 2 ? '🥈' : '🥉'}</span>
+                          {detalle.disciplinaNombre} {detalle.categoriaNombre && `- ${detalle.categoriaNombre}`}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

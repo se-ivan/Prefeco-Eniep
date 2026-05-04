@@ -7,7 +7,12 @@ export async function GET() {
   try {
     const instituciones = await prisma.institucion.findMany({
       include: {
-        resultados: true,
+        resultados: {
+          include: {
+            disciplina: true,
+            categoria: true,
+          }
+        },
         _count: {
           select: {
             participantes: true,
@@ -26,6 +31,11 @@ export async function GET() {
         let plata = 0;
         let bronce = 0;
         let puntos = 0;
+        let detallesMedallas: {
+          lugar: number;
+          disciplinaNombre: string;
+          categoriaNombre: string;
+        }[] = [];
 
         inst.resultados.forEach((res) => {
           if (res.lugar === 1) {
@@ -37,6 +47,14 @@ export async function GET() {
           } else if (res.lugar === 3) {
             bronce++;
             puntos += 1;
+          }
+          
+          if (res.lugar >= 1 && res.lugar <= 3) {
+            detallesMedallas.push({
+              lugar: res.lugar,
+              disciplinaNombre: res.disciplina.nombre,
+              categoriaNombre: res.categoria.nombre,
+            });
           }
         });
 
@@ -51,6 +69,7 @@ export async function GET() {
           puntos,
           totalMedallas: oro + plata + bronce,
           totalParticipantes: inst._count.participantes,
+          detallesMedallas,
         };
       });
 
