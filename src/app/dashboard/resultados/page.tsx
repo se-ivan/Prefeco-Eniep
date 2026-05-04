@@ -598,13 +598,6 @@ export default function ResultadosAdminPage() {
                   </PopoverContent>
                 </Popover>
               </div>
-                          <span className="text-xs text-slate-500">{i.estado}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             <Button 
