@@ -5,6 +5,7 @@ import { ModeloEducativo } from '../components/ModeloEducativo';
 import { HotelesPromo } from '../components/HotelesPromo';
 import { CafeteriaMenu } from '../components/CafeteriaMenu';
 import { Galeria } from '../components/Galeria';
+import { DescargaGaleria2026 } from '../components/DescargaGaleria2026';
 import { Planteles } from '../components/Planteles';
 import { Contacto } from '../components/Contacto';
 import { Footer } from '../components/Footer';
@@ -54,6 +55,7 @@ export default async function Home() {
       <Hero />
       <HotelesPromo />
       <CafeteriaMenu />
+      <DescargaGaleria2026 />
       <Galeria />
       <Planteles instituciones={planteles} />
       <Contacto />
