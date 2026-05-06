@@ -8,9 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Save, Trophy, Medal, Award, Check, ChevronsUpDown, Search, Image as ImageIcon } from "lucide-react";
+import { Check, ChevronsUpDown, Search, Image as ImageIcon, Trash2, Save, Trophy, Medal, Award } from "lucide-react";
+import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import ConfirmModalDelete from "@/components/ConfirmModalDelete";
 import { cn } from "@/components/ui/utils";
 import Image from "next/image";
 
@@ -33,6 +36,9 @@ export default function ResultadosAdminPage() {
   const [openOro, setOpenOro] = useState(false);
   const [openPlata, setOpenPlata] = useState(false);
   const [openBronce, setOpenBronce] = useState(false);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [resultToDelete, setResultToDelete] = useState<number | null>(null);
 
   const currentDisciplina = disciplinas?.find((d: any) => d.id === Number(selectedDisciplina));
   const categorias = currentDisciplina?.categorias || [];
@@ -144,11 +150,16 @@ export default function ResultadosAdminPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este resultado?")) return;
+  const requestDelete = (id: number) => {
+    setResultToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!resultToDelete) return;
 
     try {
-      const res = await fetch(`/api/resultados/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/resultados/${resultToDelete}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Resultado eliminado");
         mutate("/api/resultados");
@@ -159,6 +170,9 @@ export default function ResultadosAdminPage() {
     } catch (error) {
       console.error(error);
       toast.error("Error de conexión");
+    } finally {
+      setDeleteModalOpen(false);
+      setResultToDelete(null);
     }
   };
 
@@ -175,6 +189,34 @@ export default function ResultadosAdminPage() {
     if (lugar === 3) return <Award className="w-4 h-4 mr-1 inline" />;
     return null;
   };
+
+  const groupedResultados = React.useMemo(() => {
+    if (!resultados) return [];
+    const groups = new Map();
+    
+    resultados.forEach((r: any) => {
+      const key = `${r.disciplina.id}-${r.categoria.id}-${r.cintaTaekwondo || 'none'}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          idString: key,
+          disciplina: r.disciplina,
+          categoria: r.categoria,
+          cintaTaekwondo: r.cintaTaekwondo,
+          ganadores: []
+        });
+      }
+      groups.get(key).ganadores.push({
+        id: r.id,
+        institucion: r.institucion,
+        lugar: r.lugar
+      });
+    });
+    
+    return Array.from(groups.values()).map(g => {
+      g.ganadores.sort((a: any, b: any) => a.lugar - b.lugar);
+      return g;
+    });
+  }, [resultados]);
 
   return (
     <div className="space-y-6">
@@ -620,65 +662,102 @@ export default function ResultadosAdminPage() {
           <CardContent>
             {loadingResultados ? (
               <div className="py-8 text-center text-slate-500">Cargando resultados...</div>
-            ) : resultados?.length === 0 ? (
+            ) : groupedResultados.length === 0 ? (
               <div className="py-8 text-center text-slate-500 border border-dashed rounded-lg">
                 No hay resultados registrados aún.
               </div>
             ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader className="bg-slate-50 dark:bg-slate-900">
-                    <TableRow>
-                      <TableHead>Disciplina y Categoría</TableHead>
-                      <TableHead>Institución</TableHead>
-                      <TableHead className="text-center">Lugar</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {resultados?.map((r: any) => (
-                      <TableRow key={r.id}>
-                        <TableCell>
-                          <div className="font-medium">{r.disciplina.nombre}</div>
-                          <div className="text-xs text-slate-500">
-                            {r.categoria.nombre} • {r.disciplina.rama}
+              <Accordion type="multiple" className="w-full space-y-2">
+                {groupedResultados.map((g: any) => (
+                  <AccordionItem value={g.idString} key={g.idString} className="border rounded-lg bg-white dark:bg-slate-950 overflow-hidden px-4">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between w-full pr-4 text-left gap-2 md:gap-0">
+                        <div>
+                          <div className="font-semibold text-base">{g.disciplina.nombre}</div>
+                          <div className="text-xs text-slate-500 font-medium">
+                            {g.categoria.nombre} • {g.disciplina.rama} • {g.disciplina.modalidad}
                           </div>
-                          <div className="text-xs text-slate-500">{r.disciplina.modalidad}</div>
-                          {r.disciplina.disciplinaBaseNombre === "TAEKWONDO" && r.cintaTaekwondo ? (
-                            <div className="mt-1 text-[11px] font-medium">
-                              Cinta: {r.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
-                            </div>
-                          ) : null}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium truncate">{r.institucion.nombre} - {r.institucion.cct}</div>
-                          <div className="text-xs text-slate-500">{r.institucion.estado}</div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge className={getBadgeColor(r.lugar)}>
-                            {getLugarIcon(r.lugar)}
-                            {r.lugar}º Lugar
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDelete(r.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        </div>
+                        <div className="flex items-center justify-start md:justify-end gap-3 text-sm flex-wrap mt-2 md:mt-0">
+                          {g.cintaTaekwondo && (
+                            <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400">
+                              {g.cintaTaekwondo.replace("CINTA_", "").replace(/_/g, " ")}
+                            </Badge>
+                          )}
+                          <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                            <span className="font-medium text-slate-700 dark:text-slate-300">{g.ganadores.length}</span> ganadores registrados
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="rounded-md border bg-slate-50/50 dark:bg-slate-900/50">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-100 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-900">
+                              <TableHead>Institución</TableHead>
+                              <TableHead className="text-center w-32">Lugar</TableHead>
+                              <TableHead className="text-right w-24">Acciones</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {g.ganadores.map((ganador: any) => (
+                              <TableRow key={ganador.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {ganador.institucion.urlLogo ? (
+                                      <div className="relative w-6 h-6 shrink-0">
+                                        <Image src={ganador.institucion.urlLogo} alt="Logo" fill className="object-contain" />
+                                      </div>
+                                    ) : (
+                                      <ImageIcon className="w-5 h-5 text-slate-300 shrink-0" />
+                                    )}
+                                    <div className="min-w-0">
+                                      <div className="font-medium truncate">{ganador.institucion.nombre}</div>
+                                      <div className="text-[10px] sm:text-xs text-slate-500 font-mono">{ganador.institucion.cct}</div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge className={getBadgeColor(ganador.lugar)}>
+                                    {getLugarIcon(ganador.lugar)}
+                                    {ganador.lugar}º Lugar
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => requestDelete(ganador.id)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 h-8 w-8"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             )}
           </CardContent>
         </Card>
       </div>
+      
+      <ConfirmModalDelete
+        open={deleteModalOpen}
+        title="Eliminar resultado"
+        message="¿Estás seguro de eliminar este resultado de este lugar? Esto podría alterar el podio de instituciones."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModalOpen(false)}
+      />
     </div>
   );
 }
