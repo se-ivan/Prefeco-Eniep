@@ -11,6 +11,7 @@ import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { Podium } from "@/components/Podium";
+import { BannerDescargaGaleria } from '@/components/BannerDescargaGaleria';
 
 const DemographicsChart = dynamic(
   () => import("@/components/DemographicsChart").then(mod => mod.DemographicsChart),
@@ -71,6 +72,9 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 space-y-6">
       
+      {/* BANNER DE DESCARGA - colocado arriba del medallero */}
+      <BannerDescargaGaleria />
+
       {/* SECCIÓN PODIO */}
       <Podium />
 
