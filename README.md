@@ -1,3 +1,10 @@
+# INTEGRANTES
+
+Aldo Noe Pacheco Gaona
+Axel Yael Zambrano Flores
+Jose Ivan Silva Espinoza
+David Maldonado Barajas
+
 # Sistema ENIEP 2026 - Plataforma de Gestión Deportiva y Cultural
 
 Este proyecto consiste en el Sistema de Gestión E2E para el **ENIEP (Encuentro Nacional de Interprepas Federales por Cooperación)**. Incluye una landing page pública con animaciones de alto nivel, portal de registro escolar, gestión de participantes con asistentes interactivos, inscripciones a disciplinas y control de podios y medalleros en tiempo real.
@@ -8,7 +15,7 @@ Este proyecto consiste en el Sistema de Gestión E2E para el **ENIEP (Encuentro 
 
 1. **Instalar Dependencias:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Configuración de Variables de Entorno (.env):**
@@ -19,7 +26,7 @@ Este proyecto consiste en el Sistema de Gestión E2E para el **ENIEP (Encuentro 
 
 3. **Iniciar Servidor de Desarrollo:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
    La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
