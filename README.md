@@ -1,21 +1,22 @@
+# Prueba de Concepto (PoC)
 
-  # Landing page with animations
+## Integrantes del Equipo
 
-  This is a code bundle for Landing page with animations. The original project is available at https://www.figma.com/design/LSPafvFPZK8TbdhsqOhONW/Landing-page-with-animations.
+David Maldonado Barajas
+Aldo Noé Pacheco Gaona
+José Iván Silva Espinoza
+Axel Yael Zambrano Flores
 
-  ## Running the code
+---
 
-  Run `npm i` to install the dependencies.
+## Descripción
 
-  Copy `.env.example` to `.env.local` and fill the Firebase Storage variables.
+La Prueba de Concepto se desarrolló sobre nuestro proyecto de gestión de eventos deportivos para estudiantes. El objetivo es demostrar los riesgos asociados a la categoría OWASP A01:2021 - Broken Access Control (Control de Acceso Afectado), específicamente enfocada en el CWE-213, que se refiere a la exposición de información sensible debido a la falta de filtrado en el backend (Overfetching).
 
-  Required Firebase keys:
-  - `NEXT_PUBLIC_FIREBASE_API_KEY`
-  - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-  - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-  - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-  - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-  - `NEXT_PUBLIC_FIREBASE_APP_ID`
+En este escenario, al consultar el endpoint de usuarios mediante una petición GET, la aplicación utiliza un método `findMany()` sin restricciones. Debido a esta falta de abstracción en la consulta, el servidor responde enviando el objeto completo de la base de datos al cliente, exponiendo en texto plano datos privados como el `username` de inicio de sesión, el campo `role` (que revela los privilegios de la cuenta) y llaves primarias o foráneas como el `institucionId`. Aunque la interfaz gráfica oculte estos campos, cualquier usuario que inspeccione la respuesta de red puede extraerlos.
 
-  Run `npm run dev` to start the development server.
-  
+### Mitigación
+
+Para corregir este fallo, se demuestra en el código que la aplicación debe implementar proyecciones de datos en el backend. El comportamiento correcto consiste en utilizar la propiedad `select` dentro del método `findMany()` del ORM (Prisma), obligando al servidor a retornar única y exclusivamente los campos estrictamente públicos y necesarios para la vista (como el nombre y el correo electrónico), bloqueando desde la raíz cualquier fuga de arquitectura o credenciales del sistema.
+
+---
