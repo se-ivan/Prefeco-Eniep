@@ -1,9 +1,9 @@
 # INTEGRANTES
 
-Aldo Noe Pacheco Gaona
-Axel Yael Zambrano Flores
-Jose Ivan Silva Espinoza
-David Maldonado Barajas
+* Aldo Noe Pacheco Gaona
+* Axel Yael Zambrano Flores
+* Jose Ivan Silva Espinoza
+* David Maldonado Barajas
 
 # Sistema ENIEP 2026 - Plataforma de Gestión Deportiva y Cultural
 
