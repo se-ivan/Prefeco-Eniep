@@ -3,9 +3,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const usuarios = await prisma.user.findMany();
+    const usuariosSeguros = await prisma.user.findMany({
+      select: {
+        name: true,
+        email: true,
+      },
+    });
 
-    return NextResponse.json(usuarios);
+    return NextResponse.json(usuariosSeguros);
   } catch (error) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }

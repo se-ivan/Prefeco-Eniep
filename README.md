@@ -2,10 +2,10 @@
 
 ## Integrantes del Equipo
 
-David Maldonado Barajas
-Aldo Noé Pacheco Gaona
-José Iván Silva Espinoza
-Axel Yael Zambrano Flores
+- David Maldonado Barajas
+- Aldo Noé Pacheco Gaona
+- José Iván Silva Espinoza
+- Axel Yael Zambrano Flores
 
 ---
 
