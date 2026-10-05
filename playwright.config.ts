@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Force NODE_ENV to test
-process.env.NODE_ENV = 'test';
+Object.assign(process.env, { NODE_ENV: 'test' });
 
 // Load test environment variables
 dotenv.config({ path: path.resolve('./.env.test') });

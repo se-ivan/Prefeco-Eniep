@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
       { nombre: "Fútbol Varonil", tipo: "DEPORTIVA", rama: "VARONIL", modalidad: "EQUIPO" as const },
       { nombre: "Taekwondo Femenil", tipo: "DEPORTIVA", rama: "FEMENIL", modalidad: "INDIVIDUAL" as const },
       { nombre: "Oratoria Única", tipo: "CULTURAL", rama: "UNICA", modalidad: "INDIVIDUAL" as const },
-    ];
+    ] as const;
 
     for (const disc of baseDisciplinas) {
       // Create base discipline first if needed
